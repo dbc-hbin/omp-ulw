@@ -3,6 +3,17 @@
  * new omp sessions discover index.ts automatically. Restart omp to load it.
  * Changelog: initial faithful core/shared-builder/tuning port, with omp tool
  * transport adaptation and request-model refresh for supported provider hooks.
+ * Changelog: port complete Native ULW doctrine, session arming, specialised
+ * workflow pointers and evidence-bound loop/execute continuation.
+ * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
+ * Additional commands: /debugging, /review-work, /visual-qa, /visualize,
+ * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
+ * /reflection and /init-deep. These do not implicitly arm ULW.
+ * Exact Astra/Astra-fast model IDs select the shorter ULW doctrine; provider
+ * hooks refresh it when the request model changes. Other models keep baseline.
+ * The existing prompts/ulw.md template remains a native-discovery fallback.
+ * ULW keywords arm the session; flags can disable arming/pointers/continuation.
+ * Native omp transports and approval rules replace Senpi-only APIs.
  * User/custom prompts, project rules, skills and worker assignments are preserved.
  * Unrecognized templates are left unchanged with a warning. Unsupported models
  * retain omp behavior; runtime does not read the omo binary or require a parser.
@@ -15,13 +26,15 @@ import { replaceHostBehavior } from "./host";
 import { rewritePresetPayload } from "./payload";
 import { renderPreset } from "./presets";
 import type { PresetModel, PresetOptions } from "./presets";
+import { registerUlw, selectUlwDirective } from "./ulw";
+import type { UlwApi, UlwContext } from "./ulw";
 
-interface PromptContext {
+interface PromptContext extends UlwContext {
   model?: PresetModel & { api: string };
   mode: "tui" | "rpc" | "json" | "print";
   ui: { notify(message: string, level: "warning"): void };
 }
-interface ExtensionApi {
+interface ModelPromptApi {
   setLabel(label: string): void;
   getActiveTools(): string[];
   getAllTools(): Array<{ name: string }>;
@@ -29,8 +42,11 @@ interface ExtensionApi {
   on(event: "before_provider_request", handler: (event: { payload: unknown }, ctx: PromptContext) => unknown): void;
 }
 
+type ExtensionApi = ModelPromptApi & UlwApi;
+
 export default function omoPrompts(pi: ExtensionApi): void {
   pi.setLabel("OMO model prompts");
+  registerUlw(pi);
   let originalBehavior: string | undefined;
   let options: PresetOptions = { surface: "terminal", toolNames: [] };
   const profiles = new Map<string, string>();
@@ -56,14 +72,18 @@ export default function omoPrompts(pi: ExtensionApi): void {
       return;
     }
     originalBehavior = result.originalBehavior;
-    if (preset && ctx.model) profiles.set(ctx.model.id + "\n" + (ctx.model.name ?? ""), marked);
+    if (preset && ctx.model) profiles.set(JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]), marked);
     if (!preset) result.blocks[0] = result.blocks[0].replace(marked, "<omo-model-preset>\n" + originalBehavior + "\n</omo-model-preset>");
     return { systemPrompt: result.blocks };
   });
 
   pi.on("before_provider_request", (event, ctx) => {
-    if (originalBehavior === undefined || !ctx.model) return;
-    const key = ctx.model.id + "\n" + (ctx.model.name ?? "");
+    if (!ctx.model) return;
+    const payload = rewritePresetPayload(event.payload, ctx.model.api,
+      `<omo-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omo-ulw-policy>`,
+      /<omo-ulw-policy>[\s\S]*?<\/omo-ulw-policy>/g);
+    if (originalBehavior === undefined) return payload;
+    const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]);
     let replacement = profiles.get(key);
     if (replacement === undefined) {
       const preset = renderPreset(ctx.model, options);
@@ -71,6 +91,6 @@ export default function omoPrompts(pi: ExtensionApi): void {
       profiles.set(key, replacement);
     }
     // The adapter touches only our system-prompt marker, never advisor/custom/user messages.
-    return rewritePresetPayload(event.payload, ctx.model.api, replacement);
+    return rewritePresetPayload(payload, ctx.model.api, replacement);
   });
 }

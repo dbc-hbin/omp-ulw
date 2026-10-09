@@ -51,4 +51,12 @@ describe("faithful omo presets", () => {
       expect(rendered?.prompt).not.toMatch(/Specialized search available|request_user_input|ask_user_question|wait_for_answer|tool\.monitor|--print/);
     }
   });
+
+  test("official and third-party DeepSeek aliases retain provider-sensitive routing", () => {
+    const options = { surface: "terminal" as const, toolNames };
+    const model = { id: "deepseek-v4-flash", name: "DeepSeek V4 Flash" };
+    expect(renderPreset({ ...model, provider: "deepseek" }, options)?.name).toBe("deepseek-v4-1-flash");
+    expect(renderPreset({ ...model, provider: "openrouter" }, options)?.name).toBe("deepseek-v4-flash");
+    expect(renderPreset(model, options)?.name).toBe("deepseek-v4-flash");
+  });
 });

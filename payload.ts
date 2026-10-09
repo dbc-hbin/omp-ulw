@@ -7,10 +7,10 @@ function payloadObject(value: unknown): PayloadObject | undefined {
 	return value as PayloadObject;
 }
 
-function rewriteText(value: unknown, replacement: string): unknown {
+function rewriteText(value: unknown, replacement: string, region: RegExp): unknown {
 	if (typeof value !== "string") return value;
 	// Callback replacement keeps literal dollar sequences in preset text intact.
-	return value.replace(PRESET_REGION, () => replacement);
+	return value.replace(region, () => replacement);
 }
 
 function rewriteField(object: PayloadObject, key: string, rewrite: (value: unknown) => unknown): PayloadObject {
@@ -33,35 +33,35 @@ function rewriteArray(value: unknown, rewrite: (item: unknown) => unknown): unkn
 	return result ?? value;
 }
 
-function rewriteBlocks(value: unknown, replacement: string, typed: boolean): unknown {
-	if (typeof value === "string") return rewriteText(value, replacement);
+function rewriteBlocks(value: unknown, replacement: string, typed: boolean, region: RegExp): unknown {
+	if (typeof value === "string") return rewriteText(value, replacement, region);
 	return rewriteArray(value, block => {
 		const object = payloadObject(block);
 		if (!object || (typed && object.type !== "text" && object.type !== "input_text")) return block;
-		return rewriteField(object, "text", text => rewriteText(text, replacement));
+		return rewriteField(object, "text", text => rewriteText(text, replacement, region));
 	});
 }
 
-function rewriteMessages(value: unknown, replacement: string): unknown {
+function rewriteMessages(value: unknown, replacement: string, region: RegExp): unknown {
 	return rewriteArray(value, message => {
 		const object = payloadObject(message);
 		if (!object || (object.role !== "system" && object.role !== "developer")) return message;
 		// Responses tool items may have unrelated fields; only message content is eligible.
 		if (object.type !== undefined && object.type !== "message") return message;
-		return rewriteField(object, "content", content => rewriteBlocks(content, replacement, true));
+		return rewriteField(object, "content", content => rewriteBlocks(content, replacement, true, region));
 	});
 }
 
-function rewriteGoogle(object: PayloadObject, replacement: string): PayloadObject {
+function rewriteGoogle(object: PayloadObject, replacement: string, region: RegExp): PayloadObject {
 	return rewriteField(object, "systemInstruction", instruction => {
-		if (typeof instruction === "string") return rewriteText(instruction, replacement);
+		if (typeof instruction === "string") return rewriteText(instruction, replacement, region);
 		const content = payloadObject(instruction);
 		if (!content) return instruction;
-		return rewriteField(content, "parts", parts => rewriteBlocks(parts, replacement, false));
+		return rewriteField(content, "parts", parts => rewriteBlocks(parts, replacement, false, region));
 	});
 }
 
-function rewriteGitLabFlow(object: PayloadObject, replacement: string): PayloadObject {
+function rewriteGitLabFlow(object: PayloadObject, replacement: string, region: RegExp): PayloadObject {
 	return rewriteField(object, "flowConfig", config => {
 		const flow = payloadObject(config);
 		if (!flow) return config;
@@ -70,7 +70,7 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: string): PayloadO
 			if (!entry) return prompt;
 			return rewriteField(entry, "prompt_template", template => {
 				const fields = payloadObject(template);
-				return fields ? rewriteField(fields, "system", text => rewriteText(text, replacement)) : template;
+				return fields ? rewriteField(fields, "system", text => rewriteText(text, replacement, region)) : template;
 			});
 		}));
 	});
@@ -80,55 +80,55 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: string): PayloadO
  * Unknown APIs/shapes, missing markers, and already-current presets retain identity.
  * Regions must be wholly contained in a single text field; blocks are never merged.
  */
-export function rewritePresetPayload(payload: unknown, api: string, replacement: string): unknown {
+export function rewritePresetPayload(payload: unknown, api: string, replacement: string, region = PRESET_REGION): unknown {
 	const object = payloadObject(payload);
 	if (!object) return payload;
 	switch (api) {
 		case "openai-responses":
 		case "openai-codex-responses":
 		case "azure-openai-responses": {
-			const rewritten = rewriteField(object, "instructions", text => rewriteText(text, replacement));
-			return rewriteField(rewritten, "input", input => rewriteMessages(input, replacement));
+			const rewritten = rewriteField(object, "instructions", text => rewriteText(text, replacement, region));
+			return rewriteField(rewritten, "input", input => rewriteMessages(input, replacement, region));
 		}
 		case "openai-completions":
 		case "openrouter":
 		case "ollama":
 		case "ollama-chat":
-			return rewriteField(object, "messages", messages => rewriteMessages(messages, replacement));
+			return rewriteField(object, "messages", messages => rewriteMessages(messages, replacement, region));
 		case "cursor-agent":
 			// Root prompt blob IDs and request-context rules are outside this hook.
-			return rewriteField(object, "customSystemPrompt", text => rewriteText(text, replacement));
+			return rewriteField(object, "customSystemPrompt", text => rewriteText(text, replacement, region));
 		case "gitlab-duo-workflow":
 		case "gitlab-duo-agent": {
-			const rewritten = rewriteGitLabFlow(object, replacement);
+			const rewritten = rewriteGitLabFlow(object, replacement, region);
 			return rewriteField(rewritten, "startRequest", request => {
 				const nested = payloadObject(request);
-				return nested ? rewriteGitLabFlow(nested, replacement) : request;
+				return nested ? rewriteGitLabFlow(nested, replacement, region) : request;
 			});
 		}
 		case "anthropic-messages":
-			return rewriteField(object, "system", system => rewriteBlocks(system, replacement, true));
+			return rewriteField(object, "system", system => rewriteBlocks(system, replacement, true, region));
 		case "google-generative-ai":
 		case "google-vertex": {
 			// omp's hook receives SDK params with config; wire bodies use the root field.
-			const rewritten = rewriteGoogle(object, replacement);
+			const rewritten = rewriteGoogle(object, replacement, region);
 			return rewriteField(rewritten, "config", config => {
 				const nested = payloadObject(config);
-				return nested ? rewriteGoogle(nested, replacement) : config;
+				return nested ? rewriteGoogle(nested, replacement, region) : config;
 			});
 		}
 		case "google-gemini-cli":
 			return rewriteField(object, "request", request => {
 				const nested = payloadObject(request);
-				return nested ? rewriteGoogle(nested, replacement) : request;
+				return nested ? rewriteGoogle(nested, replacement, region) : request;
 			});
 		case "bedrock-converse-stream": {
 			// Current omp passes commandInput directly; also support an explicit wrapper.
-			const rewritten = rewriteField(object, "system", system => rewriteBlocks(system, replacement, false));
+			const rewritten = rewriteField(object, "system", system => rewriteBlocks(system, replacement, false, region));
 			return rewriteField(rewritten, "commandInput", commandInput => {
 				const nested = payloadObject(commandInput);
 				return nested
-					? rewriteField(nested, "system", system => rewriteBlocks(system, replacement, false))
+					? rewriteField(nested, "system", system => rewriteBlocks(system, replacement, false, region))
 					: commandInput;
 			});
 		}

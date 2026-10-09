@@ -1,10 +1,10 @@
 import { ASYNC_DEFAULT, MONITOR_CONDITIONS, TURN_END_IS_WAIT, buildPreset, resolvePresetName } from "./upstream/presets.js";
 
-export interface PresetModel { id: string; name?: string }
+export interface PresetModel { id: string; name?: string; provider?: string }
 export interface PresetOptions { surface: "terminal" | "app"; toolNames: string[] }
 
 export function renderPreset(model: PresetModel, options: PresetOptions): { name: string; prompt: string } | undefined {
-  const name = resolvePresetName({ id: model.id, name: model.name }, { promptPreset: "auto" });
+  const name = resolvePresetName({ id: model.id, name: model.name, provider: model.provider }, { promptPreset: "auto" });
   if (!name) return undefined;
   const preset = buildPreset(name, { surface: options.surface, selectedTools: options.toolNames });
   if (!preset) return undefined;

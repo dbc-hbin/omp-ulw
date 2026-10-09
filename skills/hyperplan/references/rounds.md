@@ -1,0 +1,127 @@
+# Strict round contracts and native dispatch
+
+Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). Pass the appropriate schema below as `outputSchema` with `schemaMode: "strict"`; do not rely on role defaults. Consume the validated structured payload, not a text preview. Every nested object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
+
+The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`, `creative`. Stable finding ids are lead-validated, globally unique, and never renumbered between rounds. Evidence strings contain an actual file:line, official URL, user statement provenance, or explicit `no evidence found`; never fabricated citations.
+
+## Round 1 outputSchema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "perspective": {"type": "string", "enum": ["skeptic", "validator", "researcher", "architect", "creative"]},
+    "round": {"type": "integer", "enum": [1]},
+    "findings": {
+      "type": "array", "minItems": 3, "maxItems": 7,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "claim": {"type": "string"},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        },
+        "required": ["id", "claim", "evidence"], "additionalProperties": false
+      }
+    }
+  },
+  "required": ["perspective", "round", "findings"], "additionalProperties": false
+}
+```
+
+## Round 2 outputSchema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "perspective": {"type": "string", "enum": ["skeptic", "validator", "researcher", "architect", "creative"]},
+    "round": {"type": "integer", "enum": [2]},
+    "critiques": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "targetFindingId": {"type": "string"},
+          "verdict": {"type": "string", "enum": ["ATTACK", "STANDS"]},
+          "reason": {"type": "string"},
+          "evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        },
+        "required": ["targetFindingId", "verdict", "reason", "evidence"], "additionalProperties": false
+      }
+    }
+  },
+  "required": ["perspective", "round", "critiques"], "additionalProperties": false
+}
+```
+
+The lead verifies exactly one judgment for every finding belonging to the other four perspectives, no unknown target ids and no self-judgments. This is a coverage check, not something JSON Schema alone proves.
+
+## Round 3 outputSchema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "perspective": {"type": "string", "enum": ["skeptic", "validator", "researcher", "architect", "creative"]},
+    "round": {"type": "integer", "enum": [3]},
+    "responses": {
+      "type": "array", "minItems": 3, "maxItems": 7,
+      "items": {
+        "type": "object",
+        "properties": {
+          "findingId": {"type": "string"},
+          "verdict": {"type": "string", "enum": ["DEFEND", "REFINE", "CONCEDE"]},
+          "survivingClaim": {"type": ["string", "null"]},
+          "reason": {"type": "string"},
+          "evidence": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["findingId", "verdict", "survivingClaim", "reason", "evidence"], "additionalProperties": false
+      }
+    }
+  },
+  "required": ["perspective", "round", "responses"], "additionalProperties": false
+}
+```
+
+The lead checks one response per own finding. DEFEND and REFINE require nonempty evidence and a surviving claim. CONCEDE has a null surviving claim; no conceded claim enters distillation. A supported fragment requires a separately reviewed refinement. Each explanation addresses every targeted attack, with attacker provenance retained in the ledger.
+
+## Planner outputSchema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": {"type": "string", "enum": ["completed", "questions"]},
+    "planPath": {"type": ["string", "null"]},
+    "report": {"type": "string"},
+    "questions": {"type": "array", "items": {"type": "string"}}
+  },
+  "required": ["status", "planPath", "report", "questions"], "additionalProperties": false
+}
+```
+
+`completed` requires the approved artifact to exist, a complete readable plan in `report`, and no blocking questions. `questions` requires nonempty questions and no claim of completion. The lead reads the artifact and checks all constraints/mitigations/gates independently. Ask is main-session-only and blocking; no answer never grants approval.
+
+## Dispatch construction
+
+Construct each actual call from the current native task schema, not a copied upstream team snippet. For example, after the lead has resolved the scope and schema objects, a Round 1 wave uses this shape:
+
+```js
+// context, assignments and round1Schema are lead-owned values assembled
+// from the actual request, discovered scope and the schema above.
+task({
+  context: sharedRequestAndReadOnlyConstraints,
+  tasks: assignments.map(assignment => ({
+    name: assignment.uniqueCamelCaseName,
+    task: assignment.selfContainedRoundInstructions,
+    solutionSpace: "Open evidence-based investigation; independently challenge assumptions from the assigned perspective.",
+    outputSchema: round1Schema,
+    schemaMode: "strict"
+  }))
+});
+```
+
+Omitted `agent` selects the native default. Select a specialist only if that role is listed. The task text supplies exact allowed read paths, no-write scope, perspective instructions, finding id prefix, actual lead id if messaging is needed, and observable completion. Shared material belongs in top-level context, not solutionSpace. Later rounds replace the task instructions and schema with the relevant round contract and evidence bundle.
+
+Record actual returned child ids before any further action. Native `wait({})` is first-wake: reconcile terminal payloads/messages, keep unfinished ids pending, and repeat only while the next step is blocked. Never advance on the first reply alone. Clarifications use `write` to `agent://<actual-id>` only after that id is returned; logical perspective names are never transport recipients. There is no team SDK or invented category/model field.
