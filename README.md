@@ -17,6 +17,15 @@ omp -e ./omp-ulw/index.ts
 
 일반 `/ulw`는 전문 워크플로를 자동으로 켜지 않습니다. 참조 문서는 필요한 시점에만 읽으며, 기존 프로젝트 지침과 권한 규칙을 보존합니다.
 
+## 모델별 프롬프트 위치
+
+- [`upstream/presets.js`](upstream/presets.js): 모델별 프롬프트 본문·공통 빌더와 모델 ID/별칭 선택 규칙입니다. 29개 프리셋을 포함합니다.
+- [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
+- [`index.ts`](index.ts): 세션 시작과 모델 변경 시 해당 프롬프트를 적용합니다.
+- [`upstream/source.js`](upstream/source.js): 추출한 원본 빌더 소스입니다. 런타임은 `upstream/presets.js`를 사용합니다.
+
+`prompts/`의 Markdown 파일은 모델별 프롬프트가 아니라 ULW 워크플로 호출 템플릿입니다. 템플릿의 스킬 경로는 템플릿 파일 기준 상대경로이며, 확장은 실제 설치 위치에서 스킬 경로를 계산하므로 저장소를 다른 위치에 두어도 동작합니다.
+
 ## 테스트
 
 ```bash

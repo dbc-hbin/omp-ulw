@@ -55,6 +55,16 @@ test("registered skill metadata and relative resource links resolve inside the s
   }
 });
 
+test("workflow templates resolve their skill resources relative to the template", () => {
+  for (const name of ["ulw-plan", "ulw-execute", "ulw-loop", "ulw-research", "mass-ulw"]) {
+    const template = new URL(`./prompts/${name}.md`, import.meta.url);
+    const source = readFileSync(template, "utf8");
+    const target = source.split("`")[1];
+    expect(target).toBe(`../skills/${name}/SKILL.md`);
+    expect(existsSync(new URL(target!, template))).toBe(true);
+  }
+});
+
 test("shipped TUI evidence CLI measures ANSI CJK widths and rejects invalid dimensions", () => {
   const directory = mkdtempSync(join(tmpdir(), "omo-skill-cli-"));
   try {
