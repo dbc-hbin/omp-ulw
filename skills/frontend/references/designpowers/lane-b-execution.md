@@ -15,7 +15,7 @@ Lane B feeds `ulw-execute` workers and always loads `frontend` for UI implementa
 | Plain-language labels, headings, alt text, link text, errors, and instructions | `accessible-content` and `voice-and-tone` | `ulw-execute` worker plus `frontend` | Require final copy, no placeholders, useful errors, readable labels, and consistent tone. |
 | Tokens and design-system consistency | `token-architecture` and `design-system-alignment` | `frontend` | Require real design tokens and existing component patterns before new one-off styling. |
 
-Materialized agent references for this lane: `design-lead`, `motion-designer`, and `content-writer`. They are prompt-role references for spawned OpenAgent work, not alternate executors.
+Materialized agent references for this lane: `design-lead`, `motion-designer`, and `content-writer`. They are prompt-role references for spawned OMP work, not alternate executors.
 
 ## Prompt Injection
 
@@ -24,7 +24,7 @@ Add this block to each `ulw-execute` implementation worker that touches UI:
 ```text
 Load `frontend` for UI implementation. Also apply Lane B Design Execution Guidance.
 
-Use the OpenAgent plan and `doc/frontend-design/state.md` as source of truth. Carry forward:
+Use the OMP plan and `doc/frontend-design/state.md` as source of truth. Carry forward:
 - design principles, personas, taste direction, and accepted trade-offs
 - ui-composition requirements for hierarchy, spacing, type, color, contrast, and touch targets
 - interaction-design requirements for all states, feedback, keyboard, touch, loading, empty, and error paths
@@ -45,7 +45,7 @@ Lane B worker DoneClaims must include:
 - Exact changed files and the `frontend` references loaded.
 - The real-surface QA invocation required by `ulw-execute` for the UI surface, with captured artifact path.
 - Screenshot, browser, HTTP, or xterm.js web-terminal artifacts appropriate to the visible surface.
-- Accessibility evidence from the existing OpenAgent frontend path, such as Lighthouse, react-doctor, keyboard checks, or other plan-required checks.
+- Accessibility evidence from the existing OMP frontend path, such as Lighthouse, react-doctor, keyboard checks, or other plan-required checks.
 - A short design trace: which persona, design principle, token, or state requirement each major UI decision satisfies.
 - Cleanup receipts for any browser session, server, tmux session, temporary artifact, or process used during QA.
 
@@ -53,13 +53,13 @@ Lane B worker DoneClaims must include:
 
 - UI implementation always goes through `frontend`; Lane B only enriches the worker prompt.
 - `ulw-execute` owns decomposition, worker dispatch, evidence ledger entries, adversarial checks, and completion state.
-- The materialized `design-builder` concept is not used as an available executor. OpenAgent workers build.
+- The materialized `design-builder` concept is not used as an available executor. OMP workers build.
 - No placeholders, generic copy, unverified contrast claims, decorative-only motion, or one-off hardcoded design systems pass this lane.
 - Accessibility and cognitive-accessibility are implementation constraints, not review-only cleanup.
 - Direct or auto mode language is prompt-only and cannot create new automation.
 
 ## Pass / Fail Behavior
 
-PASS when every UI worker loads `frontend`, implements against the OpenAgent plan plus Lane B constraints, and returns evidence showing the design works through the actual surface.
+PASS when every UI worker loads `frontend`, implements against the OMP plan plus Lane B constraints, and returns evidence showing the design works through the actual surface.
 
 FAIL when a worker skips `frontend`, invents unplanned design direction, omits cognitive-accessibility checks for complex flows, ships placeholder content, leaves required states undesigned, or claims success without captured real-surface evidence.

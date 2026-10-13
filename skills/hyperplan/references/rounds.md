@@ -1,10 +1,10 @@
 # Strict round contracts and native dispatch
 
-Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). Pass the appropriate schema below as `outputSchema` with `schemaMode: "strict"`; do not rely on role defaults. Consume the validated structured payload, not a text preview. Every nested object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
+Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). Include the appropriate JSON schema below in the task assignment as the required receipt shape; validate the actual terminal response yourself. Do not send outputSchema/schemaMode unless exposed by the current task schema. Every nested object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
 
 The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`, `creative`. Stable finding ids are lead-validated, globally unique, and never renumbered between rounds. Evidence strings contain an actual file:line, official URL, user statement provenance, or explicit `no evidence found`; never fabricated citations.
 
-## Round 1 outputSchema
+## Round 1 receipt schema
 
 ```json
 {
@@ -29,7 +29,7 @@ The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`
 }
 ```
 
-## Round 2 outputSchema
+## Round 2 receipt schema
 
 ```json
 {
@@ -57,7 +57,7 @@ The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`
 
 The lead verifies exactly one judgment for every finding belonging to the other four perspectives, no unknown target ids and no self-judgments. This is a coverage check, not something JSON Schema alone proves.
 
-## Round 3 outputSchema
+## Round 3 receipt schema
 
 ```json
 {
@@ -86,7 +86,7 @@ The lead verifies exactly one judgment for every finding belonging to the other 
 
 The lead checks one response per own finding. DEFEND and REFINE require nonempty evidence and a surviving claim. CONCEDE has a null surviving claim; no conceded claim enters distillation. A supported fragment requires a separately reviewed refinement. Each explanation addresses every targeted attack, with attacker provenance retained in the ledger.
 
-## Planner outputSchema
+## Planner receipt schema
 
 ```json
 {
@@ -114,10 +114,8 @@ task({
   context: sharedRequestAndReadOnlyConstraints,
   tasks: assignments.map(assignment => ({
     name: assignment.uniqueCamelCaseName,
-    task: assignment.selfContainedRoundInstructions,
-    solutionSpace: "Open evidence-based investigation; independently challenge assumptions from the assigned perspective.",
-    outputSchema: round1Schema,
-    schemaMode: "strict"
+    task: assignment.selfContainedRoundInstructions + "\nReturn JSON matching this receipt schema: " + JSON.stringify(round1Schema),
+    solutionSpace: "Open evidence-based investigation; independently challenge assumptions from the assigned perspective."
   }))
 });
 ```

@@ -131,7 +131,7 @@ And inspect each site for whether the panic is actually surfaced.
 
 ---
 
-## Race detector — ALWAYS run when the bug is intermittent
+## Race detector — when a data race is suspected
 
 ```bash
 go test -race ./...
@@ -139,7 +139,7 @@ go run -race ./cmd/server
 go build -race ./cmd/server
 ```
 
-The race detector wraps memory accesses and catches concurrent read/write without synchronization. **Run this before attaching dlv** if intermittency is involved — it often finds the bug directly.
+The race detector wraps memory accesses and catches concurrent read/write without synchronization. Use the relevant package or reproduction when unsynchronized memory access is a plausible cause; intermittency alone does not require every command above or a full-suite rerun.
 
 Output shape:
 ```

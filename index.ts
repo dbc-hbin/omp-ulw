@@ -1,5 +1,5 @@
 /**
- * OMO 5.1.18 model-prompt port. Installed in the global extensions directory;
+ * OMP model-prompt port, generated from pinned upstream GitHub sources. Installed in the global extensions directory;
  * new omp sessions discover index.ts automatically. Restart omp to load it.
  * Changelog: initial faithful core/shared-builder/tuning port, with omp tool
  * transport adaptation and request-model refresh for supported provider hooks.
@@ -16,11 +16,11 @@
  * Native omp transports and approval rules replace Senpi-only APIs.
  * User/custom prompts, project rules, skills and worker assignments are preserved.
  * Unrecognized templates are left unchanged with a warning. Unsupported models
- * retain omp behavior; runtime does not read the omo binary or require a parser.
+ * retain omp behavior; runtime requires neither upstream packages nor network access.
  * Cursor blob prompts and providers bypassing onPayload (including command-code-go
  * and GitLab workflow) receive turn-start profiles but cannot refresh them mid-turn.
  * Regression checks: bun test in this directory. Upstream provenance and the
- * reproducible extractor live in upstream/; presets.ts contains transport adaptations.
+ * reproducible updater live in upstream/; presets.ts contains transport adaptations.
  */
 import { replaceHostBehavior } from "./host";
 import { rewritePresetPayload } from "./payload";
@@ -45,7 +45,7 @@ interface ModelPromptApi {
 type ExtensionApi = ModelPromptApi & UlwApi;
 
 export default function omoPrompts(pi: ExtensionApi): void {
-  pi.setLabel("OMO model prompts");
+  pi.setLabel("OMP model prompts");
   registerUlw(pi);
   let originalBehavior: string | undefined;
   let options: PresetOptions = { surface: "terminal", toolNames: [] };
@@ -62,32 +62,32 @@ export default function omoPrompts(pi: ExtensionApi): void {
       toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name) || host.includes("`" + name + "`") || host.includes("tool." + name)),
     };
     const preset = ctx.model ? renderPreset(ctx.model, options) : undefined;
-    const marked = "<omo-model-preset>\n" + (preset?.prompt ?? "") + "\n</omo-model-preset>";
+    const marked = "<omp-model-preset>\n" + (preset?.prompt ?? "") + "\n</omp-model-preset>";
     const result = replaceHostBehavior(event.systemPrompt, marked);
     if (!result) {
       if (!warned) {
-        ctx.ui.notify("OMO prompts: custom or unfamiliar system template preserved; model preset replacement not applied.", "warning");
+        ctx.ui.notify("OMP prompts: custom or unfamiliar system template preserved; model preset replacement not applied.", "warning");
         warned = true;
       }
       return;
     }
     originalBehavior = result.originalBehavior;
     if (preset && ctx.model) profiles.set(JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]), marked);
-    if (!preset) result.blocks[0] = result.blocks[0].replace(marked, "<omo-model-preset>\n" + originalBehavior + "\n</omo-model-preset>");
+    if (!preset) result.blocks[0] = result.blocks[0].replace(marked, "<omp-model-preset>\n" + originalBehavior + "\n</omp-model-preset>");
     return { systemPrompt: result.blocks };
   });
 
   pi.on("before_provider_request", (event, ctx) => {
     if (!ctx.model) return;
     const payload = rewritePresetPayload(event.payload, ctx.model.api,
-      `<omo-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omo-ulw-policy>`,
-      /<omo-ulw-policy>[\s\S]*?<\/omo-ulw-policy>/g);
+      `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omp-ulw-policy>`,
+      /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g);
     if (originalBehavior === undefined) return payload;
     const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]);
     let replacement = profiles.get(key);
     if (replacement === undefined) {
       const preset = renderPreset(ctx.model, options);
-      replacement = "<omo-model-preset>\n" + (preset?.prompt ?? originalBehavior) + "\n</omo-model-preset>";
+      replacement = "<omp-model-preset>\n" + (preset?.prompt ?? originalBehavior) + "\n</omp-model-preset>";
       profiles.set(key, replacement);
     }
     // The adapter touches only our system-prompt marker, never advisor/custom/user messages.

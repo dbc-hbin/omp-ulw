@@ -19,25 +19,7 @@ Recall before retaining or editing. Qualify queries by project/user/topic so ano
 
 ## Capability-gated learning and managed skills
 
-The main OMP host exposes `learn` and `manage_skill`; delegated roles may
-have a smaller tool set. Read the live schema and establish ownership
-before using either. Current main-host forms are:
-
-```js
-learn({ memory: durableEvidence, context: provenance, scope: "project" });
-learn({ memory: workflowEvidence, skill: {
-  action: "create", name: workflowName, description: trigger, body: procedure
-} });
-manage_skill({ action: "update", name: existingManagedName,
-  description: trigger, body: correctedProcedure });
-```
-
-`learn.skill.action` supports create/update. `manage_skill.action` supports
-create/update/delete. Extension means update; deprecation and split are
-not separate API actions. Do not invent them. Managed skills belong only
-in the host-owned managed store; read their actual definitions first and
-never edit user-authored/project/installed skills. Check the receipt and
-discovery result rather than assuming a write succeeded.
+`learn` and `manage_skill` are optional host capabilities, not guaranteed OMP tools. Check the live tool inventory and schema before constructing a call; do not infer availability or arguments from another host or role. Extension, deprecation and split describe workflow decisions, not API actions. Managed skills belong only in the host-owned managed store; read their actual definitions and establish ownership first. Never edit user-authored/project/installed skills as a substitute. Check the receipt and discovery result rather than assuming a write succeeded.
 
 - If learn is exposed, provide the supported evidence/workflow fields required by that live schema and check whether it persists or only proposes a learning. A proposal is not a write receipt.
 - If manage_skill is exposed, inspect the existing skill and establish it is agent-owned learned memory before modification. Use only supported operations/fields. The labels update/extend/deprecate/split/create are workflow decisions, not guaranteed method or argument names.
@@ -46,7 +28,7 @@ discovery result rather than assuming a write succeeded.
 
 Prefer one surgical update/extension over a new near duplicate. Deprecation/splitting must preserve actual supported crosslinks and cannot remove a user-authored skill. A new learned procedure needs trigger, repeatable steps, real command/tool contracts, verification and pitfalls. Only promise reusable assets when the native managed store actually created and exposes them.
 
-## Strict reflection outputSchema
+## Reflection JSON receipt schema
 
 ```json
 {
@@ -104,10 +86,9 @@ task({
   context: boundedEvidenceAndPersistenceScope,
   tasks: [{
     name: "DurableReflection",
-    task: selfContainedReflectionAssignment,
+    task: selfContainedReflectionAssignment + "\nReturn JSON matching: " + JSON.stringify(reflectionReportSchema),
     solutionSpace: "Assess which corrections, facts and procedures generalize; no persistence is valid when evidence is ephemeral or already captured.",
-    outputSchema: reflectionReportSchema,
-    schemaMode: "strict"
+
   }]
 });
 ```

@@ -1,6 +1,6 @@
-# Browser QA - ego-browser and cua-driver
+# Browser QA - native browser tools
 
-Read skill://ego-browser and skill://cua-driver before driving browser/desktop tools. A UI bug requires a rendered browser; curl cannot prove cookies, service workers, client-side JS or responsive layout. Use actual tools and fresh refs, not upstream omowright engines.
+Use the exposed browser tools; read skill://cua-driver before using its browser or desktop route. A UI bug requires a rendered browser; curl cannot prove cookies, service workers, client-side JS or responsive layout. Use only documented browser tools and fresh refs.
 
 ## Concrete scenario: signed-in submit fails silently
 

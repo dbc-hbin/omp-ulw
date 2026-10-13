@@ -2,7 +2,7 @@
 
 Read this when **runtime truth beats code reading** is in conflict with **you cannot run the actual operation**.
 
-The skill's first invariant is "runtime state is the only source of truth." But sometimes the only state you can produce is a *partial* observation — the real call requires paid credits, a hardware device you don't have, network access through a corporate proxy, a production secret, or a customer dataset.
+Runtime behavior needs runtime evidence. Sometimes the only state you can produce is a *partial* observation — the real call requires paid credits, a hardware device you don't have, network access through a corporate proxy, a production secret, or a customer dataset. Static evidence can support static claims, but cannot prove an unobserved runtime outcome.
 
 **Partial runtime evidence is still runtime evidence.** This reference tells you which partial signals to harvest and how to combine them so the conclusion is defensible.
 
@@ -12,7 +12,7 @@ The skill's first invariant is "runtime state is the only source of truth." But 
 
 Use this reference when ALL are true:
 
-1. The bug or extraction question requires runtime confirmation (per skill invariant #1).
+1. The bug or extraction question requires runtime confirmation.
 2. You attempted the obvious "just run it" path and it failed for reasons unrelated to the bug:
    - 401/402/403 from a paid API
    - "device not found" / "permission denied" / SIP block
@@ -51,10 +51,10 @@ Use an installed proxy only in a task-owned configuration directory, with a loop
 ```bash
 # DYLD_INSERT_LIBRARIES / LD_PRELOAD shim approach
 # Wrap the network call to log payload, return a fake 200
-# See pwntools.md for shim examples
+# See ../runtimes/native-binary.md for loader and shim constraints
 ```
 
-**Strength**: Wire-level ground truth, but requires the target to honor your proxy / preload.
+**Strength**: A proxy captures traffic received at that proxy; a preload shim captures the arguments at its hook. Neither proves what an external service received or how it behaved when the response is canned. The target must honor the proxy / preload.
 
 ### Tier 3 — Static extraction × runtime fingerprint cross-check
 
@@ -95,7 +95,7 @@ If literally none of the above is available, read the code carefully and submit 
 
 ## How to combine partial signals
 
-A defensible conclusion **prefers two independent signals from different tiers**, with one exception: a complete Tier 2 wire-level capture is wire-level ground truth and can stand alone for request-shape claims (because the wire bytes are exactly what the remote received). For *behavioral* claims (what the system does next, what state it stores, what side effects it produces), still combine with another signal.
+A defensible conclusion **prefers two independent signals from different tiers**. A complete Tier 2 proxy capture can stand alone for the request shape received by that proxy, not for bytes received by an external service or fields beyond a shim's hook. For *behavioral* claims (what the system does next, what state it stores, what side effects it produces), still combine with another signal.
 
 | Available evidence | Defensibility |
 |---|---|
@@ -145,11 +145,11 @@ For tasks where the deliverable is an **artifact, not a bug fix** (reverse engin
 
 - Right before declaring an extraction/audit task "done"
 - After every significant revision of the deliverable (not after every small edit)
-- Maximum 3-4 iterations before escalating to user
+- Reassess after repeated inconclusive revisions; ask the user only for a missing material decision or access, not because an iteration quota elapsed
 
 ### OMP Verification Oracle pattern
 
-Dispatch ONE fresh background reviewer using context + tasks (see [02-investigate.md](02-investigate.md)), agent:reviewer when listed, no edits and no child delegation. Context contains original request, deliverables, concrete claims, evidence/source paths and unavailable capabilities. TASK: skeptically verify each claim against its cited source, identify unsubstantiated claims/missing pieces/factual errors; STOP WHEN a verdict and exact gaps are recorded. solutionSpace: conclusions are open to falsification, not an implementation assignment. Use strict outputSchema: object requiring verdict enum PASS/FAIL/PARTIAL, claims array of objects requiring claim/status/evidence strings, and gaps array of strings; additionalProperties:false throughout. Maintain actual pending ids under native first-wake wait semantics; consume only the validated terminal payload. A missing receipt is PARTIAL, never approval. After a significant revision, collect the previous terminal result and launch a fresh reviewer with delta/current evidence; after 3-4 inconclusive revisions, present the evidence gap to the user.
+Dispatch ONE fresh background reviewer using context + tasks (see [02-investigate.md](02-investigate.md)), omit agent for this custom JSON receipt, with no edits and no child delegation. Context contains original request, deliverables, concrete claims, evidence/source paths and unavailable capabilities. TASK: skeptically verify each claim against its cited source, identify unsubstantiated claims/missing pieces/factual errors; STOP WHEN a verdict and exact gaps are recorded. solutionSpace: conclusions are open to falsification, not an implementation assignment. Include a JSON receipt schema in the assignment: object requiring verdict enum PASS/FAIL/PARTIAL, claims array of objects requiring claim/status/evidence strings, and gaps array of strings; additionalProperties:false throughout. Maintain actual pending ids under native first-wake wait semantics; consume only the validated terminal payload. A missing receipt is PARTIAL, never approval. After a significant revision, collect the previous terminal result and launch a fresh reviewer with delta/current evidence; reassess repeated inconclusive revisions and ask only for a material decision or access the session cannot supply.
 
 ### Why this differs from the Oracle Triple
 

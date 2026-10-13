@@ -5,7 +5,7 @@ Use this specialist only when its capability exists and answers the current hypo
 
 **https://github.com/NationalSecurityAgency/ghidra**
 
-Ghidra is the NSA's open-source reverse-engineering suite. Its defining feature is a **decompiler** that turns machine code back into readable C. For any binary you don't have source for, this is the correct starting point — not `strings`, not hex-staring, not `objdump -d`.
+Ghidra is the NSA's open-source reverse-engineering suite. Its defining feature is a **decompiler** that turns machine code back into readable C. Use it for narrowed native-code logic after binary triage and bundled-runtime detection in [native-binary.md](../runtimes/native-binary.md); a bundled application may need source extraction instead.
 
 **Use Ghidra when**: third-party closed-source libs, malware analysis, vendored binaries whose behavior contradicts docs, CTF challenges, firmware, any time you need to read compiled code.
 

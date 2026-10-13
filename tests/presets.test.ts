@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { renderPreset } from "../presets";
 import { buildPreset, presetNames } from "../upstream/presets.js";
 
-const toolNames = ["eval", "ask", "task", "bash", "wait", "read", "grep", "glob", "write", "edit", "todo"];
+const toolNames = ["eval", "ask", "task", "bash", "wait", "read", "grep", "glob", "write", "edit", "todo", "web_search"];
 const models: Record<string, string> = {
   "kimi-k2-6": "kimi-k2.6", "kimi-k2-7": "kimi-for-coding-highspeed", "kimi-k2-8": "kimi-for-coding",
 };
 
 describe("faithful omo presets", () => {
   test("all original builders resolve their interpolations on both surfaces", () => {
-    expect(presetNames.length).toBe(29);
+    expect(presetNames.length).toBe(30);
     for (const name of presetNames) {
       for (const surface of ["terminal", "app"] as const) {
         const original = buildPreset(name, { surface, selectedTools: toolNames });
@@ -35,6 +35,8 @@ describe("faithful omo presets", () => {
       ["swe-2-max", "kimi-k3"], ["swe-2-maximum", undefined], ["k3", "kimi-k3"],
       ["kimi-k2p8", "kimi-k2-8"], ["kimi-k2.80", undefined],
       ["claude-mythos-5.1", "claude-fable-5-1"], ["claude-opus-5.5", "claude-opus-5-5"],
+      ["claude-haiku-5.5", "claude-haiku-5-5"], ["anthropic/claude-haiku-5-5", "claude-haiku-5-5"],
+      ["claude-haiku-4-5", undefined],
       ["deepseek-v4-flash-0731", "deepseek-v4-flash-0731"], ["deepseek-flash", "deepseek-v4-1-flash"],
       ["grok-4.70", undefined], ["glm-5.30", undefined], ["llama-4", undefined],
     ];

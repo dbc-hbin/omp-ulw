@@ -1,4 +1,4 @@
-const PRESET_REGION = /<omo-model-preset>[\s\S]*?<\/omo-model-preset>/g;
+const PRESET_REGION = /<(om[op]-model-preset)>[\s\S]*?<\/\1>/g;
 
 type PayloadObject = Record<string, unknown>;
 

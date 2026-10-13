@@ -2,7 +2,7 @@
 
 Source: omo 5.1.19 `plugin/extensions/kibitzer-persona.md`, translated to finite native tasks and Mnemopi. Read [the entry](../SKILL.md).
 
-## Strict outputSchema
+## JSON receipt schema
 
 ```json
 {
@@ -44,10 +44,9 @@ task({
   context: leadGoalKnownFactsAndNextAction,
   tasks: [{
     name: "MemoryRelevance",
-    task: readOnlyRelevanceAssignmentWithActualLeadId,
+    task: readOnlyRelevanceAssignmentWithActualLeadId + "\nReturn JSON matching: " + JSON.stringify(relevanceSchema),
     solutionSpace: "Determine whether existing recalled evidence changes the concrete next action; no relevant note is a valid result.",
-    outputSchema: relevanceSchema,
-    schemaMode: "strict"
+
   }]
 });
 ```

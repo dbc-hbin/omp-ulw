@@ -31,7 +31,7 @@ test("provider fallback refreshes the profile even with identical model id and n
   for (const provider of ["deepseek", "openrouter", "deepseek", "openrouter"]) {
     ctx.model.provider = provider;
     const prompt = renderPreset(ctx.model, { surface: "app", toolNames: [] })!.prompt;
-    const content = payload.messages[0].content.replace(/<omo-model-preset>[\s\S]*?<\/omo-model-preset>/g, () => `<omo-model-preset>\n${prompt}\n</omo-model-preset>`);
+    const content = payload.messages[0].content.replace(/<omp-model-preset>[\s\S]*?<\/omp-model-preset>/g, () => `<omp-model-preset>\n${prompt}\n</omp-model-preset>`);
     expect(hook({ payload } as never, ctx as never)).toEqual({ messages: [{ role: "system", content }] });
   }
 });
@@ -59,8 +59,8 @@ test("ULW policy follows request-model fallback without touching user or tool te
   const hook = handlers.get("before_provider_request")![0];
   for (const id of ["gpt-6-astra", "gpt-6.1-sol", "gpt-6-astra-fast", "unknown-model"]) {
     ctx.model.id = id;
-    const policy = `<omo-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(id)}</ultrawork-mode>\n</omo-ulw-policy>`;
-    const expected = original.replace(/<omo-ulw-policy>[\s\S]*?<\/omo-ulw-policy>/g, () => policy);
+    const policy = `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(id)}</ultrawork-mode>\n</omp-ulw-policy>`;
+    const expected = original.replace(/<omp-ulw-policy>[\s\S]*?<\/omp-ulw-policy>/g, () => policy);
     expect(hook({ payload } as never, ctx as never)).toEqual({ messages: [{ role: "system", content: expected }, payload.messages[1], payload.messages[2]] });
   }
 });

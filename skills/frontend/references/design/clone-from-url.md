@@ -8,7 +8,7 @@ A `DESIGN.md` whose every token, interaction state, and motion value was read fr
 
 ## Phase 1 — Extract the runtime truth (never guess a value)
 
-Read `skill://ego-browser` and use one actual taskSpace and its Page: `page.goto`, state-driving actions, `page.evaluate` for `getComputedStyle`, and `page.screenshot`. For a native app or unsupported browser use `skill://cua-driver` and its advertised tools. Reuse the authorized logged-in context without copying profiles. There is no cloak/omowright engine here. Computed styles establish rendered tokens; source inspection can complement them for inaccessible cross-origin keyframes.
+Use the exposed browser tools to navigate, drive interaction states, evaluate `getComputedStyle` when page JavaScript is available, and capture screenshots. For a browser or native app controlled through cua-driver, read `skill://cua-driver` and follow its advertised tools. Retain the actual session/tab ids and reuse the authorized logged-in context without copying profiles. Computed styles establish rendered tokens; source inspection can complement them for inaccessible cross-origin keyframes.
 
 Sweep the page and read, for every meaningful element and every repeated pattern:
 

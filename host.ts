@@ -6,7 +6,7 @@ export interface HostPrompt {
 /** Replace only the known default template; custom prompts and agent blocks remain owned by their authors. */
 export function replaceHostBehavior(blocks: string[], behavior: string): HostPrompt | undefined {
   const base = blocks[0];
-  if (!base || base.includes("<omo-model-preset>")) return undefined;
+  if (!base || /<om[op]-model-preset>/.test(base)) return undefined;
   const role = base.indexOf("\n§ Role\n");
   const runtime = base.indexOf("\n§ Runtime\n", role);
   const policy = base.indexOf("\n§ Tool Policy\n", runtime);

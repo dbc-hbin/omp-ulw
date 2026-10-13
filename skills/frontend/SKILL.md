@@ -5,13 +5,15 @@ description: "Builds, styles, and polishes web UI and UX. Use for any frontend, 
 
 # Frontend
 
+Resolve relative reference paths from this skill's directory, not the project working directory; use `skill://frontend/<relative-path>` with `read`. Cross-skill reads use `skill://<name>`. Workflow labels such as `/visual-qa` name skills to load, not shell commands or guaranteed slash-command APIs.
+
 This file is a router, not a rulebook. The rules live in four rulesets under `references/`, and reading them is the work, not the preamble to it. Before touching any file, name the references the request routes to and the one reason each is needed, then read exactly those. Declaring the set first is what makes the choice reviewable: a reference you never named is one you decided to skip, and a reference you named but never opened is a gap you still owe. Freestyling past the routed set produces the generic AI-slop output this skill exists to prevent.
 
 **The bar is not clean-and-correct — it is work a senior designer at Linear, Stripe, or Supabase would ship.** Correct-but-flat is a failure, not a finish. Protect the surface as hard as you protect the build: design is a first-class deliverable, not a one-shot decision you lock and walk away from.
 
 ## OMP runtime and platform boundary
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. This port owns its design knowledge locally; never route to disabled design-family skills. Confirm the actual surface before web gates: native SwiftUI/AppKit/UIKit or Android Compose/Views/mixed hosting goes to `references/native/workflow.md` and its platform reference. Native work uses existing native styles and actual app verification, not CSS tokens, DOM, Lighthouse or browser mockups as app proof. Web/React Native/Flutter retain their own toolkits.
+Consult [the OMP contract](skill://ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. This port owns its design knowledge locally; never route to disabled design-family skills. Confirm the actual surface before web gates: native SwiftUI/AppKit/UIKit or Android Compose/Views/mixed hosting goes to `references/native/workflow.md` and its platform reference. Native work uses existing native styles and actual app verification, not CSS tokens, DOM, Lighthouse or browser mockups as app proof. Web/React Native/Flutter retain their own toolkits.
 
 This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
 
@@ -41,7 +43,7 @@ Every implementation must choose one of these branches before UI code changes:
    - **Live site or URL reference** (the user names a site to clone or gives a URL): load `references/design/clone-from-url.md`. Drive a real browser and extract the runtime truth via `getComputedStyle` — tokens, layout geometry, default/hover/focus/active states, transitions and keyframes, and downloaded assets — into `DESIGN.md`, then clone-code reusable primitives against that contract.
    Final QA for both runs `/visual-qa` in reference-fidelity mode: compare the actual UI against the reference pixel-by-pixel and verify the code is an extensible design-system implementation, not a screenshot-matched one-off.
 2. **Greenfield or fresh setup:** if the user gave no concrete visual reference, design research is a build step with named deliverables — not exploration to be budgeted. Exploration-stop instincts ("enough exploration", two-wave caps) do not apply here. Fire every research lane IN PARALLEL before `DESIGN.md` is written, and open `DESIGN.md` with a `## 0. Research Log` section recording each lane's deliverable — a lane with no Research Log line did not run. Skip a lane only when its tool or network is genuinely unavailable, and name the skip in `DESIGN.md`:
-   - **Embedded references:** use `references/design/_INDEX.md` to shortlist 2-3 plausible Layer B references, then read exactly one Layer A style skill and one Layer B reference in full — every line, no partial reads (they are 200-500 lines; a sliced read produces the flattened token set this gate exists to prevent). Log the shortlist, the pick, and why. Use external design research through `skill://ego-browser` only when the curated set has no fit; add `ui-ux-db` lookups for palette/type/domain questions.
+   - **Embedded references:** use `references/design/_INDEX.md` to shortlist 2-3 plausible Layer B references, then read exactly one Layer A style skill and one Layer B reference in full — every line, no partial reads (they are 200-500 lines; a sliced read produces the flattened token set this gate exists to prevent). Log the shortlist, the pick, and why. Use external design research through the exposed browser tools only when the curated set has no fit; add `ui-ux-db` lookups for palette/type/domain questions.
    - **Lazyweb real-product screens:** READ `references/design/lazyweb.md` FIRST and run its recipe verbatim — do not improvise curl calls against lazyweb.com; the recipe mints its own anonymous token. Log the queries run, how many screens you actually VIEWED, and the layout grammar harvested — never pixel copies.
    - **StyleGallery spatial patterns:** read `references/design/stylegallery.md` and fetch the pattern whose primary spatial problem matches the screen. Log the pattern adopted and the element that owns the scroll.
    - **Image concept drafts:** generate 2-3 image concept drafts, each seeded with the loaded Layer A + Layer B tokens (palette, type, material); pick the strongest and treat the chosen draft as the reference-fidelity contract. Log the draft paths and the pick.
@@ -80,7 +82,7 @@ The reference library has one architecture file, 12 taste skills (Layer A — *h
 
 ### Layer B — brand design systems (orthogonal to Layer A; stack freely)
 
-When the user names a brand or site — "Linear-style", "like Stripe's landing", "Aside-style browser agent" — load `references/design/<brand>.md` as the token source of truth (palette, type scale, components, do/don'ts). Coverage includes `aside` `apple` `stripe` `linear.app` `notion` `vercel` `claude` `figma` `airbnb` `nike` `tesla` `spotify` `raycast` `revolut` and ~56 more; the full list with mood shortcuts is in `_INDEX.md`. Extract the tokens and apply them to the project's own content — never copy logos or trademarked imagery. If the named brand is missing, fall back to a Layer A mood match or the external design research through `skill://ego-browser`.
+When the user names a brand or site — "Linear-style", "like Stripe's landing", "Aside-style browser agent" — load `references/design/<brand>.md` as the token source of truth (palette, type scale, components, do/don'ts). Coverage includes `aside` `apple` `stripe` `linear.app` `notion` `vercel` `claude` `figma` `airbnb` `nike` `tesla` `spotify` `raycast` `revolut` and ~56 more; the full list with mood shortcuts is in `_INDEX.md`. Extract the tokens and apply them to the project's own content — never copy logos or trademarked imagery. If the named brand is missing, fall back to a Layer A mood match or the external design research through the exposed browser tools.
 
 ### React dev tooling
 
@@ -99,15 +101,15 @@ Audit the production build with the project's existing real-Chrome Lighthouse No
 
 ## Ruleset 3 — ui-ux-db (`references/ui-ux-db/`)
 
-`README.md` documents the search CLI and the master-plus-overrides persistence pattern. The CLI (run from the ruleset directory so it finds `data/`):
+`README.md` documents the search CLI and the master-plus-overrides persistence pattern. Set `SKILL_DIR` to the observed absolute directory containing this skill's `SKILL.md` (resolve `skill://frontend` with `read`); OMP does not set this shell variable automatically. The CLI finds `data/` relative to its script, regardless of the working directory:
 
 ```bash
-python3 $SKILL_DIR/references/ui-ux-db/scripts/search.py "<query>" --design-system -p "Project"   # full design-system generation
-python3 $SKILL_DIR/references/ui-ux-db/scripts/search.py "<query>" --domain <domain>             # targeted lookup
-python3 $SKILL_DIR/references/ui-ux-db/scripts/search.py "<query>" --stack <stack>               # stack best practices
+python3 "$SKILL_DIR/references/ui-ux-db/scripts/search.py" "<query>" --design-system -p "Project"   # full design-system generation
+python3 "$SKILL_DIR/references/ui-ux-db/scripts/search.py" "<query>" --domain <domain>             # targeted lookup
+python3 "$SKILL_DIR/references/ui-ux-db/scripts/search.py" "<query>" --stack <stack>               # stack best practices
 ```
 
-Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `web` `prompt`. Stacks: `html-tailwind` (default) `react` `nextjs` `vue` `svelte` `astro` `swiftui` `react-native` `flutter` `shadcn` `jetpack-compose`.
+Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `web` `icons` `gsap` `google-fonts`. Stack lookup requires explicit `--stack`; supported examples include `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `astro`, `swiftui`, `react-native`, `flutter`, `shadcn`, and `jetpack-compose`. Read the CLI help for the complete registry.
 
 ## Ruleset 4 — designpowers (`references/designpowers/`)
 
@@ -148,9 +150,9 @@ Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `
 
 | Situation | Load |
 |---|---|
-| Brand/style not among the 70 in `references/design/`, or the user says "Open Design" | external design research through `skill://ego-browser` — inspect an external source through the actual browser and record provenance |
-| Driving a browser for the Design QA phase | `../visual-qa/SKILL.md` plus `skill://ego-browser` (web) or `skill://cua-driver` (native) |
-| Pure TypeScript/logic work with zero visual surface | `programming` skill alone — this skill adds nothing there |
+| Brand/style not among the 70 in `references/design/`, or the user says "Open Design" | external design research through the exposed browser tools — inspect an external source through the actual browser and record provenance |
+| Driving a browser for the Design QA phase | `skill://visual-qa` with exposed browser tools (web) or `skill://cua-driver` (native) |
+| Pure TypeScript/logic work with zero visual surface | Follow the project's coding guidance; load only relevant skills actually listed by OMP. |
 
 ## Activation
 

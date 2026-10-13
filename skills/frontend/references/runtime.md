@@ -1,6 +1,6 @@
 # OMP visual runtime
 
-Source: omo 5.1.19 frontend workflow, adapted to exposed OMP APIs. Read `skill://ego-browser` for browser work and `skill://cua-driver` for native windows. Exact capture/CDP examples: [browser setup](../../visual-qa/references/browser-setup.md). Do not import Playwright into ego-browser or invent locator/context/emulate helpers.
+Source: omo 5.1.19 frontend workflow, adapted to exposed OMP APIs. Use exposed browser tools for pages; read `skill://cua-driver` before using its browser or native-window route. Capture and emulation guidance: [browser setup](skill://visual-qa/references/browser-setup.md). Use only documented capabilities; do not assume locator, context or emulation helpers.
 
 ## Image generation
 

@@ -4,7 +4,7 @@ This reference defines shared state and prompt semantics for designpowers guidan
 
 ## Shared State
 
-Use `doc/frontend-design/state.md` as the design operating ledger when the active workflow is allowed to write OpenAgent state. If the current task forbids editing `doc`, read it as context only and report any needed updates in the handoff.
+Use `doc/frontend-design/state.md` as the design operating ledger when the active workflow is allowed to write OMP state. If the current task forbids editing `doc`, read it as context only and report any needed updates in the handoff.
 
 Recommended sections:
 
@@ -20,7 +20,7 @@ Recommended sections:
 | Design Debt Register | Deferred design/a11y issues with severity, affected users, fix, owner, status, and acknowledgement. |
 | Evidence Index | Artifact paths for plans, screenshots, audits, walkthroughs, reviews, and cleanup receipts. |
 
-The lead is the single writer of this ledger. Workers return proposed entries and evidence; they do not append concurrently. Dispatch through the actual context/tasks contract in `../../../ulw-loop/references/omp-contract.md`, selecting listed roles or omitting agent for default. Role names in vendor documents are charters, never agent values. Give each review its own strict workflow-specific outputSchema, record actual child ids, and reconcile first-wake native wait results against the pending set before claiming a wave finished. Communicate via `agent://` only with actual returned ids.
+The lead is the single writer of this ledger. Workers return proposed entries and evidence; they do not append concurrently. Dispatch through the actual context/tasks contract in `skill://ulw-loop/references/omp-contract.md`, selecting listed roles or omitting agent for default. Role names in vendor documents are charters, never agent values. Include a workflow-specific JSON response contract in each task and validate the returned payload; pass schema fields only if the exposed tool supports them. Then record actual child ids, and reconcile first-wake native wait results against the pending set before claiming a wave finished. Communicate via `agent://` only with actual returned ids.
 
 State entries should be short, dated when useful, and evidence-backed. Do not use the state file to smuggle unverified success claims.
 
@@ -30,8 +30,8 @@ Direct and Auto are prompt-only semantics:
 
 | Mode | Meaning | Required pauses |
 |---|---|---|
-| Direct | OpenAgent proceeds through known frontend/OpenAgent routes using the user's brief, repo evidence, and reversible defaults. | Pause for destructive changes, public product choices, missing objective, or accessibility/persona tradeoffs that cannot be resolved from evidence. |
-| Auto | OpenAgent may choose defensible defaults for low-risk design details and continue through the frontend workflow. | Pause for prohibited tooling, new external integrations, irreversible design-system changes, unresolved critical accessibility gaps, or conflicting owner decisions. |
+| Direct | OMP proceeds through known frontend/OMP routes using the user's brief, repo evidence, and reversible defaults. | Pause for destructive changes, public product choices, missing objective, or accessibility/persona tradeoffs that cannot be resolved from evidence. |
+| Auto | OMP may choose defensible defaults for low-risk design details and continue through the frontend workflow. | Pause for prohibited tooling, new external integrations, irreversible design-system changes, unresolved critical accessibility gaps, or conflicting owner decisions. |
 
 Neither mode may create hooks, background schedulers, fake direct calls, or a separate planner/build harness. Modes affect prompts and escalation behavior only.
 
@@ -47,7 +47,7 @@ Neither mode may create hooks, background schedulers, fake direct calls, or a se
 
 ## designpowers Role References
 
-designpowers agent names are role references for prompt composition only. They can help phrase an OpenAgent-native assignment such as "act as a design critic" or "act as an accessibility reviewer", but they are not installed agents, selectable agent types, or a separate agent runtime.
+designpowers agent names are role references for prompt composition only. They can help phrase an OMP-native assignment such as "act as a design critic" or "act as an accessibility reviewer", but they are not installed agents, selectable agent types, or a separate agent runtime.
 
 When using a designpowers role reference:
 
@@ -73,7 +73,7 @@ If two higher-order requirements cannot both be satisfied, pause and ask the use
 
 Before final handoff, the workflow should be able to name:
 
-- which frontend references and OpenAgent skills were loaded or instructed;
+- which frontend references and OMP skills were loaded or instructed;
 - the current state path or why it was read-only;
 - the plan or execution artifact path;
 - the frontend and visual QA evidence paths;

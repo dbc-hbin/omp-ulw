@@ -19,12 +19,35 @@ omp -e ./omp-ulw/index.ts
 
 ## 모델별 프롬프트 위치
 
-- [`upstream/presets.js`](upstream/presets.js): 모델별 프롬프트 본문·공통 빌더와 모델 ID/별칭 선택 규칙입니다. 29개 프리셋을 포함합니다.
+- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Haiku 5.5를 포함한 30개 프리셋과 원본 리비전·라이선스를 담습니다.
 - [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
 - [`index.ts`](index.ts): 세션 시작과 모델 변경 시 해당 프롬프트를 적용합니다.
-- [`upstream/source.js`](upstream/source.js): 추출한 원본 빌더 소스입니다. 런타임은 `upstream/presets.js`를 사용합니다.
+- [`upstream/update.mjs`](upstream/update.mjs): GitHub 소스를 고정 SHA로 받아 로컬 프리셋을 생성합니다. 바이너리 추출이나 Senpi 패키지 설치는 필요 없습니다.
+- [`upstream/omp-build.mjs`](upstream/omp-build.mjs): OMP가 이미 제공하는 도구·프로젝트·스킬·워크스테이션 영역을 중복 주입하지 않는 조립 계층입니다.
 
 `prompts/`의 Markdown 파일은 모델별 프롬프트가 아니라 ULW 워크플로 호출 템플릿입니다. 템플릿의 스킬 경로는 템플릿 파일 기준 상대경로이며, 확장은 실제 설치 위치에서 스킬 경로를 계산하므로 저장소를 다른 위치에 두어도 동작합니다.
+
+실제 주입되는 프롬프트와 워크플로 포인터는 `omp-` 태그를 사용합니다. 기존 세션 복원과 CLI 호환성을 위해 저장된 `omo-ultrawork:*` 키와 `--omo-ultrawork-disabled`, `--omo-ulw-workflows-disabled`, `--omo-ulw-continuation-disabled` 플래그는 유지하며, 이전 `omo-` 프롬프트 태그도 읽을 수 있습니다. `upstream/`의 원본 지침은 `presets.ts`를 거쳐 OMP 도구 계약으로 변환된 뒤 전달됩니다.
+
+## GitHub에서 프리셋 갱신
+
+기존 Bun만 사용합니다. 네트워크는 갱신 명령에서만 필요하며, OMP 실행 시에는 생성된 로컬 파일만 읽습니다.
+
+```bash
+# 태그, 커밋 SHA, 브랜치 또는 해당 GitHub 링크 지정
+bun upstream/update.mjs --ref https://github.com/code-yeongyu/senpi/tree/v2026.10.13
+
+# 최신 main과 비교만 수행: 차이 없음 0, 변경 후보 있음 1, 오류 1
+bun upstream/update.mjs --ref main --check
+
+# 최신 원본으로 실제 갱신한 뒤 OMP 보정과 모델 선택 검증
+bun upstream/update.mjs --ref main
+bun test
+```
+
+명령은 먼저 ref를 커밋 SHA로 고정하고 그 SHA의 소스만 내려받습니다. 빌드·모든 프리셋 렌더링 검사가 성공한 뒤 `upstream/presets.js` 한 파일을 원자적으로 교체합니다. 다운로드·검증 실패 시 기존 파일은 유지합니다. `--ref`를 생략하면 `main`이며, GitHub API 제한이 있으면 `GITHUB_TOKEN`을 사용할 수 있습니다. 재현하려면 생성 파일 첫 줄의 SHA를 `--ref`로 전달합니다.
+
+자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 이번 스킬 반영 기준은 [OMO v5.1.33](https://github.com/code-yeongyu/oh-my-openagent/tree/5275771d8b38b70ac6e6c737f587abbb4dd36b86)이며, 작업 자원·캐시 수명 관리(#9953), mass-ulw 단계 연결·research handoff(#10050), 체크포인트 실패 경계(#10053)를 포함합니다.
 
 ## 테스트
 

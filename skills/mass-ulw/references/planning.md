@@ -5,16 +5,16 @@ metadata:
   short-description: How to plan a dag - decomposition, categories, node prompts, verification
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 
 # mass-ulw planning reference
 
 Read this file IN FULL before you define any graph. A graph defined without it is unplanned work: real runs without this doctrine collapse to three `deep` nodes with no verification. Every section below exists because its absence was observed failing.
 
-Reading this file is not planning. Before `start`, write the run plan in one breath and then execute THAT plan: the topology (waves, plus the chain points where you synthesize between runs), wave sizes against the capacity model below, a one-line reason for every non-`quick` category, and the verification wave. When reality forces a change, replan out loud instead of drifting node by node.
+Reading this file is not planning. Before `start`, write the run plan in one breath and then execute THAT plan: the topology (every predictable stage chained up front, each producer/consumer handoff path, and the evidence gates where findings can change the graph), wave sizes against the capacity model below, a one-line reason for every non-`quick` category, and the verification wave. When reality forces a change, replan out loud instead of drifting node by node.
 
 ## Decomposition doctrine
 
@@ -28,7 +28,7 @@ Reading this file is not planning. Before `start`, write the run plan in one bre
 
 - **By component** - each independently-shippable part is its own lane.
 - **By file domain** - when one component spans disjoint file sets, one node per set.
-- **By phase** - collect lanes (investigate, in parallel) -> verify lanes (falsify the collections) -> synthesize (turn verified facts into the deliverable).
+- **By stage** - collect lanes (investigate, in parallel) -> verify lanes (falsify the collections) -> synthesize (turn verified facts into the deliverable).
 
 **Default shape is fan-out, then fan-in.** N parallel lanes with no dependencies, then one synthesis node that depends on all of them. The synthesis node starts cheap too (`quick` or `unspecified-low`): merging verified pieces is mechanical unless the merge itself needs judgment. A 2-node graph with no dependency between the nodes is not a dag - use plain parallel `task` spawns instead. Reach for native workpool if documented, otherwise dependency waves when ordering itself is the point.
 
@@ -63,43 +63,45 @@ A graph whose every node is `deep-low` or `deep-high` is a routing failure: it p
 
 ## Concurrency and write-scope rules
 
-- `dependsOn` is ORDERING ONLY - no upstream output is substituted into a downstream prompt. Every prompt stands alone (see the node prompt contract).
+- **`dependsOn` orders; files carry data.** The producer prompt names the exact absolute handoff path it writes; the consumer prompt names that same path to read and treats a missing file as FAIL. Paste resolved paths, never variables the worker cannot resolve. A completed dependency does not prove a handoff exists. Every prompt stands alone (see the node prompt contract).
 - **Disjoint write scopes or serialize.** No two nodes that can run in parallel may edit the same file. If two lanes must touch the same files, chain them with `dependsOn` or merge them into one node. Declare each node's read/write scope inside its prompt.
-- **Never add a dependency to pass data.** If node B needs a fact node A produces, that is a real dependency - but if B only needs a fact YOU already know, paste the fact into B's prompt and leave the edge out.
+- **Edges represent actual consumption or write ordering.** If B needs a fact A produces, add the edge and file handoff; if the lead already knows the fact, paste it into B's prompt with no edge. Do not make every expand node depend on every harvest node: a ready branch advances while unrelated branches are still harvesting.
 - **Dependency matrix self-check before `start`:** every `dependsOn` id exists in the graph; no cycles; no node depends on something it does not actually consume; every wave has at least one runnable node.
 - **Capacity model.** Use only the concurrency actually documented by the OMP runtime. Wide graphs queue or are dispatched in explicit bounded batches; never assume provider/session caps or configuration names from another harness. Preserve coverage and record real capacity limits.
 
 ## Eval orchestration patterns
 
-Use the native OMP orchestration and recovery contract in ../SKILL.md. Construct task entries from observed targets; persist ids, scope, dependencies and verification before spawning. Fan out ready nodes, wait for handles, verify results, then construct the next phase from bounded verified digests. Independent graphs may overlap when scopes and actual runtime capacity allow. Completion notifications trigger the next decision; a single midpoint read is justified only by a decision. Retry only failed nodes; definition changes invalidate changed nodes and their descendants. Upstream output is not magically substituted into prompts. Never paste unbounded raw reports into a reducer.
+Use the native OMP orchestration and recovery contract in ../SKILL.md. Construct task entries from observed targets; persist ids, scope, dependencies and verification before spawning. Predefine every predictable stage within the checkpointed phase; fan out ready nodes, wait for the handles the next decision needs, verify their handoffs, and release their consumers without waiting for unrelated siblings. Define a new phase from bounded verified digests; add nodes within the current phase only when findings change the graph's shape, not merely its input data. Independent graphs may overlap when scopes and actual runtime capacity allow. Completion notifications trigger the next decision; a single midpoint read is justified only by a decision. Retry only failed nodes; definition changes invalidate changed nodes and their descendants. Upstream output is not magically substituted into prompts. Never paste unbounded raw reports into a reducer.
 
 ## Dag or team
 
 The dag is not the only fan-out surface, and picking the wrong one strands the run. Decide before you plan:
 
-- **Chained dags** when the work is stage-shaped: every stage is a static graph and you synthesize between stages. The lead-owned graph and ledger preserve resume identity and verified results; use actual documented workpool views only when available.
+- **A dag** when the work is stage-shaped: every predictable stage belongs in one phase graph, with files carrying data between stages. Chain runs at phase boundaries or when findings determine which nodes exist. The lead-owned graph and ledger preserve resume identity and verified results; use actual documented workpool views only when available.
 - **A cooperating native task roster** when workers must talk DURING the work: broadcasting leads, multi-round debate, or accumulating context across assignments. Each child starts with one complete assignment; steer the actual agent id through supported messaging and relay discoveries between lanes.
 - **A plain ulw-research request goes to the team path.** Cross-critique and expand loops are team mechanics; use a dag for the independent harvest stages only.
-- **A MASS research request goes to the dag path, at mass scale.** When the user combines the mass trigger with research ("mass ulw research", "mulw research", "ulw mass research"), they asked for over-collection no roster of 8 members can produce: run the harvest as chained dags under the section below, and keep a team only for the debate rounds the claim graph needs. Either path inherits ulw-research's delivery gates - rendered-page visual QA, then the proofread pass - for any report or PDF deliverable.
+- **A MASS research request goes to the dag path, at mass scale.** When the user combines the mass trigger with research ("mass ulw research", "mulw research", "ulw mass research"), they asked for over-collection no roster of 8 members can produce: run collection as cluster runs under the section below, and keep a team only for the debate rounds the claim graph needs. Either path inherits ulw-research's delivery gates - rendered-page visual QA, then the proofread pass - for any report or PDF deliverable.
 
-## Mass research - over-collect in waves, then reduce
+## Mass research - over-collect through per-angle chains, then reduce
 
-A mass research run is a HARVEST, and the graph is sized by how many angles exist, not by what feels tidy. Read `ulw-research`'s SKILL.md for the epistemic contract it owns - the journal, claim graph, EXPAND markers, convergence rules, delivery gates - and run its collection phases as dag waves:
+A mass research run is a HARVEST, and the graph is sized by how many angles exist, not by what feels tidy. Read `ulw-research`'s SKILL.md for the epistemic contract it owns - the journal, claim graph, EXPAND markers, convergence rules, delivery gates - and predefine the collection phase's predictable stages before dispatch:
 
-**Wave 1 opens at 60+ nodes, deliberately over-collecting.** Enumerate every angle the topic has - source territory, sub-question, entity, time window, competing approach, adjacent field - and give each one its own node. Sixty nodes is a floor for a genuinely broad topic, not a target to trim toward: coverage is the deliverable, and the slot limiter serializes width into queue time, never into lost correctness. Under-collecting wave 1 is the failure this mode exists to prevent.
+**The harvest opens at 60+ angles, deliberately over-collecting.** Enumerate every angle the topic has - source territory, sub-question, entity, time window, competing approach, adjacent field - and give each one its own chain. Sixty angles is a floor for a genuinely broad topic, not a target to trim toward: coverage is the deliverable, and the slot limiter serializes width into queue time, never into lost correctness. Under-collecting the harvest is the failure this mode exists to prevent.
 
-**Route the wave across the whole ladder in one graph.** Broad source sweeps and per-item harvest batches are `quick`. Angles needing a judgment call a template cannot make are `unspecified-low`. Angles with real integration surface across several territories are `unspecified-high`. Reserve `deep-low` for the few genuinely hairy cross-source contradictions, and `deep-high` only when one of them turns on a decision evidence cannot settle. One tier across sixty nodes is the routing failure named above - name the tier for every node as you define it, and honor a user's literal routing words ("quick", "deep", "all quick") exactly - a bare "deep" means `deep-low`.
+**Route the harvest across the whole ladder.** Broad source sweeps and per-item harvest batches are `quick`. Angles needing a judgment call a template cannot make are `unspecified-low`. Angles with real integration surface across several territories are `unspecified-high`. Reserve `deep-low` for the few genuinely hairy cross-source contradictions, and `deep-high` only when one of them turns on a decision evidence cannot settle. One tier across sixty nodes is the routing failure named above - name the tier for every node as you define it, and honor a user's literal routing words ("quick", "deep", "all quick") exactly - a bare "deep" means `deep-low`.
 
-**Each wave's discoveries define the next wave's nodes.** Read the settled run's node outputs in the cell, harvest every EXPAND lead they returned, deduplicate against the leads already seen, then build the next run's nodes FROM those leads - chase the tail until the leads run dry under ulw-research's convergence rules. A mass research run that stops after one wave collected breadth and no depth.
+**Each angle is a predefined chain: `harvest-<a>` -> `expand-<a>` -> `verify-<a>`.** Harvest writes `<session-dir>/waves/<run-key>/harvest-<a>.md` with claim candidates and an EXPAND tail. Expand reads that file, chases its leads and writes `expand-<a>.md` with its own tail. Verify reads both, counter-searches each claim and writes `verify-<a>.md` with verdicts, evidence and remaining leads. Resolve these paths to absolute paths in every assignment. Each node writes only its own handoff file through native read/edit/write; the root owns journals, graph/ledger state and the claim graph. Select a write-capable role for handoff-producing nodes, not a read-only scout.
 
-**Synthesis reduces through several advisory lanes, then one reducer.** Never hand sixty raw node outputs to a single node. Parallel slice workers read bounded per-wave digests; one final reducer starts only after every slice has verified evidence. Architect, deep-low and ultrabrain name the intended reasoning tier inside the brief, not OMP categories or agent names. Choose available default or senior-task reasoning workers under the common contract; choose sonic for a purely mechanical merge. If the final merge genuinely needs the highest reasoning tier, reserve that planning tier for the one reducer and record the actual role/model selected by OMP.
+**Converge by cluster, not by global stage barriers.** Group angle chains into bounded clusters sized for actual runtime capacity and reducer input budgets, counting all three stages and reducers. Sixty angles therefore means at least 180 chain nodes, not sixty nodes split among stages. As a cluster settles, the root deduplicates outstanding EXPAND leads against its journal and records additional `expand-<a>-<n>` -> `verify-<a>-<n>` pairs with new owned handoff paths. Dispatch them without waiting for other clusters. Apply ulw-research's convergence rules per cluster, including two expansion waves, no unchecked leads and settled debates; the predefined expand stage counts as the first expansion wave, not convergence by itself. Preserve completed siblings; a failed or missing handoff blocks only its consumers until a verified replacement attempt settles.
+
+**Synthesis reduces through several advisory lanes, then one reducer.** Never hand sixty raw node outputs to a single node. Each converged cluster's slice reducer reads only its verified handoffs and writes one bounded digest (<= 5k tokens) to its own handoff file. One final reducer starts only after every cluster has converged and reads only those slice digests, with citations back to evidence. The root reconciles candidates into its claim graph before synthesis treats them as supported. Architect, deep-low and ultrabrain name the intended reasoning tier inside the brief, not OMP categories or agent names. Choose available default or senior-task reasoning workers under the common contract; choose sonic for a purely mechanical merge. If the final merge genuinely needs the highest reasoning tier, reserve that planning tier for the one reducer and record the actual role/model selected by OMP.
 
 ## Node prompt contract
 
 A node prompt is the ONLY thing the worker sees. It has no conversation history, no access to your reasoning, and no way to ask you questions. Write every prompt so a competent stranger executes it exactly. Every node prompt carries, in this order:
 
 1. **TASK** - one imperative sentence naming the deliverable.
-2. **DELIVERABLE** - the concrete artifact returned: files changed, the exact report shape, the evidence produced.
+2. **DELIVERABLE** - the concrete artifact returned: files changed, the exact report shape, the evidence produced. For a handoff, name the producer-owned absolute output path, required sections and size bound; every consumer names the exact input paths and fails if any required handoff is missing.
 3. **SCOPE** - what the node may read and what it may write, with exact paths, stated as a HARD boundary the prompt forbids crossing. Name what is OUT of scope when a neighboring node owns it or the node could plausibly wander there - an explicit bound is what makes drift detectable.
 4. **VERIFY** - the check the node runs on its own work before reporting: the literal command and its expected result.
 5. **STOP WHEN** - the single observable condition that ends the node's run.

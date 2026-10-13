@@ -9,7 +9,7 @@ Escalation is for genuine ambiguity, not for skipping investigation. Most "shoul
 - **Evidence exhausted**, contradictions remain, and further investigation would require a decision with policy implications (e.g. "patch the third-party SDK vs wrap it vs change architecture").
 - The bug has **multiple valid fixes with different scope/risk tradeoffs** and the user's preference drives the choice.
 - A proposed fix would **change observable product behavior** for the end user (not just fix the internal bug).
-- You've **exhausted the Oracle Triple** and another 2 rounds failed after synthesis.
+- Further progress after the Oracle synthesis requires user-supplied access or a material decision; failed-round counts alone do not justify asking.
 
 ## Do NOT ask when
 
@@ -20,9 +20,9 @@ Escalation is for genuine ambiguity, not for skipping investigation. Most "shoul
 
 ---
 
-## Escalation format (paste into the reply)
+## Escalation format
 
-Keep it short. Evidence-dense. One decision, not a status update.
+Keep it short. Evidence-dense. One decision, not a status update. The main session uses native blocking `ask` when exposed, with the evidence and options below. If unavailable, ask directly in chat and await the answer. A worker returns the missing decision to the lead instead of asking the user.
 
 ```markdown
 ## Decision needed

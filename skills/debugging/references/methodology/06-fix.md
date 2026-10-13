@@ -69,7 +69,7 @@ When the repository test-authoring gate calls for a test, write one that fails s
 
 Run the test. Confirm it fails. Paste the failure output into the journal:
 
-```markdown
+````markdown
 ### Red phase (<ISO timestamp>)
 Test: <path>::<name>
 Command: <exact invocation>
@@ -78,7 +78,7 @@ Output:
 <verbatim failure output>
 ```
 Confirms: the bug is reproducible at the test-harness level, not just the manual repro.
-```
+````
 
 ### 2. Green — minimum change
 

@@ -49,9 +49,9 @@ describe("Native ULW session behavior", () => {
       const host = new Host();
       host.context.model = id === undefined ? undefined : { id };
       const body = id === "gpt-6-astra" || id === "OpenAI/GPT-6-ASTRA-FAST" ? astra : baseline;
-      expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).toBe(`<omo-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omo-ulw-policy>`);
+      expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omp-ulw-policy>`);
       host.context.model = { id: "gpt-6-astra" };
-      expect(host.prepare("continue")!.systemPrompt[2]).toBe(`<omo-ulw-policy>\n<ultrawork-mode>${astra}</ultrawork-mode>\n</omo-ulw-policy>`);
+      expect(host.prepare("continue")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${astra}</ultrawork-mode>\n</omp-ulw-policy>`);
     }
   });
   test("slash commands activate all modes without allowing unrelated extension messages to arm them", async () => {
@@ -62,9 +62,26 @@ describe("Native ULW session behavior", () => {
       expect(host.prepare(host.submitted!, "extension")).toBeDefined();
     }
   });
+  test("legacy prompt blocks remain inert and are replaced on session resume", () => {
+    for (const prefix of ["omo", "omp"]) {
+      const host = new Host();
+      for (const tag of [`${prefix}-ulw-loop-pointer`, `${prefix}-ultrawork-reminder`]) {
+        expect(host.prepare(`<${tag}>ulw-loop resume</${tag}>`)).toBeUndefined();
+      }
+      host.entries = [{ type: "custom", customType: "omo-ultrawork:state", data: true }];
+      host.emit("session_start");
+      const blocks = ["host", `<${prefix}-ulw-policy>old directive</${prefix}-ulw-policy>`];
+      const prepared = host.prepare("continue", "rpc", blocks)!;
+      expect(prepared.systemPrompt).toHaveLength(2);
+      expect(prepared.systemPrompt[1].startsWith("<omp-ulw-policy>")).toBe(true);
+      expect(prepared.systemPrompt[1]).not.toContain("old directive");
+      host.context.agent.kind = "sub";
+      expect(host.prepare("continue", "rpc", blocks)).toEqual({ systemPrompt: ["host"] });
+    }
+  });
   test("quoted keywords, pointer blocks, skill-name-only commands and extension input cannot arm ULW", () => {
     const host = new Host();
-    for (const text of ["ordinary task", "/skill:ulw-plan", "`ulw`", "``ultrawork``", "```js\nulw\n```", "~~~\nulw\n~~~", "```\nulw", "<omo-ulw-loop-pointer>ulw loop</omo-ulw-loop-pointer>", "<ultrawork-mode>ulw</ultrawork-mode>"]) {
+    for (const text of ["ordinary task", "/skill:ulw-plan", "`ulw`", "``ultrawork``", "```js\nulw\n```", "~~~\nulw\n~~~", "```\nulw", "<omp-ulw-loop-pointer>ulw loop</omp-ulw-loop-pointer>", "<ultrawork-mode>ulw</ultrawork-mode>"]) {
       expect(host.prepare(text)).toBeUndefined();
     }
     expect(host.prepare("ulw build this", "extension")).toBeUndefined();
@@ -78,7 +95,7 @@ describe("Native ULW session behavior", () => {
       await host.commands.get(name)!("the assigned workflow", host.context);
       const prepared = host.prepare(host.submitted!, "extension")!;
       expect(prepared.systemPrompt).toEqual(["host", "project rules"]);
-      expect(prepared.message?.content).toContain(`<omo-${name}-pointer>`);
+      expect(prepared.message?.content).toContain(`<omp-${name}-pointer>`);
       expect(existsSync(new URL(`./skills/${name}/SKILL.md`, import.meta.url))).toBe(true);
       expect(host.entries).toHaveLength(0);
       for (const text of ["`/" + name + "`", "open /" + name + "/SKILL.md", "Do not run /" + name, "[REPORT] /" + name]) expect(new Host().prepare(text)).toBeUndefined();
@@ -98,11 +115,11 @@ describe("Native ULW session behavior", () => {
           const host = new Host();
           const prepared = host.emit("before_agent_start", { prompt, systemPrompt: ["host"] }) as Prepared | undefined;
           const armed = args.startsWith("ulw") || args.includes("\nulw ");
-          expect(prepared?.systemPrompt.some(block => block.startsWith("<omo-ulw-policy>")) ?? false).toBe(armed);
+          expect(prepared?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>")) ?? false).toBe(armed);
           expect(host.entries).toHaveLength(armed ? 1 : 0);
-          expect(prepared?.message?.content.includes("<omo-ulw-plan-pointer>") ?? false).toBe(args.startsWith("ulw-plan"));
-          expect(prepared?.message?.content.includes("<omo-mass-ulw-pointer>") ?? false).toBe(args.startsWith("mass-ulw"));
-          expect(host.prepare("continue")?.systemPrompt.some(block => block.startsWith("<omo-ulw-policy>")) ?? false).toBe(armed);
+          expect(prepared?.message?.content.includes("<omp-ulw-plan-pointer>") ?? false).toBe(args.startsWith("ulw-plan"));
+          expect(prepared?.message?.content.includes("<omp-mass-ulw-pointer>") ?? false).toBe(args.startsWith("mass-ulw"));
+          expect(host.prepare("continue")?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>")) ?? false).toBe(armed);
           expect(new Host().prepare(prompt, "extension")).toBeUndefined();
           const child = new Host();
           child.context.agent.kind = "sub";
@@ -127,12 +144,12 @@ describe("Native ULW session behavior", () => {
 
   test("real invocations survive reference masking and contrast clauses", () => {
     for (const text of ["ulw-loop fix it", "ULTRAWORK: fix it", "ulw-plan.", "check doc/ulw/notes.md, then ulw the fix", "Do not use tmux, but ulw the fix", "don\u2019t use tmux \u2014 ulw this", "don't run the old one; ulw the new one", "do not stop until done, ulw", 'Explain "ulw-loop", then ulw fix it', "> old ulw plan\nulw fix it"]) {
-      expect(new Host().prepare(text)?.systemPrompt.some(block => block.startsWith("<omo-ulw-policy>"))).toBe(true);
+      expect(new Host().prepare(text)?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
     }
     const mass = new Host();
     expect(new Host().prepare("ulw `ignored` loop")?.message).toBeUndefined();
     const prepared = mass.prepare("mass-ulw do the migration")!;
-    expect(prepared.message?.content).toContain("<omo-mass-ulw-pointer>");
+    expect(prepared.message?.content).toContain("<omp-mass-ulw-pointer>");
     expect(prepared.systemPrompt).toEqual(["host", "project rules"]);
     expect(mass.entries).toHaveLength(0);
   });
@@ -142,7 +159,7 @@ describe("Native ULW session behavior", () => {
     const first = host.prepare("ULTRAWORK implement the task")!;
     const body = readFileSync(new URL("./skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
     expect(first.systemPrompt.slice(0, 2)).toEqual(["host", "project rules"]);
-    expect(first.systemPrompt[2]).toBe(`<omo-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omo-ulw-policy>`);
+    expect(first.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omp-ulw-policy>`);
     expect(host.prepare("continue", "rpc", first.systemPrompt)?.systemPrompt).toEqual(first.systemPrompt);
     expect(host.prepare("ulw keep going")?.systemPrompt).toEqual(first.systemPrompt);
     expect(host.entries).toHaveLength(1);
@@ -174,7 +191,7 @@ describe("Native ULW session behavior", () => {
     child.emit("session_start");
     child.emit("session_compact");
     expect(child.prepare("continue")).toBeUndefined();
-    expect(child.prepare("ULW: scoped unit", "rpc", ["host", "<omo-ulw-policy>inherited root rules</omo-ulw-policy>"])).toEqual({ systemPrompt: ["host"] });
+    expect(child.prepare("ULW: scoped unit", "rpc", ["host", "<omp-ulw-policy>inherited root rules</omp-ulw-policy>"])).toEqual({ systemPrompt: ["host"] });
     expect(child.emit("session_stop", { signal: new AbortController().signal })).toBeUndefined();
   });
 
@@ -186,11 +203,11 @@ describe("Native ULW session behavior", () => {
     ];
     for (const [text, name] of cases) {
       const message = new Host().prepare(text)?.message;
-      expect(message?.content).toContain(`<omo-${name}-pointer>`);
+      expect(message?.content).toContain(`<omp-${name}-pointer>`);
       expect(existsSync(new URL(`./skills/${name}/SKILL.md`, import.meta.url))).toBe(true);
     }
     const overlap = new Host().prepare("mass ulw-loop and ulw research");
-    for (const name of ["mass-ulw", "ulw-loop", "ulw-research"]) expect(overlap?.message?.content).toContain(`<omo-${name}-pointer>`);
+    for (const name of ["mass-ulw", "ulw-loop", "ulw-research"]) expect(overlap?.message?.content).toContain(`<omp-${name}-pointer>`);
     expect(new Host().prepare("ulw task")?.message).toBeUndefined();
     expect(new Host().prepare('<skill name="ulw-plan">ulw plan</skill>')?.message).toBeUndefined();
   });
@@ -205,6 +222,34 @@ describe("Native ULW session behavior", () => {
 });
 
 describe("evidence-bound ULW continuations", () => {
+  test("execute closes blocked rows while independent and final-verification tasks continue", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "omo-ulw-test-"));
+    try {
+      const host = new Host(cwd);
+      mkdirSync(join(cwd, "doc/plans"), { recursive: true });
+      const plan = join(cwd, "doc/plans/test.md");
+      const boulder = join(cwd, "doc/boulder.json");
+      const work = { status: "active", session_ids: ["omp:test-session"], active_plan: "doc/plans/test.md" };
+      writeFileSync(boulder, JSON.stringify({ works: { test: work } }));
+      const signal = new AbortController().signal;
+      const blocked = "- [~] 1. Missing product behavior\n- [~] 2. blocked by 1\n";
+      for (const remaining of ["- [ ] 3. Independent task\n\n## Final verification wave\n- [ ] F1. Verify delivered work\n", "- [x] 3. Independent task\n\n## Final verification wave\n- [ ] F1. Verify delivered work\n", "- [x] 3. Independent task\n\n## Final verification wave\n- [x] F1. Verify delivered work\n", ""]) {
+        writeFileSync(plan, blocked + remaining);
+        const result = host.emit("session_stop", { signal });
+        if (remaining.includes("- [ ]")) expect((result as Continued).continue).toBe(true);
+        else expect(result).toBeUndefined();
+        expect(host.emit("session_stop", { signal })).toBeUndefined();
+        expect(readFileSync(plan, "utf8")).toBe(blocked + remaining);
+        expect(JSON.parse(readFileSync(boulder, "utf8")).works.test.status).toBe("active");
+      }
+      work.status = "blocked";
+      writeFileSync(boulder, JSON.stringify({ works: { test: work } }));
+      expect(host.emit("session_stop", { signal })).toBeUndefined();
+      host.emit("session_switch");
+      expect(host.emit("session_stop", { signal })).toBeUndefined();
+    } finally { rmSync(cwd, { recursive: true, force: true }); }
+  });
+
   test("loop continuation is session-owned, progress-sensitive, cancellation-aware and stops for paused/blocked/completed work", () => {
     const cwd = mkdtempSync(join(tmpdir(), "omo-ulw-test-"));
     try {

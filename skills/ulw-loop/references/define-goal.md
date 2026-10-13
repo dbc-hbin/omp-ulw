@@ -1,11 +1,11 @@
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 # Define Goal
 
-How to turn a brief into a registered goal the run can be held to. Read this BEFORE calling the binding durable goal record: the objective you register is the binding contract for the whole run, and the run's quality is capped by the quality of this objective.
+How to turn a brief into a registered goal the run can be held to. Read this BEFORE writing the binding durable goal record: the objective you register is the binding contract for the whole run, and the run's quality is capped by the quality of this objective.
 
 A goal is a prompt to the agent that executes it, including future-you after compaction. It earns its tokens the way any prompt does: it carries only what the run cannot re-derive later, the outcome, the proof, the bounds, and the stop state. Everything else is noise that steals attention from the parts that decide completion.
 
@@ -19,7 +19,7 @@ Before registering, the objective must answer all five:
 4. What scope boundaries matter? What is in, and what is explicitly out.
 5. What should make the agent stop and ask instead of grinding?
 
-An objective that cannot answer one of these is not ready. Repair it (below) before calling the tool.
+An objective that cannot answer one of these is not ready. Repair it (below) before writing the record.
 
 ## Objective anatomy
 
@@ -89,7 +89,7 @@ Repaired: "Resolve every open change-requesting review comment on PR 123 touchin
 ## Completion honesty
 
 - Report the binding durable goal record complete only after auditing every criterion against evidence captured in this run. A green suite is supporting evidence, never completion proof by itself.
-- Waiting is not blocked: while a monitor, background child, or scheduled continuation can wake the run, end the turn and let it fire. Blocked requires a true impasse: no live resumption channel, and the same block recurring across consecutive turns.
+- Pending work is not a blocker: continue independent work, then use wait when its result is needed. Do not end the task with live pending work; record actual unmet dependencies or missing capabilities as blockers.
 - The moment the WHEN TO STOP line holds with evidence in hand, deliver and stop.
 
 ## Anti-patterns
@@ -100,5 +100,5 @@ Repaired: "Resolve every open change-requesting review comment on PR 123 touchin
 | Criteria added after implementation | The contract bent to fit the work; nothing was proven | Write criteria and scenarios at registration, before any edit |
 | Decorative precision ("99.97% uptime" nobody measures) | A threshold no validator checks is noise wearing a suit | Only thresholds a named validator will actually check |
 | Padded objective (role prose, restated context, filler) | Every extra token competes with the criteria for attention | Outcome, deliverables, criteria, bounds, stop line; nothing else |
-| Goal registered in prose or a notepad | Nothing binds the run; completion becomes a vibe | the binding durable goal record with the objective, every time the tool exists |
+| Goal kept only in transient conversation | Resume loses the contract | Write the objective and criteria into the durable run files |
 | Duplicate goal for the same intent | Two contracts, neither authoritative | Continue the active goal or surface the conflict |

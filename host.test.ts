@@ -27,7 +27,7 @@ Original reporting`;
 test("behavior replacement preserves host capabilities, project instructions, and specialized agent assignment", () => {
   const project = "<repo-rules>Never modify customer data</repo-rules>";
   const agent = "Review only; report security findings without edits";
-  const result = replaceHostBehavior([base, project, agent], "<omo-model-preset>Chosen model behavior</omo-model-preset>");
+  const result = replaceHostBehavior([base, project, agent], "<omp-model-preset>Chosen model behavior</omp-model-preset>");
   expect(result).toBeDefined();
   expect(result?.blocks.slice(1)).toEqual([project, agent]);
   const first = result?.blocks[0] ?? "";
@@ -46,6 +46,8 @@ test("custom and unfamiliar prompts are never replaced", () => {
 });
 
 test("an already-owned profile cannot be nested by a second installation", () => {
-  const first = replaceHostBehavior([base], "<omo-model-preset>profile</omo-model-preset>");
-  expect(replaceHostBehavior(first?.blocks ?? [], "<omo-model-preset>other</omo-model-preset>")).toBeUndefined();
+  for (const prefix of ["omp", "omo"]) {
+    const first = replaceHostBehavior([base], `<${prefix}-model-preset>profile</${prefix}-model-preset>`);
+    expect(replaceHostBehavior(first?.blocks ?? [], "<omp-model-preset>other</omp-model-preset>")).toBeUndefined();
+  }
 });

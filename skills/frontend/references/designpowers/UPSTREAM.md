@@ -4,19 +4,19 @@ Upstream project: `Owl-Listener/designpowers`
 
 Upstream repository: `https://github.com/Owl-Listener/designpowers`
 
-Local upstream submodule: `packages/shared-skills/upstreams/designpowers`
+Historical upstream submodule path: `packages/shared-skills/upstreams/designpowers` (not present in this OMP package).
 
 Pinned upstream commit: `cb00757da9d554591fa78d27aa1854d60a05c4f7`
 
 ## Materialized Files
 
-The build materializes third-party designpowers files into `packages/shared-skills/skills/frontend/references/designpowers/vendor/`.
+The upstream build materialized third-party designpowers files into `packages/shared-skills/skills/frontend/references/designpowers/vendor/`. This OMP package ships the resulting files directly under this reference's `vendor/` directory; no materialization step is required.
 
 - `LICENSE` -> `vendor/LICENSE`
 - `agents/*.md` allowlist -> `vendor/agents/`
 - selected `skills/*/SKILL.md` allowlist -> `vendor/skills/*/reference.md`
 
-The materialized `vendor/` directory is ignored in git and included in npm/package output through the frontend skill's `.npmignore` behavior.
+The upstream package ignored its materialized `vendor/` directory and included it through `.npmignore`. Here, `vendor/` is tracked source material, not generated output.
 
 ## Included Upstream Skills
 
@@ -63,7 +63,7 @@ The materialized `vendor/` directory is ignored in git and included in npm/packa
 
 ## Excluded Upstream Skills
 
-These upstream skills are intentionally excluded because they are bridge/state/router integration surfaces that would compete with the existing frontend/OpenAgent workflow:
+These upstream skills are intentionally excluded because they are bridge/state/router integration surfaces that would compete with the existing frontend/OMP workflow:
 
 - `figma-bridge`
 - `design-express`

@@ -5,9 +5,9 @@ metadata:
   short-description: How to deliver questions to THIS user, learned from behavior
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 
 # ulw-plan - stance calibration
@@ -16,7 +16,7 @@ Read this alongside your intent reference, before the first user-facing question
 
 ## Renderers
 
-Three delivery modes over the SAME surviving forks (the two filters and owner-decision rules are unchanged upstream). Deliver planning choices, owner-decision forks, approval decisions and review-cap decisions through native OMP ask from the main session, after independent work is finished. OMP ask already blocks; do not pass a wait flag or invent Senpi question tools. Follow its current schema, option limits and recommended index; never add a redundant Other option. Host-required permission requests use the direct channel instead. If no ask tool is listed or a call returns unavailable, state that in one line and put the unresolved decisions in chat. A timed-out, dismissed, empty or unavailable answer is not approval, even if the result says to use best judgment: only a reversible defaultable fork may take its recorded recommendation; owner authorizations and the approval gate stay open. Keep `status: awaiting-approval` at the plan gate, name the pending decision once, write no plan and end the turn. Apply the existing explicit execution-bootstrap exception rather than asking a second generic approval.
+Three delivery modes over the SAME surviving forks (the two filters and owner-decision rules are unchanged upstream). Deliver planning choices, owner-decision forks, approval decisions and review-cap decisions through native OMP ask from the main session, after independent work is finished. OMP ask already blocks; use its exposed parameters without a wait flag. Follow its current schema, option limits and recommended index; never add a redundant Other option. Host-required permission requests use the direct channel instead. If no ask tool is listed or a call returns unavailable, state that in one line and put the unresolved decisions in chat. A timed-out, dismissed, empty or unavailable answer is not approval, even if the result says to use best judgment: only a reversible defaultable fork may take its recorded recommendation; owner authorizations and the approval gate stay open. Keep `status: awaiting-approval` at the plan gate, name the pending decision once, write no plan and end the turn. Apply the existing explicit execution-bootstrap exception rather than asking a second generic approval.
 
 - **batch** - all surviving forks in as few ask calls as the current schema allows, recommended default first; a skipped defaultable fork resolves to its default. Fits users who enumerate upfront and delegate the rest.
 - **one-by-one** - one fork per ask call. Fits users who own decisions individually.
@@ -97,4 +97,4 @@ Episode format - every field required:
 - [YYYY-MM-DD] (seed) appears to <hypothesis + context> <!-- src: <harness>/<session-id>,...; harness: <names>; model: <models>; seeded: YYYY-MM-DD; pattern: inferred-from-external-sessions; confidence: low -->
 ```
 
-- **Precedence: native episodes > the user's explicit statements > seeds.** Once 2-3 native episodes exist, stop consulting seeds entirely.
+- **Precedence: the user's current explicit statements > native episodes > seeds.** Once 2-3 native episodes exist, stop consulting seeds entirely.

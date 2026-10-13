@@ -8,7 +8,7 @@ argument-hint: "[planning-request]"
 
 Say `HYPERPLAN MODE ENABLED!` once on explicit activation. Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Read [perspectives](references/perspectives.md) and [round contracts](references/rounds.md) before dispatch.
 
-This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
+Host and current user instructions take precedence. Merely reading this skill does not activate it. Reuse references already read; load operation-specific guidance when needed.
 
 This is adversarial filtering, not consensus building. Attack claims ruthlessly; defend with evidence, refine when an attack lands, and concede when wrong. Hostility is directed at reasoning, not people. Simplicity, complete impact analysis, verified evidence, sound architecture, and lateral alternatives must all survive each other's objections. Never drop a perspective merely because an upstream category is unavailable.
 
@@ -18,7 +18,7 @@ Source: omo 5.1.19 `plugin/skills/hyperplan/SKILL.md`, compared with `code-yeong
 
 OMP uses background `task` children, not a resident team service. `team_create`, `task_send`, `team_delete`, category routing, injected system identities, and foreground task flags are not available contracts. Perspective instructions belong in each child's `task`; use only roles listed in the current native schema, or omit `agent` for the default worker. Never pass category, model, subagent_type, prompt, load_skills, or run_in_background. A perspective name is a logical lane, not an agent id or native role.
 
-Read the exposed task schema. Shared goal and constraints go in `context`; independent assignments go in `tasks`, with `solutionSpace` describing actual uncertainty. Set the workflow's `outputSchema` and `schemaMode: "strict"` on every task. Children start blank: include required source paths, scope, round number, and findings/attacks explicitly.
+Read the exposed task schema. Shared goal and constraints go in `context`; independent assignments go in `tasks`, with `solutionSpace` describing actual uncertainty. Include the round's required JSON receipt shape in each task and validate the terminal response against it. Do not send outputSchema or schemaMode unless exposed by the current task schema. Children start blank: include required source paths, scope, round number, and findings/attacks explicitly.
 
 The lead is the information broker. Record every returned actual child id against perspective, round, attempt, and resolved identity. Forward bundles in the next wave's task context. Send necessary in-flight clarification only by `write` to `agent://<actual-id>`; children may relay a relevant discovery to the supplied actual lead id through the same channel. Never use `lead`, `skeptic`, or any invented team recipient as a transport address. Messages are not terminal results.
 
@@ -32,7 +32,7 @@ Planning is read-only against project code. Use a task-owned artifact location f
 
 ## 1. Round 1: independent analysis
 
-Dispatch all five perspectives together: Pragmatist Skeptic, Integration Tester, Autonomous Researcher, Architect Strategist, Creative Challenger. The researcher can use `scout` if listed; use listed reviewer/senior-task roles only where appropriate, otherwise omit `agent`. Do not substitute fictional architect/artistry roles.
+Dispatch all five perspectives together: Pragmatist Skeptic, Integration Tester, Autonomous Researcher, Architect Strategist, Creative Challenger. Omit `agent` and put each read-only perspective in its task: these rounds require custom JSON receipts rather than specialist-fixed response formats. Do not substitute fictional architect/artistry roles.
 
 Each child reads relevant project evidence and returns 3-7 stable, numbered findings, each at most three sentences. Finding ids are unique across the run, such as `skeptic-1`. Cite file:line for code, official URLs for library claims, and user statements for preferences; explicitly mark missing evidence. No member sees another's findings yet. No synthesis or executable plan.
 
@@ -42,7 +42,7 @@ Use the Round 1 schema in [round contracts](references/rounds.md). A child assig
 
 Immediately record returned actual child ids in a pending set. Work independently while they run. Native `wait({})` wakes on the first settled job, message, or steering interrupt; it does not accept handles and does not guarantee the wave is complete.
 
-At each wake reconcile auto-delivered results and returned jobs by actual id. Remove only terminal children; retain unfinished siblings, record failed/cancelled jobs, and validate `structured.status` plus `structured.data` or the parsed payload at `agent://<actual-id>`. A preview, `resultText`, message, or still-running snapshot is not completion. Keep waiting only when the next step needs a pending result. Advance only when the wave's pending set is empty and all five required payloads are valid.
+At each wake reconcile auto-delivered results and returned jobs by actual id. Remove only terminal children; retain unfinished siblings, record failed/cancelled jobs, and validate the requested receipt from the actual terminal response or full `agent://<actual-id>` payload. Use structured fields only when actually returned. A preview, `resultText`, message, or still-running snapshot is not completion. Keep waiting only when the next step needs a pending result. Advance only when the wave's pending set is empty and all five required payloads are valid.
 
 Validate perspective/round identity, stable ids, complete required coverage, and evidence independently. An invalid output is a failed contract. Retain verified siblings; replace only a terminal failed lane with its exact failure context and bind the new actual id to the same logical lane. Do not treat silence or elapsed time as failure, poll repeatedly, or sleep. If native delegation is unavailable, report that hyperplan is blocked rather than pretending a single-agent review supplies five independent perspectives.
 

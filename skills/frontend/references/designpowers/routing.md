@@ -1,20 +1,20 @@
 # designpowers Routing Contract
 
-`designpowers` routes design operating-layer guidance inside the existing frontend skill. It is not a replacement for `/frontend`, `/visual-qa`, `/ulw-plan`, `/ulw-execute`, `/review-work`, or any OpenAgent skill, and it must not create a second planner, builder, verification harness, or orchestration API.
+`designpowers` routes design operating-layer guidance inside the existing frontend skill. It is not a replacement for `/frontend`, `/visual-qa`, `/ulw-plan`, `/ulw-execute`, `/review-work`, or any OMP skill, and it must not create a second planner, builder, verification harness, or orchestration API.
 
 ## Phase Routing
 
 | User intent or workflow phase | Load or instruct | Required handoff from designpowers |
 |---|---|---|
 | Ambiguous or multi-step web UI request; any request needing a plan | `/ulw-plan` plus this reference's `lane-a-direction.md` | Provide design discovery prompts, target users, inclusive personas, taste direction, open owner decisions, and design debt policy as planning inputs. |
-| Approved plan execution; continuing an OpenAgent plan | `/ulw-execute` plus `lane-b-execution.md` | Keep execution under Boulder/ledger discipline and include current design-state constraints in worker assignments. |
+| Approved plan execution; continuing an OMP plan | `/ulw-execute` plus `lane-b-execution.md` | Keep execution under the OMP execution ledger and include current design-state constraints in worker assignments. |
 | Building, styling, redesigning, auditing, or performance-checking a web UI | frontend `design` + `perfection`; add `lane-b-execution.md` when designpowers context affects implementation | Preserve the frontend `DESIGN.md` gate, design/perfection routing, React tooling, real-browser checks, and implementation standards. |
 | Screenshots, visual regressions, clone fidelity, layout quality, alpha/CJK checks, or design QA | `/visual-qa` plus `lane-c-review.md` | Run objective evidence capture before design judgment and feed the same artifacts into persona/accessibility/heuristic review. |
 | Final implementation approval, QA my work, review changes, or significant completed implementation | `/review-work` plus `lane-c-review.md` and `lane-d-memory.md` | Include the design brief, state file path, visual artifacts, unresolved design debt, and accessibility-debt acknowledgements as review inputs. |
 
 ## Planning Through `/ulw-plan`
 
-When planning is needed, `designpowers` supplies design-specific context and lets `/ulw-plan` own the plan artifact. Do not write a separate design plan. The Prometheus plan should receive:
+When planning is needed, `designpowers` supplies design-specific context and lets `/ulw-plan` own the plan artifact. Do not write a separate design plan. The `ulw-plan` plan should receive:
 
 - product or page goal;
 - primary tasks and user journeys;
@@ -35,7 +35,7 @@ When a plan is approved or selected, `/ulw-execute` remains the orchestrator. `d
 - required `/visual-qa` loading for rendered visual proof;
 - the design debt rule: unresolved accessibility debt cannot disappear into a summary.
 
-Direct implementation outside `/ulw-execute` is not part of this routing contract when a Prometheus plan is active.
+Direct implementation outside `/ulw-execute` is not part of this routing contract when a `ulw-plan` plan is active.
 
 ## UI Build Through Frontend `design` And `perfection`
 

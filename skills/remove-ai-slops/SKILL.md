@@ -95,19 +95,19 @@ Do one coherent small pass inline. For independent substantial units, native bac
 Concrete OMP shape after inspecting actual task schema and file scope:
 
 ```js
+const cleanupReceiptSchema = {type:"object",properties:{files:{type:"array",items:{type:"string"}},changes:{type:"array",items:{type:"object",properties:{category:{type:"string"},replacement:{type:"string"},whySafe:{type:"string"},pointer:{type:"string"}},required:["category","replacement","whySafe","pointer"],additionalProperties:false}},skipped:{type:"array",items:{type:"string"}},risks:{type:"array",items:{type:"string"}},checks:{type:"array",items:{type:"string"}}},required:["files","changes","skipped","risks","checks"],additionalProperties:false};
 await tool.task({
   context: "Perform the authorized bounded cleanup recorded at local://cleanup-scope.md. Preserve its pre-existing user hunks, public behavior and security guards; no new dependencies or abstractions. Root owns final verification.",
   tasks: [{
     name: "CleanParser",
-    task: "TASK: Read skills/remove-ai-slops/SKILL.md and local://cleanup-scope.md, then apply the approved behavior-preserving cleanup to its owned parser path only. DELIVERABLE: owned diff summary grouped by category with replacement, why-safe and skipped issues. SCOPE: exact path/hunks from the scope artifact; no caller/test edits, no builds/tests/formatters midflight. VERIFY: inspect all nine categories and KEEP rules, existing owner tests and boundary guards; return risks and required final checks to root. STOP WHEN: all approved safe edits are present and no user hunk was touched.",
-    solutionSpace: "Cleanup options are partially open; preserve behavior and skip any candidate whose equivalence cannot be established from the supplied contracts.",
-    schemaMode: "strict",
-    outputSchema: {type:"object",properties:{files:{type:"array",items:{type:"string"}},changes:{type:"array",items:{type:"object",properties:{category:{type:"string"},replacement:{type:"string"},whySafe:{type:"string"},pointer:{type:"string"}},required:["category","replacement","whySafe","pointer"],additionalProperties:false}},skipped:{type:"array",items:{type:"string"}},risks:{type:"array",items:{type:"string"}},checks:{type:"array",items:{type:"string"}}},required:["files","changes","skipped","risks","checks"],additionalProperties:false}
+    task: "TASK: Read skill://remove-ai-slops and local://cleanup-scope.md, then apply the approved behavior-preserving cleanup to its owned parser path only. DELIVERABLE: owned diff summary grouped by category with replacement, why-safe and skipped issues. SCOPE: exact path/hunks from the scope artifact; no caller/test edits, no builds/tests/formatters midflight. VERIFY: inspect all nine categories and KEEP rules, existing owner tests and boundary guards; return risks and required final checks to root. STOP WHEN: all approved safe edits are present and no user hunk was touched." + "\nReturn JSON matching: " + JSON.stringify(cleanupReceiptSchema),
+    solutionSpace: "Cleanup options are partially open; preserve behavior and skip any candidate whose equivalence cannot be established from the supplied contracts."
+
   }]
 });
 ```
 
-Omit agent for the default worker; senior-task only when listed and difficult reasoning merits it. No category/model. Replace example artifacts with observed paths. Track actual ids in a pending set; native wait({}) wakes on first settled result/message, not an entire batch. Consume validated structured.data or agent:// payload; remove only terminal entries. Retain verified siblings, collect a failed terminal child before any replacement, never duplicate a live writer. Integrate owned results before opening the next batch; final report requires empty pending set.
+Omit agent for the default worker; senior-task only when listed and difficult reasoning merits it. No category/model. Replace example artifacts with observed paths. Track actual ids in a pending set; native wait({}) wakes on first settled result/message, not an entire batch. Validate the actual terminal response from task/wait or agent://; remove only terminal entries. Retain verified siblings, collect a failed terminal child before any replacement, never duplicate a live writer. Integrate owned results before opening the next batch; final report requires empty pending set.
 
 ## Phase 5 - Final gates and critical review
 

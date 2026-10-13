@@ -23,6 +23,7 @@ export interface UlwApi {
   on(event: "session_stop", handler: (event: { signal: AbortSignal }, ctx: UlwContext) => { continue: true; additionalContext: string } | undefined): void;
 }
 
+// Keep persisted session keys and shipped CLI flags stable; emitted prompts use OMP names.
 const stateType = "omo-ultrawork:state";
 const skillRoot = fileURLToPath(new URL("./skills/", import.meta.url));
 const directive = readFileSync(join(skillRoot, "ultrawork/SKILL.md"), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
@@ -52,7 +53,7 @@ const workflows = [
 /** Native ULW ignores quoted code and already-expanded directive/pointer blocks. */
 export function visibleUlwText(text: string): string {
   if (/^\s*(?:\[(?:[A-Z][A-Z0-9_-]{2,}|[\w.-]+ -> [\w.-]+)\]|[A-Z][\w.-]{0,30} \([^()\s]{1,40}\)(?:, | to )[\w.-]{1,40}:)/.test(text)) return text.replace(/[^\r\n]/g, "\0");
-  text = text.replace(/<(omo-[a-z0-9-]+-pointer|ultrawork-mode|omo-ultrawork-reminder)>[\s\S]*?<\/\1>/gi, value => value.replace(/[^\r\n]/g, "\0"));
+  text = text.replace(/<(om[op]-[a-z0-9-]+-pointer|ultrawork-mode|om[op]-(?:ulw|ultrawork)-reminder)>[\s\S]*?<\/\1>/gi, value => value.replace(/[^\r\n]/g, "\0"));
   const fences = /^ {0,3}(`{3,}|~{3,})[^\n]*(?:\n|$)/gm;
   for (;;) {
     const opening = fences.exec(text);
@@ -73,7 +74,7 @@ export function visibleUlwText(text: string): string {
 
 export function registerUlw(pi: UlwApi): void {
   pi.registerFlag("omo-ultrawork-disabled", { description: "Disable automatic Native ULW arming", type: "boolean", default: false });
-  pi.registerFlag("omo-ulw-workflows-disabled", { description: "Disable OMO workflow skill pointers", type: "boolean", default: false });
+  pi.registerFlag("omo-ulw-workflows-disabled", { description: "Disable OMP workflow skill pointers", type: "boolean", default: false });
   pi.registerFlag("omo-ulw-continuation-disabled", { description: "Disable ULW loop/execute continuation", type: "boolean", default: false });
   let armed = false;
   let rearmed = false;
@@ -115,7 +116,7 @@ export function registerUlw(pi: UlwApi): void {
     if (ctx.agent.kind !== "main") {
       inputSource = undefined;
       commandPending = false;
-      const blocks = event.systemPrompt.filter(block => !block.startsWith("<omo-ulw-policy>"));
+      const blocks = event.systemPrompt.filter(block => !/^<om[op]-ulw-policy>/.test(block));
       return blocks.length === event.systemPrompt.length ? undefined : { systemPrompt: blocks };
     }
     let text = event.prompt;
@@ -138,14 +139,14 @@ export function registerUlw(pi: UlwApi): void {
       if (!armed) { armed = true; pi.appendEntry(stateType, true); }
     }
     if ((!armed || pi.getFlag("omo-ultrawork-disabled")) && selected.length === 0) return;
-    const blocks = event.systemPrompt.filter(block => !block.startsWith("<omo-ulw-policy>"));
+    const blocks = event.systemPrompt.filter(block => !/^<om[op]-ulw-policy>/.test(block));
     if (armed && !pi.getFlag("omo-ultrawork-disabled")) {
       // A current system block survives compaction and provider fallback without replaying a 31KB user message.
-      blocks.push(`<omo-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model?.id)}</ultrawork-mode>\n</omo-ulw-policy>`);
+      blocks.push(`<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model?.id)}</ultrawork-mode>\n</omp-ulw-policy>`);
     }
-    const pointers = selected.map(workflow => `<omo-${workflow.name}-pointer>This message mentions ${workflow.name}. If the user is asking to run it, read ${join(skillRoot, workflow.name, "SKILL.md")} and follow its complete workflow. If it is only discussed, quoted or relayed, ignore this pointer. This session's run id is ${ctx.sessionManager.getSessionId()}.</omo-${workflow.name}-pointer>`);
+    const pointers = selected.map(workflow => `<omp-${workflow.name}-pointer>This message mentions ${workflow.name}. If the user is asking to run it, read ${join(skillRoot, workflow.name, "SKILL.md")} and follow its complete workflow. If it is only discussed, quoted or relayed, ignore this pointer. This session's run id is ${ctx.sessionManager.getSessionId()}.</omp-${workflow.name}-pointer>`);
     if (rearmed) {
-      pointers.unshift("<omo-ultrawork-reminder>ultrawork mode is already armed for this session - the complete directive in the current system prompt remains binding; re-read the durable notepad and resume without repeating completed bootstrap or checks.</omo-ultrawork-reminder>");
+      pointers.unshift("<omp-ultrawork-reminder>ultrawork mode is already armed for this session - the complete directive in the current system prompt remains binding; re-read the durable notepad and resume without repeating completed bootstrap or checks.</omp-ultrawork-reminder>");
       rearmed = false;
     }
     return { systemPrompt: blocks, ...(pointers.length ? { message: { customType: "omo-ultrawork:directive", content: pointers.join("\n"), display: false as const } } : {}) };
@@ -170,9 +171,13 @@ export function registerUlw(pi: UlwApi): void {
             const plan = readFileSync(planPath, "utf8");
             const tasks = [...visibleUlwText(plan).matchAll(/^- \[([ xX~])\] /gm)];
             if (tasks.length === 0) continue;
-            const unfinished = tasks.some(task => task[1].toLowerCase() !== "x");
+            const pending = tasks.some(task => task[1] === " ");
+            const blocked = tasks.some(task => task[1] === "~");
+            if (!pending && blocked) continue;
             fingerprint = raw + plan;
-            reason = `Resume ulw-execute from ${boulderPath} and ${planPath}; ${unfinished ? "integrate pending child results, complete the next unfinished task with captured evidence, and update Boulder/ledger" : "all top-level tasks are checked; verify the Final Verification Wave and its evidence, then mark the Boulder work complete and finalize its ledger"}. Respect cancellation, approvals and blocked/paused state.`;
+            reason = `Resume ulw-execute from ${boulderPath} and ${planPath}; ${pending
+              ? "integrate pending child results and execute the next dependency-ready pending task, including pending Final Verification Wave rows; capture evidence and update Boulder/ledger"
+              : "all top-level tasks are checked; verify the Final Verification Wave and its evidence, then mark the Boulder work complete and finalize its ledger"}.${blocked ? " Treat [~] rows and transitive dependents as terminal non-success; never reopen or re-queue them. Final verification checks delivered work and reports known gaps without treating those gaps alone as new failures. When pending work ends, report every unmet gap, mark Boulder blocked and stop without claiming success." : ""} Respect cancellation, approvals and blocked/paused state.`;
             break;
           }
         }

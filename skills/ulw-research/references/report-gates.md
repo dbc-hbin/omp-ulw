@@ -1,7 +1,7 @@
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 # Report-Gates Defect Glossary
 
@@ -54,7 +54,7 @@ Gates emit a manifest-level outcome with one of three statuses:
 
 ### Layout Gate Probe File Requirement
 
-The `layout` gate only runs when a probe file (a rendering artifact: PDF, PNG, or HTML snapshot) is provided alongside the manifest. If no probe file is available, the manifest records `layout: not_run` and the gate does not emit defects.
+The `layout` gate consumes the JSON boxes returned by layout-probe evaluated in the rendered page, passed as check --layout <boxes.json>. PDF/PNG files and HTML snapshots are not probe JSON. If no probe file is available, the manifest records `layout: not_run` and the gate does not emit defects.
 
 ## Lineage and Citation Markers
 

@@ -1,16 +1,16 @@
 ---
 name: mass-ulw
-description: "Drives dependency-ordered native OMP task waves or documented workpool runs, one phase at a time with node-level recovery. Activate explicitly for mass-ulw or a requested task DAG."
+description: "Drives dependency-ordered native OMP task waves or documented workpool runs, with each phase's predictable stages defined up front and file handoffs between nodes. Activate explicitly for mass-ulw or a requested task DAG."
 argument-hint: "<task>"
 metadata:
   short-description: Dependency-graph orchestration of child agents
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
-This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
+Reuse references already read in this session; load operation-specific guidance when that operation needs it.
 
 
 # mass-ulw
@@ -23,13 +23,15 @@ Before defining ANY graph, read `references/planning.md` (relative to this skill
 
 ## The shape
 
+A phase is the unit checkpointed by the owning loop or plan: a goal criterion, worktree, or evidence gate. A stage (harvest, expand, verify, reduce) is a step within that phase, not a new phase. Before dispatch, define every predictable stage in the same graph, with producer/consumer handoff paths and real dependencies. Start a new run for a new phase or when findings change which nodes must exist, not merely because downstream inputs are not known yet. Split a phase into cluster runs only for bounded reduction or documented runtime capacity; count every stage and reducer when sizing them.
+
 A run is a declarative definition: a stable ledger `key` (lead-managed identity and resume, not an automatic runtime idempotency service), a human `name`, and `nodes`. Each node has an `id`, a self-contained task assignment, solutionSpace describing the solution's uncertainty, and a selected available specialist role or the default worker, and optional `dependsOn` listing node ids that must finish first. `dependsOn` is ordering ONLY: no upstream output is substituted into a downstream prompt, so write every prompt to stand alone. Put exact file scope, acceptance and required skill paths in task; shared goals/interfaces belong in context. Node ids and dependsOn are lead-owned graph metadata, not task input fields.
 
 Map the difficulty/specialty metadata in references/planning.md to an actually listed OMP role and record that mapping; omit agent for default task work. OMP selects models and fallbacks. Record resolvedModel only from actual results, never pass a per-task model or category. Dispatch dependency-ready task waves.
 
 ## Goal before start
 
-Every run is goal-bound. In a standalone run, register the goal as written (the binding durable goal record, or a `# Goal` block where no goal tool exists). Under `ulw-loop` or `ulw-execute`, the loop's registered goal already covers the run, so register no second goal. The objective names the deliverable the graph produces, and the success criteria carry RESULT VERIFICATION - node and run completion claims are false until proven against captured evidence, the same contract the dag completion directive injects (TREAT AS FALSE UNTIL YOU PROVE IT). The verification wave (references/planning.md) produces the evidence those criteria name; the run ends when the criteria pass, never when the last node reports completion.
+Every run is goal-bound. In a standalone run, register the goal as written (the binding durable goal record, or a `# Goal` block where no goal tool exists). Under `ulw-loop` or `ulw-execute`, the loop's registered goal already covers the run, so register no second goal. The objective names the deliverable the graph produces, and the success criteria carry RESULT VERIFICATION - node and run completion claims are false until proven against captured evidence, a lead-enforced evidence rule, not an injected DAG completion directive. The verification wave (references/planning.md) produces the evidence those criteria name; the run ends when the criteria pass, never when the last node reports completion.
 
 Ask any material decision only the user can make (scope, spend, an irreversible choice) from the main session through native OMP ask before starting the dependent wave, after finishing independent work - never from an eval cell or a node prompt. OMP ask blocks without a wait flag. Request permissions directly when host instructions require that channel. A missing, dismissed or unavailable answer grants no authorization; hold the dependent wave while unrelated authorized work proceeds.
 
@@ -37,15 +39,15 @@ Ask any material decision only the user can make (scope, spend, an irreversible 
 
 Read xd://eval/agents first when available; use a workpool only as documented there. If absent, explicit task dependency waves are the supported implementation. Do not import any DAG SDK or invent workflow methods. Persist doc/mass-ulw/<run-id>/graph.json and ledger.jsonl through read/write/edit: graph {key,name,phase,status,nodes:[{id,task,solutionSpace,agent?,requestedTier?,resolvedModel?,dependsOn,status,attempt,handle?,artifact?,verdict?}]}. Lead owns writes.
 
-Before dispatch reject duplicate ids, missing dependencies, cycles, overlapping parallel write scopes and missing verification nodes. A node is ready only when every dependency is independently verified complete. Batch all ready independent nodes through task; keep returned actual handles, mark in_progress, keep doing independent work, then wait when the next decision needs them. Save bounded outputs and actual artifacts before marking complete. Read upstream artifacts and paste the relevant verified facts into downstream assignments; dependencies themselves do not transport context.
+Before dispatch reject duplicate ids, missing dependencies, cycles, overlapping parallel write scopes and missing verification nodes. A node is ready only when every dependency is independently verified complete. Batch ready independent nodes through task; keep returned actual handles, mark in_progress, keep doing independent work, then wait for the handles needed by the next decision, not unrelated siblings. Save bounded outputs and actual artifacts before marking complete. Each producer assignment names its exact absolute handoff file; each consumer names the same file to read and treats a missing handoff as FAIL. Dependencies order work but do not transport context or prove the file exists. Add edges only for consumed outputs or real write ordering; no all-to-all stage barriers. Advance verified branches while unrelated branches are still running.
 
-A run covers one phase. Synthesize its verified results before defining the next phase. Independent runs may overlap only with disjoint scopes and actual available capacity; no hardcoded Senpi concurrency/residency limits apply. For mass research preserve the 60+ opening-angle harvest on genuinely broad topics, bounded per-node reports and staged reduction.
+A run covers one phase. Synthesize its verified results before defining the next phase. Independent runs may overlap only with disjoint scopes and actual available capacity; use the current host capacity rather than fixed concurrency limits. For mass research preserve the 60+ opening-angle harvest on genuinely broad topics, bounded per-node reports and staged reduction.
 
 ## Recovery and resume
 
 On resume read graph and ledger first; reconnect only actual retained handles. Never duplicate a live node. Reuse unchanged completed outputs after checking their evidence freshness; never claim automatic host journal replay. Retry a failed/cancelled node with failure context after its attempt settles, retaining successful siblings. A blocked ancestor leaves descendants waiting while unrelated branches proceed. A definition change invalidates that node plus transitive dependents, not the entire graph. Editing a running assignment requires native agent:// messaging and a recorded revision; do not dispatch two writers. If context cannot be continued, spawn a fresh bounded attempt from the durable artifacts. Record cancellation reasons and use the documented host stop route, never cancel for elapsed time alone.
 
-The final verification wave is mandatory: completed children are claims, not proof. The graph is complete only when its binding goal criteria are observed and verified. Native todos plus graph/ledger state are the inspection surface; do not claim /dag widgets, Senpi RPC events or idempotent SDK keys.
+The final verification wave is mandatory: completed children are claims, not proof. The graph is complete only when its binding goal criteria are observed and verified. Native todos plus graph/ledger state are the inspection surface; do not invent graph widgets, RPC events or idempotent SDK keys.
 
 ## Supervising a run
 
@@ -55,4 +57,4 @@ Inspection surfaces:
 
 - Read the lead-owned graph.json and ledger.jsonl for node state, attempts, dependencies, failures and verification verdicts.
 - Read actual agent:// ids once when a midpoint decision needs their context; wait collects the pending handles.
-- Use only host-provided native workpool views documented by the current runtime. No /dag command, TUI status widget or Senpi RPC channel is assumed.
+- Use only host-provided native workpool views documented by the current runtime. Do not assume a graph command, status widget or RPC channel.

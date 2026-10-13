@@ -5,6 +5,8 @@ description: "Runs rigorous visual QA across web, terminal, and paginated surfac
 
 # Visual QA - Dual-Oracle Web and TUI Verification
 
+Resolve relative reference paths from this skill's directory, not the project working directory; use `skill://visual-qa/<relative-path>` with `read`. Cross-skill reads use `skill://<name>`. Workflow labels such as `/visual-qa` name skills to load, not shell commands or guaranteed slash-command APIs.
+
 Verify a rendered UI against the platform baseline (the checklist below), against its reference when one exists, and against the stated intent: objective script evidence plus two parallel read-only oracle passes, synthesized into one per-item PASS/FAIL verdict. The script numbers focus the reviewers. They are not the verdict.
 
 ## Purpose and when to use
@@ -13,7 +15,7 @@ Verify a rendered UI against the platform baseline (the checklist below), agains
 - Use with or without a reference: a mock, a baseline, or a source site when one exists; otherwise the checklist is the reference. Also when you suspect a regression, when CJK (Korean/Japanese/Chinese) text may clip, misalign, or wrap awkwardly, when a claimed design system might actually be a flat image, or when a terminal layout may overflow or its borders may break.
 - Skip when there is no rendered surface (pure backend or library logic with no visual or terminal output). For broad post-implementation review use review-work; this skill is the visual specialist.
 
-In the commands below, `$SKILL_DIR` is this skill's own directory (the folder containing this SKILL.md). The bundled self-contained Node evidence CLI lives at `scripts/visual-qa.mjs`; no TypeScript source or build step is needed.
+In the commands below, set `SKILL_DIR` to the observed absolute directory containing this skill's `SKILL.md`, resolved with `read` on `skill://visual-qa`; OMP does not set this shell variable automatically. The bundled self-contained Node evidence CLI lives at `scripts/visual-qa.mjs`; no TypeScript source or build step is needed.
 
 ## Step 1 - Detect the surface
 
@@ -48,7 +50,7 @@ Before any reviewer sees an image, verify each capture yourself: the file signat
 
 ### Web
 
-1. Read `references/browser-setup.md` and capture the ACTUAL surface through `skill://ego-browser`. For every enumerated page capture 390 CSS px with mobile/touch/DPR emulation, 1440 desktop, plus 1920 for page layouts, each in light AND dark; include scrolled-to-end viewports and applicable interaction/state captures. Do not infer emulation from a narrow desktop window. Record actual dimensions, DPR, mobile/touch, theme, state, build digest and capture time. If an emulation capability is absent, identify that exact gap rather than claim the matrix passed.
+1. Read `references/browser-setup.md` and capture the ACTUAL surface through the exposed browser tools. For every enumerated page capture 390 CSS px with mobile/touch/DPR emulation, 1440 desktop, plus 1920 for page layouts, each in light AND dark; include scrolled-to-end viewports and applicable interaction/state captures. Do not infer emulation from a narrow desktop window. Record actual dimensions, DPR, mobile/touch, theme, state, build digest and capture time. If an emulation capability is absent, identify that exact gap rather than claim the matrix passed.
 2. When a REFERENCE exists (the user's mock, a generated page snapshot, a Figma export, a source-site capture, a known-good baseline), capture it as PNG at the same viewport, scroll position, color mode, density, and state as its ACTUAL counterpart, keep any overview text or annotations next to it as part of the reference packet, and run the diff for each pair, keeping the JSON:
 
 ```
@@ -61,7 +63,7 @@ For reference-fidelity work, repeat the capture and diff for every referenced vi
 
 ### TUI
 
-1. Capture the running TUI in a real terminal via `skill://cua-driver`, with actual PTY input, resize and true-color/CJK glyphs. An existing real xterm.js browser renderer can instead be driven through `skill://ego-browser`. The upstream repository-only web-terminal capture script is not present and is not required here; do not copy or invent that command. Save the rendered screenshot plus terminal columns/rows, font, DPR, locale, input/state, source revision and cleanup receipt. Raw ANSI/plain text may supplement but never replace rendered TUI proof. If no real terminal renderer can be captured, mark this a capability blocker. Window chrome is acceptable only in native terminal evidence, clearly distinguished from page-only web evidence.
+1. Capture the running TUI in a real terminal via `skill://cua-driver`, with actual PTY input, resize and true-color/CJK glyphs. An existing real xterm.js browser renderer can instead be driven through the exposed browser tools. The upstream repository-only web-terminal capture script is not present and is not required here; do not copy or invent that command. Save the rendered screenshot plus terminal columns/rows, font, DPR, locale, input/state, source revision and cleanup receipt. Raw ANSI/plain text may supplement but never replace rendered TUI proof. If no real terminal renderer can be captured, mark this a capability blocker. Window chrome is acceptable only in native terminal evidence, clearly distinguished from page-only web evidence.
 
 2. Run the width check on the produced text and keep the JSON:
 
@@ -177,13 +179,13 @@ This is the platform baseline, distilled from Apple's Human Interface Guidelines
 
 ## OMP reviewer output contract
 
-Read `references/verdict-schema.json`; pass that exact JSON as each task's `outputSchema` with `schemaMode: "strict"`. Populate all fields, including confidence, summary, checklist, evidenceTrace, findings, good, blocking and artifacts. Pass A owns G-J; Pass B owns A-F. Put shared intent, complete capture manifest/reference packet, source paths and diff, script JSON and freshness digest in top-level `context`; put each independent read-only charter, allowed reads, no-edit scope, checklist ids and stop condition in its `task`. Set `solutionSpace` to uncertainty (for example, "Whether pixels and source establish compliance is open; the evidence and checklist are fixed"). Select `agent: "reviewer"` only if listed; otherwise omit agent. Do not supply category/model/prompt fields. Record actual child ids in a pending set; native `wait({})` wakes on the first settlement/message, so reconcile terminal payloads individually and wait again only while blocked on remaining children. A malformed schema, missing image access or incomplete coverage is not PASS. The final verdict requires a pageVerdicts entry for EVERY enumerated page; missing coverage is FAIL, never N/A. Use `references/final-verdict-schema.json` for the synthesized machine verdict and the report template below for the readable report.
+Read `skill://visual-qa/references/verdict-schema.json` and include its JSON response contract in each reviewer task. Require every field, including confidence, summary, checklist, evidenceTrace, findings, good, blocking and artifacts; validate returned JSON against that schema before accepting it. Do not pass `outputSchema` or `schemaMode` unless the exposed task schema supports them. Pass A owns G-J; Pass B owns A-F. Put shared intent, complete capture manifest/reference packet, source paths and diff, script JSON and freshness digest in top-level `context`; put each independent read-only charter, allowed reads, no-edit scope, checklist ids and stop condition in its `task`. Set `solutionSpace` to the uncertainty being reviewed. Omit agent and assign read-only reviewer behavior because this workflow requires its own JSON receipt rather than a specialist's fixed response format. Use only exposed dispatch fields. Record actual child ids in a pending set; native `wait({})` wakes on the first settlement/message, so reconcile terminal payloads individually and wait again only while blocked on remaining children. A malformed payload, missing image access or incomplete coverage is not PASS. Read `skill://visual-qa/references/final-verdict-schema.json` and validate the final synthesized verdict against it.
 
 ## Step 3 - Dispatch two read-only QA subagents in parallel
 
 This independent review is REQUIRED before any "done" claim. Do not self-review inside the main agent and call the UI verified - a self-graded pass is the failure mode this step exists to stop. Dispatch it yourself, every time, without waiting to be told. Give each reviewer the captures for every enumerated page from Step 2, not a sample, tell it the page count so it can confirm none were skipped, and paste the checklist sections it owns verbatim.
 
-Use one native task dispatch with two tasks so both passes run concurrently, following `../ulw-loop/references/omp-contract.md`. Each oracle is read-only: it reviews and reports, it cannot modify files. Each returns PASS, REVISE, or FAIL with concrete, located findings. Pass A proves the surface is a real design-system implementation, not a mock-only or faked-image substitute, and judges behaviour: motion, states, keyboard, platform (checklist G-J). Pass B directly opens screenshots and judges what is seen: layout, hierarchy, text, targets, themes, consistency (checklist A-F), reference fidelity and CJK.
+Use one native task dispatch with two tasks so both passes run concurrently, following `skill://ulw-loop/references/omp-contract.md`. Each oracle is read-only: it reviews and reports, it cannot modify files. Each returns PASS, REVISE, or FAIL with concrete, located findings. Pass A proves the surface is a real design-system implementation, not a mock-only or faked-image substitute, and judges behaviour: motion, states, keyboard, platform (checklist G-J). Pass B directly opens screenshots and judges what is seen: layout, hierarchy, text, targets, themes, consistency (checklist A-F), reference fidelity and CJK.
 
 Paste evidence directly into each prompt: source code, the plain-text TUI captures, the script JSON, and the screenshot paths plus your described observations for web. Never fork parent history into a reviewer - the message carries everything it needs. Require each blocking finding to be tagged `[product]` (the rendered UI is wrong) or `[evidence]` (the capture artifact is defective - wrong signature, partial compositing, stale file); the loop treats the two differently. The two passes differ in depth by charter, not by any model or effort setting, which cannot be pinned per call.
 
@@ -235,7 +237,7 @@ BLOCKING: items that must be fixed; empty if PASS
 
 ```text
 REVIEW TYPE: VISUAL FIDELITY AND CJK PRECISION (read-only)
-TIER INTENT: Treat this as the focused visual pass. Directly open the screenshots with the available image-viewing tool (the advertised image-reading surface or `skill://ego-browser` browser inspection) before judging. Anchor every claim to the script evidence, source code, and captures.
+TIER INTENT: Treat this as the focused visual pass. Directly open the screenshots with the available image-viewing tool (the advertised image-reading surface or native browser inspection) before judging. Anchor every claim to the script evidence, source code, and captures.
 
 INTENT:
 {What the user requested and the mock or baseline to match.}

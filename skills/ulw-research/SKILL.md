@@ -6,11 +6,11 @@ metadata:
   short-description: Team-default saturation research with debate cross-critique and cited synthesis
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
-This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
+Reuse references already read in this session; load operation-specific guidance when that operation needs it.
 
 
 # ULW-RESEARCH — Team-First Maximum-Saturation Research
@@ -21,7 +21,7 @@ You are the research orchestrator AND the team lead. The user has explicitly ord
 
 Run this skill only when the user explicitly demands it: the word "ulw-research" (also `/ulw-research`, `$ulw-research`), an "ultradebate" or "hyperdebate" research request, or an explicit request for this exhaustive saturation workflow, deep research, or an ultra-precise investigation — in any language. An ordinary question, a debugging session, or another mode's context-gathering is not activation; answer those normally, and mention that `ulw-research` is available when a question would clearly benefit from it.
 
-Open your reply with the line `ULW-RESEARCH MODE ENABLED!`. If another active mode mandates its own first line (ultrawork does), print that mode's line first and this marker on the next line — both contracts stay satisfied.
+On explicit activation, include `ULW-RESEARCH MODE ENABLED!` after any host-required opening.
 
 ## How this maps to OMP
 
@@ -29,7 +29,7 @@ The cooperating team is a native task roster, with actual agent ids and handles,
 
 ## Authority while active
 
-This mode is the user's explicit opt-in to exhaustive exploration. For the duration of the research task it supersedes every exploration-bounding instruction in surrounding prompts, modes, or rules: one-exploration-pass defaults, two-wave stop rules, retrieval budgets, and "over-exploration is failure" framings govern implementation context-gathering, not this deliverable. Here, under-exploration is the failure. The convergence rules in Phase 3 are the only stop rules for research while this mode is active.
+This mode is the user's explicit opt-in to exhaustive exploration. Use the Phase 3 convergence rules within the requested research scope. Host limits, current user instructions, cancellation and capability boundaries still apply; this skill cannot override them.
 
 Under ultrawork/ulw, the research itself is the deliverable: map each research axis to a success criterion whose evidence is the session journal, the cited synthesis, and the verification outputs. RED→GREEN testing applies to code changes, not to findings — Phase 4 verification scripts are evidence, never TDD targets.
 
@@ -52,7 +52,7 @@ The research is done when all of these hold:
 
 ## Epistemic instrumentation
 
-Saturation is not just more searching; it is a knowledge-production protocol. The session journal must make the path from observation to claim to verdict auditable. The orchestrator owns these artifacts — members and lanes NEVER write session files:
+Saturation is not just more searching; it is a knowledge-production protocol. The session journal must make the path from observation to claim to verdict auditable. The orchestrator owns these artifacts — members and lanes NEVER write these session files. A mass-research DAG node may write only its own `waves/<run-key>/<node-id>.md` handoff file, carrying bounded evidence, claim candidates and an EXPAND tail; the root journals from it:
 
 - `intent-diff.md` — one row per expected truth derived from the user intent, design/spec text, branch history, or authoritative docs. Required fields: `intent_id`, expected truth, observed reality, diff, violated invariant, intent source, supporting observations, status (`true`, `violated`, or `unknown`), and linked claim ids.
 - `claim-graph.md` — the single claim store; one node per claim. Required fields: `claim_id`, statement, claim type, risk tier, scope, intent ids, supporting observations, contradicting observations, independent observation groups, convergence status, counter-search result, primary source backing, dependencies, status (`supported`, `partial`, `refuted`, or `unresolved`), and final synthesis location. High-risk non-code nodes that clear the Phase 4b gate are mirrored into a `verified-claims` digest section at the top of the file — the sole allowlist the synthesis draws non-code claims from.
@@ -62,7 +62,7 @@ Saturation is not just more searching; it is a knowledge-production protocol. Th
 - `excursion-log.md` — one ENTER row and one EXIT row per excursion. Required fields: `excursion_id`, parent claim or axis, ENTER trigger, depth, workers spent, EXIT rule that closed it, what it changed in the top-level answer (`none` is a valid, required answer), and the ulw-loop steer/evidence id it was mirrored into.
 - `debate-log.md` — one row per debate round: the claim under attack, the attacker's argument, the defender's evidence, your verdict, and what changed in the claim graph because of it.
 
-Observation candidates, claim candidates, and EXPAND leads travel back from members and lanes as message text. You write the instrumentation artifacts, link candidates into the intent diff and claim graph, and record where each observation entered the synthesis. A conclusion is not ready for final materials until its expected truth/reality diff is closed or marked unknown, its claim node exists, and its independent-observation convergence status is supported or explicitly excepted.
+Observation candidates, claim candidates, and EXPAND leads travel back from members and lanes as message text, except mass-research DAG nodes that write their owned handoff files. You write the instrumentation artifacts, link candidates into the intent diff and claim graph, and record where each observation entered the synthesis. A conclusion is not ready for final materials until its expected truth/reality diff is closed or marked unknown, its claim node exists, and its independent-observation convergence status is supported or explicitly excepted.
 
 ## Phase 0 — Scope solo, organize the brief
 
@@ -88,7 +88,7 @@ This is `$SESSION_DIR`. Write `brief.md` into it: the analysis block, the axis l
 
 ### Run it as a loop, and journal in real time
 
-Durable loop state is ON by default: read ../ulw-loop/references/omp-ledger.md and register the research axes as goals with cited-answer criteria through read/write/edit before collection. Use the actual session id from the host pointer. The research session directory timestamp is the start clock; never rename it. Journal every finding/source/quote/number/lead immediately and resume by reading brief, goals, ledger and research journal after compaction.
+Research uses the loop ledger format as a state helper, not activation of the ulw-loop execution workflow: read ../ulw-loop/references/omp-ledger.md and register the research axes as goals with cited-answer criteria through read/write/edit before collection. Use the actual session id from the host pointer, or the explicit unique run id recorded once under omp-ledger.md if none is exposed. The research session directory timestamp is the start clock; never rename it. Journal every finding/source/quote/number/lead immediately and resume by reading brief, goals, ledger and research journal after compaction.
 
 ### Deliverable lane, format, and the empty-info interview
 
@@ -103,7 +103,7 @@ Phase 6 opens by turning the recorded fields into `design-spec.md`.
 
 ## Phase 1 — Stand up the team (DEFAULT composition)
 
-**When the user asked for MASS research, the team is not the collection surface.** "mass ulw research", "mulw research", "ulw mass research" — in any language — order over-collection that 8 member slots cannot produce. Read `mass-ulw`'s `references/planning.md` and run collection as chained dags at its mass scale: a 60+ node opening wave covering every angle the topic has, routed across `quick` / `unspecified-low` / `unspecified-high` / `deep-low` in one graph, each wave's EXPAND leads defining the next wave's nodes until convergence, and a synthesis that reduces through several parallel `architect` nodes into one `architect` reducer (`ultrabrain` substitutes when the config has no `architect` category). Everything else in this skill still binds: the deliverable interview, the journal, the claim graph, the convergence rules, and the delivery gates. Keep a small team alongside the graph for the debate rounds of Phase 3 — attack is conversation, and dag nodes do not talk.
+**When the user asked for MASS research, the team is not the collection surface.** "mass ulw research", "mulw research", "ulw mass research" — in any language — order over-collection that 8 member slots cannot produce. Read [mass-ulw planning](../mass-ulw/references/planning.md) and predefine collection's predictable stages: 60+ distinct angles on a genuinely broad topic, each a `harvest -> expand -> verify` chain with exact producer/consumer file paths. These are stages within the collection phase, not separate phases or a sixty-node total. Use native OMP task/wait dependency waves, advance each verified branch without all-to-all stage barriers, converge clusters independently, then reduce bounded cluster digests into one final reducer using actual listed OMP roles. Everything else in this skill still binds: the deliverable interview, the journal, the claim graph, the convergence rules, and the delivery gates. Keep a small team alongside the graph for the debate rounds of Phase 3 — attack is conversation, and dag nodes do not talk.
 
 Otherwise a team is the DEFAULT for ulw-research, not an option: a lead one member surfaces almost always reshapes what another should search next, and debate needs live cooperating members, not fire-and-forget workers. Create it immediately after the brief:
 
@@ -113,7 +113,7 @@ Build one native task batch with one CamelCase-named axis owner per actual slot 
 - **Always maximum useful coverage.** Fill the actual available worker capacity with distinct axes and a skeptic; canonical eight slots is a research coverage target, not an OMP runtime limit. Split broad axes until each angle has an owner. Queue additional lanes when capacity is lower; do not silently trim coverage.
 - **Compose deliberately across available native roles.** Broad exploratory recon uses scout; prescribed mechanical collection uses sonic; contested reasoning uses default task or listed senior-task; independent attacks use reviewer/security-reviewer, and a dedicated writing assignment names that role inside its task. Map legacy difficulty labels through the common OMP contract, not to invented agent names. Record requested tier, selected role, actual resolved model and any reported fallback. OMP owns model selection; never send model/category/subagent_type fields or assume omo.json governs OMP.
 - **Routing words from the user are literal.** "quick", "fast", "deep", "모두 quick으로", "최대 병렬" are hard instructions, not mood. Map the requested tier to an actually available OMP role and journal `requested tier -> selected role -> actual resolved model -> reported fallback or capability gap` for every slot. Do not claim a literal model or reasoning pin the task API cannot express. Silently promoting a "quick" roster to a heavier tier is a defect, and so is dropping to a cheaper one without saying why.
-- **Debate members are mandatory for ultradebate/hyperdebate, default otherwise.** At least one skeptic/red-team member (`ultrabrain` or your strongest reasoning category) whose ONLY job is attack: cross-critique claims, evidence quality, source independence, synthesis structure, and report choices before they reach the deliverable. When the user says ultradebate or hyperdebate, run at least two attacking perspectives (e.g. a skeptic attacking evidence and a contrarian attacking framing) and give every contested claim a full round.
+- **Debate members are mandatory for ultradebate/hyperdebate, default otherwise.** At least one skeptic/red-team member (an available independent reasoning or reviewer role) whose ONLY job is attack: cross-critique claims, evidence quality, source independence, synthesis structure, and report choices before they reach the deliverable. When the user says ultradebate or hyperdebate, run at least two attacking perspectives (e.g. a skeptic attacking evidence and a contrarian attacking framing) and give every contested claim a full round.
 - **The raise law — broadcast every lead the instant it surfaces.** Member briefs order relentless over-communication: every new lead, finding, contradiction, and dead end goes to write a message to the actual agent:// id the moment it surfaces, never hoarded for a final dump. Through long passes members send `WORKING: <axis> - <phase>`, and `BLOCKED: <reason>` the moment progress stops. Too many small updates is correct here; going quiet is the only failure. They arrive as injected notifications — act on each lead the moment it lands (Phase 3), never holding out for a member's final reply.
 - **Track shared state in the open.** Register the axes and major leads on the team tasklist (the lead-owned durable task ledger) and keep them current (the lead-owned durable task ledger) so a member reconnecting after a crash can see the whole board.
 
@@ -134,10 +134,10 @@ Sequencing beats stuffing — a fresh premium team reading a finished journal re
 Every member task assignment contains, in order:
 
 1. `TASK:` — one imperative line naming the role and the owned axis.
-2. The budget lift: "This is an explicit exhaustive-research assignment. Your default retrieval budget and stop-when-answered rules do not apply — run the full protocol below and raise every lead."
+2. The budget lift: "This is an explicit exhaustive-research assignment. Cover the assigned axis and raise relevant leads within host limits and the current user's requested scope."
 3. Scope — the axis, the sources to hit, and what a complete answer contains.
 4. The role protocol (Phase 2).
-5. The raise law and the reply tail. EXPAND markers, observation candidates and claim candidates travel as bounded messages to the actual lead agent:// id supplied in context, never a fictional to: "lead" address. For the terminal report override the role's default output with the common strict {report:string} outputSchema. Keep the full report and the following tail inside report; the lead extracts that field from validated structured data before journaling or parsing leads. Every substantial report ends with:
+5. The raise law and the reply tail. EXPAND markers, observation candidates and claim candidates travel as bounded messages to the actual lead agent:// id supplied in context, never a fictional to: "lead" address. Request a terminal JSON receipt with a report string in task. Keep the full report and following tail inside report; the lead validates the actual response before journaling or parsing leads. Do not assume outputSchema/schemaMode task fields or a structured runtime envelope. Every substantial report ends with:
 
 ```
 ## EXPAND
@@ -149,7 +149,7 @@ A member with nothing to expand sends `## EXPAND` followed by `none — <one-lin
 
 ## Phase 2 — Saturation wave
 
-Launch the entire first wave in one turn — every member briefed at a cooperating native task roster time starts immediately; add bounded `task` lanes in the same turn for the territories members cannot reach (read-only curated-agent sweeps, blocked pages). Sequential launches and "start with one and see" defeat the mode.
+Launch the entire first wave in one turn — every member briefed at a cooperating native task roster time starts immediately; add bounded `task` lanes in the same turn for the territories members cannot reach (read-only discovery sweeps, blocked pages). Sequential launches and "start with one and see" defeat the mode.
 
 Scaling floor — more angles always justify more workers; members and lanes together must meet it:
 
@@ -163,7 +163,7 @@ Scaling floor — more angles always justify more workers; members and lanes tog
 
 X lanes is 1 on every row when the brief says `X/social signal: yes` and 0 otherwise; the `(+1)` in the floor column applies only in the yes case, so a `Multi-faceted` run with X signal must field 18 workers, not 17.
 
-The browsing column is BINDING, not advisory: when the brief says `Browsing: yes`, the roster names a browsing-lane owner armed with the installed ego-browser skill before the first wave launches, and that lane is spawned in the same turn as the rest of the wave. A run that reaches wave 2 with zero browsing lanes on a `Browsing: yes` brief has silently downgraded every source to what plain fetch happened to return.
+The browsing column is BINDING, not advisory: when the brief says `Browsing: yes`, the roster names a browsing-lane owner with access to the exposed browser tools before the first wave launches, and that lane is spawned in the same turn as the rest of the wave. A run that reaches wave 2 with zero browsing lanes on a `Browsing: yes` brief has silently downgraded every source to what plain fetch happened to return.
 
 **Disambiguate before you expand.** When the topic names something that could resolve several ways — a product, a person, a codename, a version — the first wave settles WHICH entity before any lane researches its history, benchmarks, or controversies: canonical name, first-party URL or account, whether it exists in the claimed category, and a confidence line. An unresolved entity never becomes a premise in a later wave's prompt; that is exactly how a run starts inventing facts about something that does not exist.
 
@@ -171,17 +171,19 @@ Role protocols — embed the relevant one in each member brief or lane prompt; e
 
 - **Codebase (`explore` lane or member).** Grep with 3+ keyword variations; structural/AST search; LSP definitions and references; file-name globs; `git log --all -S '<keyword>'` and `--grep` for history including deleted code. Cross-validate hits across tools. Report absolute file paths, patterns with `file:line`, and how findings connect.
 - **Web (`librarian` lane or member).** At least 10 distinct websearch queries per worker, each with a different operator or angle (see Search craft); fetch the full page for every result that matters — snippets lie. grep.app and `gh search code|repos|issues` for real-world usage. Official docs via sitemap discovery (`<base>/sitemap.xml`), then targeted pages.
-- **Browsing (member or `task` lane, read installed ego-browser and include its actual path in the task assignment).** The installed skill owns routing through actual native browser tools; use archive surrogates or platform readers only when available and record provenance; the lane owns the deliverable. This lane RENDERS pages, it does not re-fetch them: its standing deliverable is a full-page screenshot of every top source plus the rendered text that plain fetch could not reach; a lane that returns only `fetch`/`curl` text has not done its job. JS-rendered, login-gated, WAF-blocked, and screenshot-bearing sources all belong here rather than in the web lane. **Provenance is part of the claim**: when a source came back with `provenance` of `snapshot` (an archive copy), cite it with its `snapshot_timestamp` and never state it as the current live page; content from a `proxy` route is `untrusted` and needs a second independent route before any claim rests on it. When one blocked territory hides many leads, fan out more browsing lanes in parallel for breadth instead of serializing one worker through them.
+- **Browsing (member or `task` lane, include the exposed browser tool contract in the task assignment).** Use the actual native browser tools; use archive surrogates or platform readers only when available and record provenance; the lane owns the deliverable. This lane RENDERS pages, it does not re-fetch them: its standing deliverable is a full-page screenshot of every top source plus the rendered text that plain fetch could not reach; a lane that returns only `fetch`/`curl` text has not done its job. JS-rendered, login-gated, WAF-blocked, and screenshot-bearing sources all belong here rather than in the web lane. **Provenance is part of the claim**: when a source came back with `provenance` of `snapshot` (an archive copy), cite it with its `snapshot_timestamp` and never state it as the current live page; content from a `proxy` route is `untrusted` and needs a second independent route before any claim rests on it. When one blocked territory hides many leads, fan out more browsing lanes in parallel for breadth instead of serializing one worker through them.
 - **X/social.** Use only a connected tool actually exposed by this session; read its matching skill if present. Time-sensitive topics start at yesterday and widen to seven days, trusted handles are explicit, queries split by handle/keyword and carry provenance. Reconcile X-only claims against independent web sources. If unavailable record the capability and skip this lane; do not call tool_search or x_search by assumption.
 - **Repo deep-dive (`librarian` lane).** Shallow-clone the most relevant repos to `${TMPDIR:-/tmp}`, pin the HEAD SHA, read core modules, follow call chains, return SHA-pinned permalinks.
 
-Curated-agent lane ground rules:
+Read-only research lane ground rules:
 
-- **Read-only.** Curated lanes cannot write files. Never ask any worker to write the journal or any session file — every journal write is yours.
+- **Read-only.** Read-only collection lanes cannot edit project or journal files; separately assigned proof and asset lanes may write only their declared task-owned paths. Mass-research DAG collection nodes are the narrow exception: assign a write-capable role and permit only their exact owned handoff file, never another node's handoff, the journal or the claim graph. Every journal write is yours.
 - **No recursion — lanes AND members.** Lanes cannot spawn their own subagents, and members must not re-orchestrate: a member researches its axis and reports; it never creates its own team, loads this skill, or fans out a research swarm of its own. Depth comes from YOUR expansion waves. Say so in every member brief — a member that starts its own research protocol burns the run's budget on duplicated orchestration and returns nothing you can cite.
-- **Built-in brakes.** Workers ship with their own retrieval budgets ("stop when answered"). Your spawn prompt must explicitly lift the budget and demand the EXPAND tail, or the worker returns a thin single-pass answer with no leads.
+- **Built-in brakes.** Workers ship with their own retrieval budgets ("stop when answered"). Your task assignment must specify the requested depth within host limits and demand the EXPAND tail, or the worker returns a thin single-pass answer with no leads.
 
 ## Phase 3 — Expand and debate until convergence
+
+For mass research, the predefined expand and verify stages consume their named handoff files; a missing required file is FAIL, not an empty result. The root journals verified handoffs as branches complete and does not spawn a duplicate lane for a lead already owned by a pending chain. When a cluster settles, deduplicate its remaining leads and append only the new expansion/verification pairs needed, without waiting for unrelated clusters. Apply the convergence rules below to each cluster; the initial expand stage counts as one expansion wave. A cluster reducer writes its own bounded handoff digest, and the final reducer reads only converged cluster digests. Root-owned claim-graph gates and debate still decide which claims enter synthesis.
 
 This loop is what makes the mode research rather than search. Collect returns as they land via injected notifications — peek a running lane with read the actual agent:// id once for a midpoint decision when you need its transcript mid-run — and act on each raised lead the moment it arrives:
 
@@ -221,7 +223,7 @@ Interest alone is not a trigger. Anything without one stays a queued lead in `ex
 
 6. **Relay the user's steering to everyone.** When the user changes scope, cadence, target sources, language, or format mid-run, broadcast it to every live member and lane immediately (agent:// messaging per member, a follow-up per lane) and record the exact wording in `expansion-log.md`. Steering only you saw silently splits the team's assignment from the user's actual ask.
 
-**Convergence — the only stop rules while this mode is active.** Run at least 2 expansion waves on any multi-faceted query before claiming convergence; then stop only when one holds:
+**Convergence within host limits and the user's current scope.** Run at least 2 expansion waves on any multi-faceted query before claiming convergence; then stop only when one holds:
 
 - Zero unchecked leads remain — each investigated or closed as duplicate/dead end — AND every supported claim has survived its skeptic pass.
 - 3 consecutive waves produced no new actionable leads.
@@ -241,7 +243,7 @@ Journal each verdict to `verify-<slug>.md`.
 
 Code settles code-shaped claims (Phase 4). Numeric, market-share, legal, dated, causal, and financial claims cannot be run — so they pass through a data-flow-lock instead: the synthesis may assert a high-risk non-code claim **only** if it cleared this gate, and the gate's output is the sole allowlist the synthesis draws from. Skip the gate and there is nothing to synthesize — the lock is self-enforcing.
 
-The claim graph is orchestrator-owned. Workers only return claim candidates as message text, the same channel as EXPAND markers — never a file. As leads resolve, you record one node per asserted claim in `claim-graph.md` and compute its status; workers report candidates in their replies, and you decide. The graph is the single claim store: final synthesis may not draw from free-form claims that skipped it.
+The claim graph is orchestrator-owned. Workers only return claim candidates as message text, the same channel as EXPAND markers — except mass-research DAG nodes, whose candidates live in their own handoff file. As leads resolve, you record one node per asserted claim in `claim-graph.md` and compute its status; workers report candidates, and you decide. The graph is the single claim store: final synthesis may not draw from free-form claims that skipped it.
 
 A high-risk claim clears the gate to `verified-claims` only when all hold:
 
@@ -251,7 +253,7 @@ A high-risk claim clears the gate to `verified-claims` only when all hold:
 - **A primary source** (the standard, filing, dataset, or first-party doc) backs it, not only secondary commentary.
 - **Temporal evidence is explicit**: each supporting observation records `observed_at` and either `valid_at` or `claim_valid_at`, so branch-only, historical, release, and current-runtime claims cannot be conflated.
 
-Anything that fails goes to an `Unresolved` (insufficient evidence) or `Refuted` (counter-search won) annex — abstention is a correct outcome, not a gap to paper over. Record each gate outcome on the claim node itself — risk tier, independent source domains, counter-search result, primary source backing, and status — and mirror the cleared nodes into the `verified-claims` digest section at the top of `claim-graph.md`. Worker reply marker (message text, same channel as EXPAND):
+Anything that fails goes to an `Unresolved` (insufficient evidence) or `Refuted` (counter-search won) annex — abstention is a correct outcome, not a gap to paper over. Record each gate outcome on the claim node itself — risk tier, independent source domains, counter-search result, primary source backing, and status — and mirror the cleared nodes into the `verified-claims` digest section at the top of `claim-graph.md`. Worker reply marker (message text, or the owned mass-research handoff file, same channel as EXPAND):
 
 ```
 ## CLAIMS
@@ -304,7 +306,7 @@ The promised formats recorded in `brief.md` and `outcome.json` are binding; `pdf
 
 Asset lanes (background, parallel `task` spawns, each fed `design-spec.md`) — visuals are the DEFAULT deliverable of this phase, not garnish the user must ask for; a delivered report without figures is an incomplete run:
 
-- **Charts for every quantitative finding, computed from real data.** Pull the numbers into an actual table first (CSV/JSON under `$SESSION_DIR`), then plot from that table, never from prose. Follow the data-scientist tool doctrine — numpy always, Polars for filtering/sorting/transforms, DuckDB for joins/aggregations/window functions, never pandas — and load the `data-scientist` skill when this session has it: `uv run --with numpy --with polars --with duckdb --with pyarrow --with matplotlib python`. Keep `pyarrow` in that set — the DuckDB-to-Polars handoff (`.pl()`) fails without it, and `.df()` fails without pandas, so hand data across through `.pl()`, never `.df()`. Save to `$SESSION_DIR/assets/`.
+- **Charts for every quantitative finding, computed from real data.** Pull the numbers into an actual table first (CSV/JSON under `$SESSION_DIR`), then plot from that table, never from prose. Read skill://data-scientist when available and use its current dependency and computation guidance; probe installed packages before using them. Do not assume uv or a resident data stack. Save to `$SESSION_DIR/assets/`.
 - **Mermaid graphs** for process, architecture, argument, timeline, and evidence-flow structure, themed to the spec's fonts and palette. Render each to SVG and confirm the file exists before the document references it.
 - **Generated visuals whenever this session has an image-generation skill:** a cover plus a concept illustration per major theme, prompted from the spec's style, palette, and mood — document-styled illustration, never generic stock art dropped into a designed page.
 - **Full-page screenshots** of the top 5-10 sources (browsing lane) as provenance you can show.
@@ -318,7 +320,7 @@ Assembly lane — native OMP task with tasks entries: the report is a designed a
 Nothing reaches the user until the gates pass. Record each result with `node "$SKILL_DIR/scripts/report-tools.mjs" outcome gate <static|layout|visual|proofread> <pass|fail|not_run> --session-dir "$SESSION_DIR"`. A chat or post answer (light tier) runs gate 1 and one render; every paginated or web deliverable runs all four (the reference's sections 3 and 7).
 
 1. **Static gates (always, before anyone looks at pixels).** `node "$SKILL_DIR/scripts/report-tools.mjs" check "$SESSION_DIR/report.html" --design-spec "$SESSION_DIR/design-spec.md" > "$SESSION_DIR/defects.json"`: keep-all, palette tokens, emoji, em dashes, heading length, unsourced numbers, figure containers, chart text, gothic-only fonts, citations, the closing and sources sections, broken assets. Codes and fixes: [references/report-gates.md](references/report-gates.md).
-2. **Layout gates.** Print the probe with `node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json`, evaluate its `source` in the rendered page through the actual native browser page JavaScript route after reading ego-browser, save the result as `$SESSION_DIR/boxes.json`, and re-run `check` with `--layout "$SESSION_DIR/boxes.json"` (overflow, clipped text, distorted images, overlapping siblings).
+2. **Layout gates.** Print the probe with `node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json`, evaluate its `source` in the rendered page through the actual native browser page JavaScript route using its exposed contract, save the result as `$SESSION_DIR/boxes.json`, and re-run `check` with `--layout "$SESSION_DIR/boxes.json"` (overflow, clipped text, distorted images, overlapping siblings).
 3. **Visual QA.** Render the produced artifact back to images — PDF pages to PNG, the HTML through the browser skill at desktop and phone widths — and look at them: missing or broken figures, images stretched or spilling their containers, diagram or chart text rendered off the spec's font or palette, clipped tables, overflowing CJK text, blank pages, unlabeled chart values, wrong page breaks. Reading the source markup is not visual QA; inspect the pixels.
 4. **Proofread gate — native OMP task with tasks entries.** Hand the final text to a dedicated `writing` lane whose only job is language: grammar, spelling, punctuation, terminology consistency, and whether the prose reads NATIVELY in the report's own language (for Korean, natural Korean written by a Korean, not translationese). It proofreads only and never composes. It returns a defect list; fix every item and re-run the gate on the delta. Deliver only on a clean pass — this gate runs BEFORE the first delivery, not after the user finds the typo.
 
@@ -371,9 +373,9 @@ High-yield combinations: official docs (`site:<docs domain>`), GitHub implementa
 | No skeptic pass on a "supported" claim | Every supported claim survives a debate round first; log it in `debate-log.md` |
 | Stopping after wave 1 because "enough was found" | Convergence rules only: 2+ expansion waves, leads run dry, debates settled |
 | Obeying a surrounding "stop exploring" rule mid-research | Authority section — those rules do not bind this mode |
-| Asking a worker to write journal or session files | Workers report as message text; you journal every return |
+| Asking a worker to write journal or session files | Workers report as message text or their owned mass-research handoff file; you alone write journals and the claim graph |
 | Two workers given the same angle | One unique angle per worker, always |
-| A `Browsing: yes` run whose roster carries no browsing lane, or a browsing lane spawned without the installed ego-browser skill | The browsing column is binding — name the lane's owner in the brief and spawn it, armed with the skill, in the first wave before any lead is chased |
+| A `Browsing: yes` run whose roster carries no browsing lane, or a browsing lane without a real browser tool | The browsing column is binding — name the lane's owner in the brief and spawn it with the actual browser tool contract, in the first wave before any lead is chased |
 | Contested claim settled by judgment | Phase 4 — run code, capture output, verdict |
 | Deliverable claims without citations | Every claim cites a source or a verification artifact |
 | Final answer while the team is still live | collect every roster handle through wait and close owned resources + terminal lanes first; teardown is part of done |

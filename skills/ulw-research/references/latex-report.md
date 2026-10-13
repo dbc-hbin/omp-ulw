@@ -1,7 +1,7 @@
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 # LaTeX Report Reference (ulw-research Phase 6)
 
@@ -46,7 +46,7 @@ bibtex main            # or: biber main   (only when a .bib workflow is used)
 4. Render page previews and LOOK at them — this is the visual-QA gate for this route:
 
 ```bash
-pdftoppm -png -r 110 main.pdf page && ls page-*.png
+pdftoppm -png -r 110 main.pdf page
 ```
 
 Inspect every page: broken figures, overflowing tables, clipped CJK, blank pages, bad page breaks, unlabeled charts. Reading the `.tex` source is not visual QA. Fix and re-render until the pages are clean.
@@ -91,12 +91,11 @@ Start from this, not from memory. It is engine-agnostic and carries the packages
 \titleformat{\section}{\Large\bfseries\color{accent}}{\thesection}{0.5em}{}
 ```
 
-**CJK variant** — compile with XeLaTeX and replace the font block with a real installed CJK font (verify first with `fc-list | grep -i "cjk\|pretendard"`):
+**CJK variant** — compile with XeLaTeX and replace the font block with a real installed CJK font (inspect the installed font list with `fc-list`):
 
 ```latex
 \usepackage{fontspec}
-\setmainfont{Noto Serif CJK KR}      % or Pretendard, Noto Sans CJK KR — whatever fc-list proves exists
-\setmainfont{Latin Modern Roman}     % optional: keep Latin in the report's serif
+\setmainfont{Noto Sans CJK KR}       % use a sans CJK family verified in fc-list
 ```
 
 Fonts, colors, and heading style come from `design-spec.md` when one exists — one palette and one font family govern prose, charts, and diagrams alike; a figure in a random default font inside a styled report is a defect.

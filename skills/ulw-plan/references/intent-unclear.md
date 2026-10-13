@@ -5,9 +5,9 @@ metadata:
   short-description: ulw-plan unclear-intent research path
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) before applying this file. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
 
 # ulw-plan - UNCLEAR intent
@@ -33,7 +33,7 @@ Fold a contrarian self-grill into the Plan Consultant spawn: challenge the singl
 <high_accuracy_auto>
 Because the human did not steer, adversarial review SUBSTITUTES for the interview you skipped - this is what catches a bad default. Plan Consultant runs during plan generation as always; after Plan Consultant findings are folded and the plan file is complete, run the adversarial reviewer high-accuracy review defined in `full-workflow.md` AUTOMATICALLY - no "do you want a review?" question - and drive it to convergence under the bounded convergence contract in `full-workflow.md`: fix every eligible blocker and resubmit fresh, record ineligible findings as non-blocking notes, and on cap exhaustion stop and ask the user.
 
-TRIVIAL-TIER GUARD: if Classify sized the work Trivial, the auto-Plan Reviewer loop is SUPPRESSED (Plan Consultant still runs once) - a vague-but-tiny request ("clean this up") must not trigger the full adversarial loop. UNCLEAR raises the research-plus-default posture; it does not override the Trivial cost guard for Plan Reviewer.
+Trivial classification reduces interview and exploration depth, not an explicitly requested review. Apply the default-on review policy from SKILL.md unless the user declines it.
 </high_accuracy_auto>
 
 <approval_gate>

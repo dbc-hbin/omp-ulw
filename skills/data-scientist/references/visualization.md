@@ -1,6 +1,6 @@
 # Visualization
 
-A chart exists to answer a question at a glance. Render standalone plots with installed matplotlib, or self-contained HTML/static SVG through `../../visualize/SKILL.md`, then look at the rendered artifact before delivering. Probe the chosen engine/font first; do not auto-install libraries. A chart nobody inspected is not evidence.
+A chart exists to answer a question at a glance. Render standalone plots with installed matplotlib, or self-contained HTML/static SVG through `skill://visualize`, then look at the rendered artifact before delivering. Probe the chosen engine/font first; do not auto-install libraries. A chart nobody inspected is not evidence.
 
 ## When to chart
 

@@ -69,20 +69,20 @@ Use scout for read-only discovery; senior-task for difficult investigation when 
 Concrete invocation shape after inspecting the actual repo and task schema:
 
 ```js
+const investigationReceiptSchema = {type:"object", properties:{hypothesis:{type:"string"},status:{type:"string",enum:["confirmed","refuted","inconclusive"]},observations:{type:"array",items:{type:"object",properties:{source:{type:"string"},value:{type:"string"},interpretation:{type:"string"}},required:["source","value","interpretation"],additionalProperties:false}},gaps:{type:"array",items:{type:"string"}}},required:["hypothesis","status","observations","gaps"],additionalProperties:false};
 await tool.task({
   context: "A submit request returns 200 with empty content. Inspect the current server instance and the journal supplied at local://debug-submit.md. Do not alter user processes or shared state.",
   tasks: [{
     name: "LogEvidence",
     agent: "scout",
-    task: "TASK: Read the exact server log path recorded in local://debug-submit.md. Test H2: an SDK failure is packaged as success. DELIVERABLE: timestamped raw stopReason/errorMessage/usage values and source pointers, plus unresolved observations. SCOPE: read-only log and route paths listed in that journal, no source or debuggee mutations. VERIFY: distinguish H2 from a handler early-return. STOP WHEN: evidence confirms/refutes H2 or the precise missing observation is named.",
-    solutionSpace: "The failure mechanism is unknown; select only observations that distinguish the SDK-error hypothesis.",
-    schemaMode: "strict",
-    outputSchema: {type:"object", properties:{hypothesis:{type:"string"},status:{type:"string",enum:["confirmed","refuted","inconclusive"]},observations:{type:"array",items:{type:"object",properties:{source:{type:"string"},value:{type:"string"},interpretation:{type:"string"}},required:["source","value","interpretation"],additionalProperties:false}},gaps:{type:"array",items:{type:"string"}}},required:["hypothesis","status","observations","gaps"],additionalProperties:false}
+    task: "TASK: Read the exact server log path recorded in local://debug-submit.md. Test H2: an SDK failure is packaged as success. DELIVERABLE: timestamped raw stopReason/errorMessage/usage values and source pointers, plus unresolved observations. SCOPE: read-only log and route paths listed in that journal, no source or debuggee mutations. VERIFY: distinguish H2 from a handler early-return. STOP WHEN: evidence confirms/refutes H2 or the precise missing observation is named." + "\nReturn JSON matching: " + JSON.stringify(investigationReceiptSchema),
+    solutionSpace: "The failure mechanism is unknown; select only observations that distinguish the SDK-error hypothesis."
+
   }]
 });
 ```
 
-Record returned actual ids in a pending set. Continue independent evidence gathering. Native wait({}) wakes on first settled result/message; reconcile ids and remove only terminal children. Read structured.data or the validated agent:// payload, never wrapper text. A still-running snapshot is not completion. Wait again only when pending work blocks the next action; do not end the investigation with pending children. Message actual roster ids via write, not fictional team recipients.
+Record returned actual ids in a pending set. Continue independent evidence gathering. Native wait({}) wakes on first settled result/message; reconcile ids and remove only terminal children. Validate the actual terminal response from task/wait or agent://; use structured.data only when the runtime returns it. A still-running snapshot is not completion. Wait again only when pending work blocks the next action; do not end the investigation with pending children. Message actual roster ids via write, not fictional team recipients.
 
 ## Evidence capture discipline (both paths)
 

@@ -1,8 +1,8 @@
 # Native map/reduce node contracts
 
-Read [init-deep](../SKILL.md) and the [OMP compatibility contract](../../ulw-loop/references/omp-contract.md). Use explicit dependency waves: map -> subtree reductions -> optional digest reductions -> root -> verification. A real documented native workpool may implement these same dependencies; no invented DAG SDK, configuration knob, category/model selector, context-window constant or retry API is part of this port.
+Read [init-deep](../SKILL.md); consult the [OMP compatibility contract](../../ulw-loop/references/omp-contract.md) only for unresolved native tool semantics, reusing it within the session. Use explicit dependency waves: map -> subtree reductions -> optional digest reductions -> root -> verification. A real documented native workpool may implement these same dependencies; no invented DAG SDK, configuration knob, category/model selector, context-window constant or retry API is part of this port.
 
-Read the actual native task schema first. Use `context` for shared repository root, exclusion rules, preservation policy and report formats; use `tasks` for self-contained assignments with exact read/write paths and observable completion. `solutionSpace` describes uncertainty. Set `outputSchema` and `schemaMode: "strict"` on every task. Omit `agent` for default workers; select only listed suitable roles. A read-only scout cannot write reports: either use a writer-capable default worker for the map contract below, or have an explicitly assigned reducer consume its strict report payload and persist it. Do not grant imaginary tools through an arbitrary allowlist.
+Read the actual native task schema first. Use `context` for shared repository root, exclusion rules, preservation policy and report formats; use `tasks` for self-contained assignments with exact read/write paths and observable completion. `solutionSpace` describes uncertainty. Include the required JSON receipt schema in the assignment and validate the returned payload; do not pass unsupported `outputSchema` or `schemaMode` arguments. Omit `agent` for default workers; select only listed suitable roles. A read-only scout cannot write reports: either use a writer-capable default worker for the map contract below, or have an explicitly assigned reducer consume its validated report payload and persist it. Do not grant imaginary tools through an arbitrary allowlist.
 
 ## Scanner receipt schema
 
@@ -56,7 +56,7 @@ A subtree reducer reads named successful reports plus relevant existing docs, sp
 
 The lead establishes inherited parent content before descendant writers where necessary. No ancestor and descendant concurrently edit the same file. User rules always survive; issues concerning uncertain user intent block dependent edits, not unrelated successful reductions.
 
-## Verifier outputSchema
+## Verifier JSON receipt schema
 
 ```json
 {
@@ -94,10 +94,8 @@ task({
   context: repositoryAndPreservationContract,
   tasks: chunks.map(chunk => ({
     name: chunk.uniqueCamelCaseName,
-    task: chunk.numberedExtractionAssignment,
-    solutionSpace: "Investigate the actual layout and conventions; do not assume framework defaults or undocumented boundaries.",
-    outputSchema: scannerReceiptSchema,
-    schemaMode: "strict"
+    task: chunk.numberedExtractionAssignment + "\nReturn JSON matching: " + JSON.stringify(scannerReceiptSchema),
+    solutionSpace: "Investigate the actual layout and conventions; do not assume framework defaults or undocumented boundaries."
   }))
 });
 ```

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { rewritePresetPayload } from "./payload";
 
-const oldPreset = "<omo-model-preset>old profile</omo-model-preset>";
-const newPreset = "<omo-model-preset>new profile $& $` $' $$</omo-model-preset>";
+const oldPreset = "<omp-model-preset>old profile</omp-model-preset>";
+const newPreset = "<omp-model-preset>new profile $& $` $' $$</omp-model-preset>";
 const oldText = `Host instructions\n\n${oldPreset}\n\nProject rules`;
 const newText = `Host instructions\n\n${newPreset}\n\nProject rules`;
 
@@ -122,6 +122,14 @@ const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = 
 ];
 
 describe("rewritePresetPayload", () => {
+	test("legacy markers migrate only in system fields and mismatched tags stay untouched", () => {
+		const legacy = "<omo-model-preset>old profile</omo-model-preset>";
+		const payload = { instructions: legacy, input: [{ role: "user", content: legacy }] };
+		expect(rewritePresetPayload(payload, "openai-responses", newPreset)).toEqual({ ...payload, instructions: newPreset });
+		const malformed = { instructions: "<omo-model-preset>old profile</omp-model-preset>" };
+		expect(rewritePresetPayload(malformed, "openai-responses", newPreset)).toBe(malformed);
+	});
+
 	for (const [index, shape] of realisticShapes.entries()) {
 		test(`${shape.api} realistic shape ${index}: scoped, immutable, idempotent`, () => {
 			const snapshot = structuredClone(shape.payload);
@@ -155,7 +163,7 @@ describe("rewritePresetPayload", () => {
 	});
 
 	test("incomplete or cross-block markers are not rewritten", () => {
-		const payload = { system: [{ type: "text", text: "prefix <omo-model-preset>old" }, { type: "text", text: "profile</omo-model-preset> suffix" }] };
+		const payload = { system: [{ type: "text", text: "prefix <omp-model-preset>old" }, { type: "text", text: "profile</omp-model-preset> suffix" }] };
 		expect(rewritePresetPayload(payload, "anthropic-messages", newPreset)).toBe(payload);
 	});
 

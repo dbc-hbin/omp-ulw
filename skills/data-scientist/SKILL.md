@@ -5,6 +5,8 @@ description: "Processes and analyzes data with resident-kernel engines (DuckDB, 
 
 # Data Scientist: Hybrid-Engine Data Processing
 
+Resolve relative reference paths from this skill's directory, not the project working directory; use `skill://data-scientist/<relative-path>` with `read`. Cross-skill reads use `skill://<name>`. Workflow labels such as `/visual-qa` name skills to load, not shell commands or guaranteed slash-command APIs.
+
 Answer data questions through the cheapest engine and surface that can prove the answer, and
 decide where the computation should live before touching the data.
 
@@ -34,7 +36,7 @@ Per-surface patterns and pitfalls: read `references/execution-surfaces.md` befor
   older spellings.
 - **numpy** when numeric work goes beyond SQL/DataFrame aggregation: statistical tests,
   linear algebra, FFT, random sampling.
-- **matplotlib** for standalone charts when installed; static SVG/HTML via `../visualize/SKILL.md` for self-contained browser artifacts — read `references/visualization.md` first; it carries the
+- **matplotlib** for standalone charts when installed; static SVG/HTML via `skill://visualize` for self-contained browser artifacts — read `references/visualization.md` first; it carries the
   quality bar and a mandatory visual check.
 
 Performance folklore ("X is Nx faster at filtering") varies with data shape, cardinality,
@@ -89,5 +91,7 @@ follow `references/visualization.md` including its visual QA step.
 | `references/uv-setup.md` | uv missing or broken on this machine |
 
 ## CLI fallback
+
+Set `SKILL_DIR` to the observed absolute directory containing this skill's `SKILL.md`, resolved with `read` on `skill://data-scientist`; OMP does not set this shell variable automatically.
 
 When no kernel exists, `python3 "$SKILL_DIR/scripts/quick-query.py" <file> [SQL]` (`--filter <polars-sql-expr>`, `--describe`) is a one-shot fallback only after Python 3.11+, duckdb, polars, pyarrow, typer and rich are confirmed installed. No automatic uv dependency resolution is required. Supports CSV, Parquet, JSON and NDJSON. Read its argument parsing before invoking; record query, grain, row counts, exclusions and elapsed time. Missing engines do not justify approximate or invented results.

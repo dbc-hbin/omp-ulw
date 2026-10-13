@@ -1,28 +1,28 @@
 ---
 name: ultrawork
-description: "Complete omo Native ULW doctrine: session-armed, outcome-first, evidence-driven execution"
+description: "OMP ultrawork: explicitly activated, outcome-first, evidence-driven execution"
 ---
 
 <!-- Source: omo Native 5.1.19 plugin/skills/ultrawork/SKILL.md. OMP transport/authority adaptations are explicit. -->
 
 <ultrawork-mode>
 
-**MANDATORY**: First user-visible line this turn MUST be exactly:
+On explicit activation, after any host-required opening, say:
 `ULTRAWORK MODE ENABLED!`
 
 [CODE RED] Maximum precision. Outcome-first. Evidence-driven.
 
 # OMP transport and authority (authoritative for this port)
 
-This is the complete omo Native 5.1.19 ultrawork doctrine, adapted only where OMP has a different runtime contract. When ULW is active, its opening marker and outcome/evidence discipline replace the ordinary model's opening/reporting format. Activation remains armed for this session; follow-up turns resume the existing goal and notepad, not a fresh bootstrap. Cancellation stops work immediately. A new unrelated request replaces the old goal, never silently extends it.
+This is the OMP ultrawork workflow. When explicitly activated, ULW supplies outcome/evidence guidance within host and current user instructions; it does not replace higher-priority opening or reporting requirements. Merely reading this file does not activate it. Activation remains armed for this session; follow-up turns resume the existing goal and notepad, not a fresh bootstrap. Cancellation stops work immediately. A new unrelated request replaces the old goal, never silently extends it.
 
 Available tools, their schemas, project instructions and explicit user restrictions remain binding. ULW never manufactures permission: commit/stage/push only when explicitly authorized, and obtain required approval before merge, release, deploy, external messages or destructive actions. If commits are not authorized, report the verified diff; do not stage instead. Worktree creation follows the user's workspace policy. When authorized, retain the atomic verified-commit discipline below.
 
-For delegated work spell out the assigned scope, allowed paths/actions, completion criteria, required checks and returned evidence in the child brief. Child sessions do not automatically arm ULW or specialised skill pointers, even when the brief mentions ULW; include relevant skill paths only when the assigned work needs them. Children apply the evidence discipline only to their assigned scope; they do not take over the parent goal, repeat its bootstrap, or re-delegate without an assignment requiring orchestration. Use the actual task schema, not Senpi category/subagent_type arguments: task({ context, tasks: [{ name, task, solutionSpace }] }); add agent only for a listed specialist and outputSchema/schemaMode when a particular return contract is required. Put paths and acceptance in task; solutionSpace describes how fixed or open the solution is. Use CamelCase names of at most 32 characters. Choose scout for exploratory read-only discovery, sonic for already-decided mechanical work, omit agent for default implementation, or use listed senior-task/reviewer/security-reviewer for their corresponding work. OMP chooses role models and fallbacks; never send model or category fields. Read the common OMP contract in skills/ulw-loop/references/omp-contract.md for first-result wait, structured outputs and recovery. Each independent lane starts in the same background wave; collect results through wait, steer with supported agent messaging, and keep disjoint write ownership. Cooperating lanes use those same children and messages; named dependencies form separate waves or the native workpool contract, not fictional team_* or workflow tools. Read xd://eval/agents before using agent/workpool helpers.
+For delegated work spell out the assigned scope, allowed paths/actions, completion criteria, required checks and returned evidence in the child brief. Child sessions do not automatically arm ULW or specialised skill pointers, even when the brief mentions ULW; include relevant skill paths only when the assigned work needs them. Children apply the evidence discipline only to their assigned scope; they do not take over the parent goal, repeat its bootstrap, or re-delegate without an assignment requiring orchestration. Use the actual OMP task schema: task({ context, tasks: [{ name, task, solutionSpace }] }); add agent only for a listed specialist. Describe required receipt fields in task; outputSchema/schemaMode are not task fields unless the current schema explicitly exposes them. Put paths and acceptance in task; solutionSpace describes how fixed or open the solution is. Use CamelCase names of at most 32 characters. Choose scout for exploratory read-only discovery, sonic for already-decided mechanical work, omit agent for default implementation, or use listed senior-task/reviewer/security-reviewer for their corresponding work. OMP chooses role models and fallbacks; never send model or category fields. Read the common OMP contract in skill://ulw-loop/references/omp-contract.md for first-result wait, structured outputs and recovery. Each independent lane starts in the same background wave; collect results through wait, steer with supported agent messaging, and keep disjoint write ownership. Cooperating lanes use those same children and messages; named dependencies form separate waves or the native workpool contract, not fictional team_* or workflow tools. Read xd://eval/agents before using agent/workpool helpers.
 
-There is no Senpi goal tool, monitor, task_output, team API or SDK here. Use a binding # Goal block with all criteria in the durable notepad; when a native goal tool is actually present, prefer its documented contract. Reads/searches/symbol queries use read/find/grep/glob/lsp/ast_grep; edits use edit/write. Never shell out for a tool the host supplies. async bash starts long commands and condition watches, wait collects their results. No foreground watch cell, polling loop or watcher child. ask blocks: finish independent work first, then ask only for a material owner decision.
+Use a binding # Goal block with all criteria in the durable notepad. Reads/searches/symbol queries use read/find/grep/glob/lsp/ast_grep; edits use edit/write. Never shell out for a tool the host supplies. async bash starts long commands and condition watches, wait collects their results. No foreground watch cell, polling loop or watcher child. ask blocks: finish independent work first, then ask only for a material owner decision.
 
-Read skills/ulw-plan, ulw-loop, ulw-execute, ulw-research or mass-ulw ONLY when explicitly requested; their pointers identify installed paths. Loop/execute state owns bootstrap 1-3 exactly as below. Bare ULW neither activates those workflows nor grants git authority.
+Read skill://ulw-plan, skill://ulw-loop, skill://ulw-execute, skill://ulw-research or skill://mass-ulw only for an explicitly requested workflow or its documented prerequisite. Loop/execute state owns bootstrap 1-3 exactly as below. Bare ULW neither activates those workflows nor grants git authority.
 
 
 
@@ -81,10 +81,10 @@ exercises the surface; capture the artifact.
      HTTP client from js eval); capture status line + headers +
      body.
   2. Terminal / TUI - drive a real pty and prove it through the
-     xterm.js web terminal (see the TUI visual QA note below). tmux
+     available rendered terminal (see the TUI visual QA note below). tmux
      `send-keys` is fine for a boot smoke; NEVER `tmux capture-pane`
      for color / layout / CJK evidence, which degrades truecolor.
-  3. Browser use - read the available ego-browser/browser skill and drive
+  3. Browser use - follow the exposed browser tool contract and drive
      the REAL page using its supported automation route, attaching to the
      user's signed-in browser when login is required. Capture the action
      log and screenshot path. Never substitute a non-browser surface for
@@ -117,18 +117,33 @@ channel scenario when the behavior is user-facing. `--dry-run`,
 printing the command, "should respond", and "looks correct" never
 count.
 
-For TUI visual QA, render the terminal through the real xterm.js web
+For TUI visual QA, render the terminal through an available GUI or web
 terminal and screenshot it - never a `tmux capture-pane` dump, which
 degrades color and wide-glyph width. Use an existing live-pty web-terminal runner if the repository provides
-one; otherwise capture equivalent browser-rendered terminal evidence:
+one; otherwise capture equivalent host-rendered terminal evidence:
 screenshot + plain transcript + cleanup receipt. Do not invent a runner
 path or substitute a text dump for visual evidence.
 
-# Bootstrap (DO ALL FOUR BEFORE ANY OTHER WORK — NO SKIPPING)
+# Bootstrap (COMPLETE EVERY SECTION BEFORE ANY OTHER WORK — NO SKIPPING)
 
-When a ulw-loop pointer or the ulw-execute skill accompanies this
-directive, that contract supersedes bootstrap sections 1-3: its state
-owns the goal and is the notepad (the loop CLI's goals and ledger, or
+## Task resources
+Before the first task command (apart from this setup), create one
+`RUN_TMP=$(mktemp -d)` and record its concrete path and cleanup immediately.
+For every subsequent shell command, set `RUN_TMP` to that recorded path and
+export `TMPDIR="$RUN_TMP" NODE_COMPILE_CACHE="$RUN_TMP/node-compile-cache" BUN_RUNTIME_TRANSPILER_CACHE_PATH="$RUN_TMP/bun-transpiler"`
+in that same command; exports do not persist across OMP bash calls.
+Subprocesses inherit that environment. Give each independent task child its
+own run root and these instructions in its brief, not fictional `task`
+environment parameters; collect its resource ownership and cleanup receipts.
+At task end, after owned processes exit, remove only owned run roots, caches
+and eligible worktrees, with read-back receipts. Preserve shared caches,
+user work, retained evidence and worktrees needed by open PRs, including
+parents containing them. Keep the durable notepad and retained evidence
+outside disposable paths; record why any owned resource must remain.
+
+When ulw-loop or ulw-execute is explicitly active, its contract owns
+bootstrap sections 1-3: its state
+owns the goal and is the notepad (the loop's durable goals and ledger, or
 Boulder plus `doc/ulw-execute/ledger.jsonl`), and its checklist is
 the plan.
 
@@ -164,9 +179,8 @@ are delegating never justify a planner: plan directly in the notepad.
 Never spawn the planner before the discovery wave has returned.
 
 ## 1. Create the goal with binding success criteria
-Register the goal with the native goal tool when one is available, using
-its documented objective contract. OMP exposes no Senpi create_goal:
-open a binding `# Goal` block and copy it in full to the durable notepad.
+OMP has no goal tool. Open a binding `# Goal` block and copy it
+in full to the durable notepad.
 That recorded goal is the contract for the whole run; skipping it is a
 defect. Goals are unlimited; never invent a numeric budget or limit.
 Write the objective at full detail: every deliverable, every named
@@ -187,16 +201,12 @@ The criteria MUST list, upfront:
 
 These scenarios are the contract. You are not done until every one of
 them PASSES with its evidence captured.
-Waiting on the goal is a legal turn ending, never `blocked`: while a
-monitor, pending child notification, scheduled continuation, or any
-other live resumption channel is on duty to wake the run, end the turn
-and let it fire. `update_goal` with status blocked requires a true
-impasse — no live resumption channel exists AND the same block recurs
-across consecutive goal turns. Blocking over an armed wait (the
-canonical case: a CI watch with auto-merge) freezes the goal while its
-wake-up event is already in flight. A decision only the user can make
-is asked through the question tool - waiting for the answer when the
-run cannot proceed without it - never recorded as blocked.
+While a child or async command is pending, continue independent work
+and use native wait when the next step needs its result. Do not end
+the task merely because a notification will arrive later. Record a
+blocker only for an actual unmet dependency or unavailable capability.
+Ask a decision only the user can make through native blocking ask
+(or directly in chat if unavailable), after independent work is done.
 
 ## 2. Open the durable notepad
 Use write to create `local://ulw-notepad.md` (the host session-scoped
@@ -245,15 +255,21 @@ The todo list is the live cursor over the written plan, never a
 substitute for it: the file holds the thinking, the list tracks the
 execution.
 The todo tool is OMP `todo` — your live, user-visible checklist.
-`init` the phased list (one task per atomic work unit: an edit plus
+Use the exposed todo schema to initialize the phased list, preserving cleanup
+todos already registered (one task per atomic work unit: an edit plus
 its verification, a QA scenario run, a teardown), then drive every
-state transition through it: `start` the instant a step begins,
-`done` the instant it finishes, `append` newly discovered steps the
-moment they surface, `drop` abandoned ones. Keep each step small
+state transition through its documented actions: start when a step begins,
+complete when it finishes, add discovered work immediately, and remove
+abandoned work. Do not infer action names or status values from this prose. Keep each step small
 enough to finish within a few tool calls. Mark completed IMMEDIATELY —
 never batch, never let the rendered plan lag behind reality. When no
 `todo` tool exists on this surface, the notepad's `## Todo` section is
 the checklist and the same immediacy rules apply.
+Add a cleanup todo AT CREATION for each worktree, cache directory (including
+RUN_TMP), and QA resource (PID, session, browser context, port, container,
+script or temp path), naming its owner, cleanup boundary and read-back check.
+Complete it only after teardown is verified; record required retention instead
+of deleting protected resources under Task resources.
 Step text encodes WHERE / WHY (which criterion it advances) / HOW /
 VERIFY: `path: <action> for <criterion> — verify by <check>`.
 
@@ -269,12 +285,10 @@ execution` below - one js eval cell; a result you must inspect before
 the next call is sequenced, not batched.**
 Discovery order:
 1. **SYMBOLS REQUIRE LSP** — definitions, references, rename impact,
-   workspace symbols, diagnostics: the built-in `lsp_*` tools, not
+   workspace symbols, diagnostics: the native `lsp` tool, not
    text search. Run diagnostics after edits; errors block.
-2. Structural shapes — call / function / class / import patterns,
-   codemods — go to the bundled `ast-grep` skill (`sg` with `$VAR` /
-   `$$$` metavariables) or the `ast_grep` MCP server (`search`,
-   `rewrite`, `scan`).
+2. Structural shapes and codemods use the exposed `ast_grep` and
+   `ast_edit` schemas; do not assume an AST MCP server or extra skill.
 3. Unknown behavior/location → find first. Literal text → grep; filenames
    → glob; file inspection → read; history → git. Narrow in-program.
 4. Architecture / flow / blast radius across more files than one wave
@@ -284,13 +298,12 @@ Discovery order:
 
 # Parallel execution (batch what is independent, observe what is not)
 **`eval` with `language: "js"` is the default surface for the independent
-part of a step - reads, searches, symbol lookups, git/`lsp_*`/web
+part of a step - reads, searches, symbol lookups, git/`lsp`/web
 queries, `task(...)` spawns - not `bash`, not a parade of one-off calls,
-not `python3 -c`.** If the eval tool reports a Bun kernel (the `bun-1-4` skill is listed),
-read that skill before your first cell; use Bun builtins for computation
+not `python3 -c`.** Follow the exposed eval documentation and use Bun builtins for computation
 and the host tools for reads, edits, search and commands; a command that
 can outlive one reply starts through async bash (Waiting discipline). Sort the step before you write the cell: every
-independent lookup fires AT ONCE via `Promise.all` / `parallel(thunks)`
+independent lookup fires AT ONCE via `Promise.all` over independent `tool.*` calls
 with real control flow - `if`/`else` per case, `for` over every target, a
 `try`/`catch` per item - and a result that feeds a later lookup may still
 be sequenced inside the same cell. Edits, side-effecting commands,
@@ -306,8 +319,8 @@ page, a component, an image, a 3D scene, a layout - make one change,
 render or screenshot it, look, then make the next; check a 3D scene from
 several angles and a page at desktop and mobile widths, compare with the
 reference or the stated intent, and ask only where two readings of that
-intent diverge. Kernel busy with a detached cell? HOP to `py` - never
-bash + `python3 -c`. Spawn independent `task(...)` children in the same
+intent diverge. Collect pending work through its documented wait route; do not assume
+a detached-cell API or switch kernels to bypass it. Spawn independent `task(...)` children in the same
 wave (the native background task contract, each routed to its fitting agent);
 fan-out is SAFE only with disjoint write scopes - no two children edit the
 same files; overlapping units go to a team with per-member worktrees or
@@ -344,19 +357,18 @@ Until every success criterion PASSES with its evidence captured:
    above; auxiliary surface for CLI- or data-shaped criteria), end to
    end, yourself, plus the step-2 tests; a reproduction now passes.
    Paste the artifact path into the notepad.
-5. CLEANUP (PAIRED — NEVER SKIP): the moment a QA scenario spawns any
-   resource, register its teardown as its own todo (e.g.
-   `cleanup: kill server pid for criterion 2 — verify kill -0 fails`).
-   Every runtime artifact the QA spawned in step 4 MUST be torn down
-   before this step completes:
+5. CLEANUP (PAIRED — NEVER SKIP): follow the creation-time resource
+   todo rule in Bootstrap section 3. Before reporting scenario PASS,
+   tear down its owned QA resources:
    server PIDs (`kill <pid>`; verify `kill -0` fails), `tmux` sessions
    (`tmux kill-session -t ulw-qa-<criterion>`; verify with `tmux ls`),
-   browsers / sessions (`browser.close()` / `session.stop()`), containers
+   task-owned browser / GUI sessions (their documented close/end route), containers
    (`docker rm -f`), bound ports (`lsof -i :<port>` empty), temp
-   sockets / files / dirs (`rm -rf` the `mktemp` paths), QA-only env
-   vars. Append a one-line cleanup receipt to the notepad next to the
-   artifact, e.g. `cleanup: killed 12345; tmux kill-session ulw-qa-foo;
-   rm -rf /tmp/ulw.aB12cD`. No receipt → criterion stays in_progress.
+   sockets / files / dirs inside `$RUN_TMP`, QA-only env vars. Preserve
+   evidence; remove the run root, runtime caches and eligible worktrees
+   at task end under Task resources, not between scenarios. Append
+   read-back cleanup receipts beside the artifact in the notepad.
+   No receipt → criterion stays in_progress.
 6. Verify: LSP diagnostics clean on changed files; no test skipped or
    xfail-ed this turn.
 7. Mark completed. Append non-obvious findings / learnings.
@@ -411,12 +423,12 @@ smaller when needed.
 Do not mark a todo `done` while an active child owns its evidence or
 start dependent work before audit, research, or review is integrated
 or explicitly inconclusive. Launch independent children first, then
-keep independent root work or end the turn; every child must reach
+keep doing independent root work or call wait; every child must reach
 terminal status (`completed`, `failed`, `blocked`, or recorded
 inconclusive) before dependent todo transitions, implementation,
 planning, approval gates, handoff, or final response. Silence is not
 terminal: a running child is alive and its completion will wake you,
-so end the turn rather than poll it, and do not finalize while
+so call wait rather than poll it, and do not finalize while
 children remain open.
 
 # Verification gate (TRIGGERED, NOT OPTIONAL)
@@ -430,12 +442,13 @@ No plan file means no reviewer: a bare `ulw` run — however heavy —
 records a self-review in the notepad instead. Same for LIGHT tier.
 Self-review is: re-read the diff, run diagnostics, confirm each
 criterion's evidence, and state in one line why the tier held.
-`plan-reviewer` and `plan-consultant` are plan-gated reviewers, not general helpers —
-never summon either to sanity-check work that no plan file covers.
+Plan review and consultation are assignments for listed native workers,
+not plan-reviewer or plan-consultant agent names. Host-required reviews
+still apply even when this skill's optional plan gate does not.
 
 Procedure (NON-NEGOTIABLE):
 1. Spawn a reviewer child via `task` with a self-contained reviewer
-   assignment in `prompt` — the available reviewer agent for read-only review, or a
+   assignment in `task` — the available reviewer agent for read-only review, or a
    task review worker when the review must run code. Pass: goal, success-criteria, scenario evidence, full diff,
    notepad path.
 2. Verify each reviewer concern yourself. A concern blocks only when
@@ -479,7 +492,7 @@ Without authorization, leave the verified diff unstaged and report it.
   a regression this change introduces, an invalid proof, a failing test
   or stale doc of code you touched — as registered work (todo plus
   success criterion) to the ideal state. A defect outside it gets a
-  tracked issue with reproduction and evidence and a line in the final
+  local finding with reproduction and evidence and a line in the final
   message; a deferral never turns a criterion into PASS. Keep delegated
   unit scope hard: the worker reports, the orchestrator registers or
   files.
@@ -488,7 +501,7 @@ Without authorization, leave the verified diff unstaged and report it.
 - Never claim done from inference — only from captured evidence.
 
 # Output discipline
-- First line literally: `ULTRAWORK MODE ENABLED!`
+- On explicit activation, include `ULTRAWORK MODE ENABLED!` after any host-required opening.
 - After bootstrap: 1-2 paragraph plan summary + notepad path.
 - During execution: at every handoff - todo phase change, blocker,
   plan change, before a long pass - one handoff block composed after
@@ -515,9 +528,9 @@ Without authorization, leave the verified diff unstaged and report it.
 - Leftover QA state (live process, `tmux` session, browser context,
   bound port, temp file / dir) means NOT done. Tear it down, record
   the receipt, then continue.
-- After 2 identical failed attempts at one step, surface what was tried
-  and ask the user through the question tool before another retry; if
-  the question times out, continue on best judgment.
+- After repeated identical failures, change the approach materially.
+  Ask only for a decision the user must make; missing authorization
+  remains pending rather than becoming permission after a timeout.
 - After 2 parallel exploration waves yield no new useful facts, stop
   exploring and act.
 

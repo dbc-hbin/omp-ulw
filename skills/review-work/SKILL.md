@@ -28,7 +28,7 @@ Reuse already-captured real-surface proof only when it covers the FINAL content.
 | HTTP | Live endpoint request/status/headers/body and persisted state readback |
 | CLI | Actual command, arguments, stdout/stderr/exit code and side-effect state; native async bash, PTY for interaction |
 | TUI | Actual rendered terminal and visual capture for color/layout/CJK claims; plain capture-pane is insufficient |
-| Web | Read skill://ego-browser and skill://cua-driver; actual browser actions, semantic postconditions and screenshots |
+| Web | Use exposed browser tools or skill://cua-driver; actual browser actions, semantic postconditions and screenshots |
 | Desktop | Installed cua-driver skill and actual running app, fresh AX/state, action log and screenshot |
 | Library/SDK | Import and exercise the real public API; result transcript/state |
 | Data/migration/config/generated artifact | Read/diff resulting actual artifact and validate through its real consumer |
@@ -41,18 +41,10 @@ Follow repository and host test policy. Capture required reproduction first, the
 
 ## Phase 2 - ONE fresh reviewer
 
-After QA capture, launch one native background task; do independent root teardown/report work while it reads. Use agent:reviewer if listed; otherwise omit agent and prescribe read-only reviewer behavior. It cannot implement fixes, modify inputs, spawn agents, or substitute for the root QA. It receives self-contained context, exact scope/diff, goal/constraints/background, current input identity, history findings, code/neighbor paths, QA matrix and existing artifact paths. Use this example only after discovering the actual paths and native task schema:
+After QA capture, launch one native background task; do independent root teardown/report work while it reads. Omit agent and prescribe read-only reviewer behavior: this workflow requires its own JSON receipt, not a specialist's fixed response format. It cannot implement fixes, modify inputs, spawn agents, or substitute for the root QA. It receives self-contained context, exact scope/diff, goal/constraints/background, current input identity, history findings, code/neighbor paths, QA matrix and existing artifact paths. Use this example only after discovering the actual paths and native task schema:
 
 ```js
-await tool.task({
-  context: "Review the final change and root QA recorded at local://submit-review-inputs.md. That artifact contains the original goal, all constraints, exact current diff/content identity, source paths, history findings and QA matrix with evidence paths. No writes or nested delegation.",
-  tasks: [{
-    name: "SubmitGate",
-    agent: "reviewer",
-    task: "TASK: Gate-review the completed submit change against the supplied goal/constraints and audit every QA artifact. Read skills/review-work/SKILL.md and local://submit-review-inputs.md. DELIVERABLE: the strict verdict receipt, criterion evidence and exact blockers/notes. SCOPE: read-only paths and final diff recorded in the input artifact, no fixes or new product requirements. VERIFY: apply all eight checklist items below; inspect every QA artifact, missing proof is unproven. STOP WHEN: every goal/constraint/QA row is assessed and APPROVE/REJECT/INCONCLUSIVE with confidence is recorded.",
-    solutionSpace: "Approval is uncertain; skeptically falsify the submitted claims using current code and artifacts, without judging hypothetical future designs.",
-    schemaMode: "strict",
-    outputSchema: {
+const reviewReceiptSchema = {
       type:"object",
       properties:{
         verdict:{type:"string",enum:["APPROVE","REJECT","INCONCLUSIVE"]},
@@ -67,7 +59,14 @@ await tool.task({
       },
       required:["verdict","confidence","summary","contentIdentity","goalBreakdown","constraintCompliance","qaAudit","blockers","notes"],
       additionalProperties:false
-    }
+    };
+await tool.task({
+  context: "Review the final change and root QA recorded at local://submit-review-inputs.md. That artifact contains the original goal, all constraints, exact current diff/content identity, source paths, history findings and QA matrix with evidence paths. No writes or nested delegation.",
+  tasks: [{
+    name: "SubmitGate",
+    task: "TASK: Gate-review the completed submit change against the supplied goal/constraints and audit every QA artifact. Read skill://review-work and local://submit-review-inputs.md. DELIVERABLE: the strict verdict receipt, criterion evidence and exact blockers/notes. SCOPE: read-only paths and final diff recorded in the input artifact, no fixes or new product requirements. VERIFY: apply all eight checklist items in that skill; inspect every QA artifact, missing proof is unproven. STOP WHEN: every goal/constraint/QA row is assessed and APPROVE/REJECT/INCONCLUSIVE with confidence is recorded." + "\nReturn JSON matching: " + JSON.stringify(reviewReceiptSchema),
+    solutionSpace: "Approval is uncertain; skeptically falsify the submitted claims using current code and artifacts, without judging hypothetical future designs."
+
   }]
 });
 ```
@@ -89,7 +88,7 @@ APPROVE only with complete evidence, no blockers and all applicable QA rows veri
 
 ## Phase 3 - Collect receipts and cleanup
 
-Record actual returned child id in a pending set. Native wait({}) wakes on first settled result/message/steering, not a wave barrier. Reconcile the actual id; remove only terminal children, keep running entries pending and continue independent root work. Inspect structured.status and consume structured.data or validated agent:// payload; wrapper text, acknowledgements, silence, timeout and still-running snapshots are not verdicts. Missing/invalid required receipt is a contract failure. Never replace a live reviewer just because it is slow.
+Record actual returned child id in a pending set. Native wait({}) wakes on first settled result/message/steering, not a wave barrier. Reconcile the actual id; remove only terminal children, keep running entries pending and continue independent root work. Confirm terminal status and validate the requested receipt fields in the actual task/wait response or agent:// payload; wrapper text, acknowledgements, silence, timeout and still-running snapshots are not verdicts. Missing/invalid required receipt is a contract failure. Never replace a live reviewer just because it is slow.
 
 After terminal failure/missing payload, retain current QA and launch one fresh, smaller replacement with the exact failure; no concurrent review panel. A valid re-review after authorized fixes is a fresh reviewer with delta + updated current evidence, never re-tasking a stale reviewer. Report unresolved failure as INCONCLUSIVE if the capability cannot supply a receipt; do not claim review passed.
 

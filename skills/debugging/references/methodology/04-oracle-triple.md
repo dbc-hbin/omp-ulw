@@ -36,7 +36,7 @@ Spawn all three in parallel.
 
 ## The three OMP assignments
 
-Dispatch three background native tasks together, using context + tasks as shown in [02-investigate.md](02-investigate.md). Prefer listed senior-task or omit agent for the default worker. Read-only; no implementation or nested delegation. Each receives the same exact bug, raw observations, failed hypotheses, loaded code identity and bounded source paths. Give each a strict outputSchema with required framing (string), candidates (array of strings), assumptions (array of strings), and queries (array of objects with query, holds, fails string fields), additionalProperties:false throughout. Use solutionSpace to state that the cause is unknown and this framing explores alternative explanations, not file scope.
+Dispatch three background native tasks together, using context + tasks as shown in [02-investigate.md](02-investigate.md). Prefer listed senior-task or omit agent for the default worker. Read-only; no implementation or nested delegation. Each receives the same exact bug, raw observations, failed hypotheses, loaded code identity and bounded source paths. Include in each assignment a JSON receipt schema with required framing (string), candidates (array of strings), assumptions (array of strings), and queries (array of objects with query, holds, fails string fields), additionalProperties:false throughout. Use solutionSpace to state that the cause is unknown and this framing explores alternative explanations, not file scope.
 
 - A, obvious-but-missed: exactly three ranked causes. Check typo/off-by-one, wrong import/constant, stale cache, wrong process/file, harness vs app, src vs dist. Explain compatibility with the evidence.
 - B, system-boundary: exactly three causes naming specific boundary and violated contract. Consider SDK behavior, middleware, gateway rewriting, build/runtime env, module order, shared-library versions, ABI and transport negotiation.
@@ -92,8 +92,8 @@ Reset the "consecutive failed rounds" counter to 0. Return to Phase 3 (parallel 
 
 ## If *another* 2 rounds fail after the Oracle Triple
 
-You are genuinely stuck. This is the escalation threshold.
+Use this threshold to reconsider the approach, not to hand a factual investigation back to the user.
 
-Escalate to the user (see `05-escalate.md`) with the full trace: every hypothesis tried, every piece of evidence captured, both Oracle syntheses. Do not guess a fix.
+Reassess the evidence and change the investigation approach. Escalate to the user (see `05-escalate.md`) only when the next step requires a material decision or access the session cannot supply; include the hypotheses, observations and Oracle synthesis. A round count alone is not a blocker or a reason to stop. Do not guess a fix.
 
 This is rare — in practice, the Oracle Triple resolves almost all stuck debugging sessions within one round, because it pulls in framings the investigator was too close to the code to see.

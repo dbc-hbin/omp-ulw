@@ -141,7 +141,7 @@ PYTHONASYNCIODEBUG=1 python script.py
 
 Surfaces: coroutines that were never awaited, slow callbacks, unhandled task exceptions. **Always turn this on** if the bug is timing- or async-related.
 
-### `asyncio.gather` swallows the first exception
+### `asyncio.gather` propagates the first exception
 
 By default, `asyncio.gather(t1, t2)` propagates the first exception but does not cancel the remaining awaitables. If you need all exceptions, use `gather(..., return_exceptions=True)`.
 

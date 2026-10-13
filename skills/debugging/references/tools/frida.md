@@ -70,7 +70,7 @@ When `frida-trace` isn't enough, you write a JS agent and load it with `frida` o
 
 ```js
 // By exported symbol name
-const openPtr = Module.getGlobalExportByName("open");  // null = any module
+const openPtr = Module.getGlobalExportByName("open");  // searches globally; throws if absent
 const sslWritePtr = Process.getModuleByName("libssl.so").getExportByName("SSL_write");
 
 // By offset in a stripped binary (get the offset from Ghidra)

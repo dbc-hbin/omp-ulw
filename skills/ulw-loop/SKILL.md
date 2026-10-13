@@ -6,11 +6,11 @@ metadata:
   short-description: Goal-like ultrawork loop for systematic decomposition
 ---
 
-## OMP compatibility override (authoritative)
+## OMP runtime contract
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. It overrides only unavailable harness APIs, state persistence, permissions and tool routing; all philosophy, evidence, adversarial, planning and delivery gates below remain binding. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
 
-This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
+Reuse references already read in this session; load operation-specific guidance when that operation needs it.
 
 
 # ulw-loop
@@ -35,9 +35,9 @@ The loop ledger is the ULW notepad; create no competing binding goal. No SDK or 
 - Register goals up front, shaped by `references/define-goal.md` (write binding goal and criteria before execution, then the binding durable goal record from the returned handoff), and mirror every atomic step into the live `todo` checklist: one ultra-granular step per action, exactly one in_progress, transitions marked the instant they happen.
 - After compaction read brief, goals and ledger FIRST, reconcile actual handles and resume; never re-plan completed work.
 - Completed state is preserved; unrelated work gets a separate binding run rather than overwriting completed evidence.
-- Every success criterion needs observable evidence from a real surface: a channel (terminal/TUI via the xterm.js web terminal, HTTP, browser, computer-use) or, for CLI- or data-shaped criteria, an auxiliary surface (CLI stdout, DB diff, parsed config dump).
-- Evidence is bound to the tree it was captured at (`git rev-parse --short "HEAD^{tree}"`); it goes stale only when tracked content changes — a rebase or amend that keeps the tree identical keeps it valid. When the tree differs, re-run at the current HEAD and re-record, never relabel or regenerate. Record only after cleanup receipts exist.
-- Delegate code edits, test writes, fixes, and QA execution to right-sized OMP subagents through the native `task` tool or through native workpool if documented, otherwise dependency waves nodes when the phase's lanes carry ordering.
+- Every success criterion needs observable evidence from a real surface: a channel (terminal/TUI via an available real terminal renderer, HTTP, browser, computer-use) or, for CLI- or data-shaped criteria, an auxiliary surface (CLI stdout, DB diff, parsed config dump).
+- Bind evidence to the full snapshot from scripts/verify-state.mjs: HEAD tree plus working diff and relevant untracked inputs. Changed captured content invalidates its proofs, even without a commit; recapture rather than relabel. Record cleanup receipts before passing a criterion.
+- Delegate independent implementation units through native task when that saves time; retain main-session verification and cohesive work. Use documented workpool or dependency waves when ordering requires them.
 - Use repository git conventions (only commit when explicitly authorised) for git-tracked edits: inspect recent and touched-path commit history, then, only if the user explicitly authorised commits, commit each verified work unit atomically in the repository's observed language, scope, and message style with only that unit's files staged. Never carry verified units into a later omnibus commit.
 
 ## Team mode: decide it, do not default to it

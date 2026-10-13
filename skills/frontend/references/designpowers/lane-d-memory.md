@@ -1,6 +1,6 @@
 # Lane D: Memory, Debt & Handoff
 
-Lane D records the design record around OpenAgent work. It owns `doc/frontend-design/state.md`, design debt, handoff notes, retrospective notes, and observational taste memory. It has no hooks and no independent automation path. It records and summarizes what happened so the next OpenAgent phase has reliable context.
+Lane D records the design record around OMP work. It owns `doc/frontend-design/state.md`, design debt, handoff notes, retrospective notes, and observational taste memory. It has no hooks and no independent automation path. It records and summarizes what happened so the next OMP phase has reliable context.
 
 ## Phase Owner
 
@@ -65,7 +65,7 @@ Lane D passes only when the record is inspectable:
 - Accessibility debt is either resolved or explicitly acknowledged by the user before acceptance.
 - Handoff notes cite concrete artifacts, decisions, constraints, and evidence paths.
 - Retrospective notes cite the final verification artifacts, unresolved debt, and lessons from fix rounds or user overrides.
-- The evidence index points to real files produced by OpenAgent planning, `ulw-execute`, `visual-qa`, or `review-work`.
+- The evidence index points to real files produced by OMP planning, `ulw-execute`, `visual-qa`, or `review-work`.
 
 ## Guardrails
 

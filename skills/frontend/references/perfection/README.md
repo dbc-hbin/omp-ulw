@@ -86,7 +86,7 @@ For initial install of react-scan + react-doctor (and react-grab) in a fresh Rea
 
 ## AUDIT WORKFLOW
 
-Use the project's existing real-Chrome Lighthouse Node API audit runner with production URL, mobile and desktop profiles, and JSON reports. The upstream Python CLI is not ported: it assumes a private Playwright websocket transport and globally installs npm packages. Missing runner/dependencies are reported as unverified audit coverage. The following is project test-runner guidance only, not an OMP or ego-browser API:
+Use the project's existing real-Chrome Lighthouse Node API audit runner with production URL, mobile and desktop profiles, and JSON reports. The upstream Python CLI is not ported: it assumes a private Playwright websocket transport and globally installs npm packages. Missing runner/dependencies are reported as unverified audit coverage. The following is project test-runner guidance only, not an OMP tool API:
 
 ```ts
 // scripts/audit.ts
