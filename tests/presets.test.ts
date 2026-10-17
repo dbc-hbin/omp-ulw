@@ -9,7 +9,7 @@ const models: Record<string, string> = {
 
 describe("faithful omo presets", () => {
   test("all original builders resolve their interpolations on both surfaces", () => {
-    expect(presetNames.length).toBe(30);
+    expect(presetNames.length).toBe(31);
     for (const name of presetNames) {
       for (const surface of ["terminal", "app"] as const) {
         const original = buildPreset(name, { surface, selectedTools: toolNames });
@@ -22,6 +22,8 @@ describe("faithful omo presets", () => {
         expect(rendered?.name).toBe(name);
         expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
         expect(rendered?.prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|tool\.monitor|--print|THERE IS NO WAIT TOOL/);
+        expect(rendered?.prompt).not.toMatch(/\[Outcome so far\]|\bYou need:/);
+        expect(rendered?.prompt).toContain("Never make a todo-only turn");
         expect(rendered?.prompt).not.toMatch(/<workstation>|<context_files>|<skills>/);
       }
     }
@@ -37,17 +39,20 @@ describe("faithful omo presets", () => {
       ["claude-mythos-5.1", "claude-fable-5-1"], ["claude-opus-5.5", "claude-opus-5-5"],
       ["claude-haiku-5.5", "claude-haiku-5-5"], ["anthropic/claude-haiku-5-5", "claude-haiku-5-5"],
       ["claude-haiku-4-5", undefined],
+      ["gemini-4-argon", "gemini-4-argon"], ["google/gemini-4-argon-preview", "gemini-4-argon"],
+      ["gemini-4-argonaut", undefined], ["gemini-4", undefined],
       ["deepseek-v4-flash-0731", "deepseek-v4-flash-0731"], ["deepseek-flash", "deepseek-v4-1-flash"],
       ["grok-4.70", undefined], ["glm-5.30", undefined], ["llama-4", undefined],
     ];
     for (const [id, name] of cases) expect(renderPreset({ id }, { surface: "terminal", toolNames })?.name).toBe(name);
     expect(renderPreset({ id: "opaque", name: "GPT 6.1 Luna" }, { surface: "app", toolNames })?.name).toBe("gpt-6-astra");
+    expect(renderPreset({ id: "opaque", name: "Gemini 4 Argon" }, { surface: "app", toolNames })?.name).toBe("gemini-4-argon");
     expect(renderPreset({ id: "opaque", name: "gpt-5.6" }, { surface: "app", toolNames })).toBeUndefined();
   });
 
   test("selected tools govern optional search and mutation routing", () => {
     const options = { surface: "terminal" as const, toolNames: [] };
-    for (const id of ["gpt-5.2", "kimi-k2.6", "claude-opus-4-8", "gpt-6-astra"]) {
+    for (const id of ["gpt-5.2", "kimi-k2.6", "claude-opus-4-8", "gpt-6-astra", "gemini-4-argon"]) {
       const rendered = renderPreset({ id }, options);
       expect(rendered).toBeDefined();
       expect(rendered?.prompt).not.toMatch(/Specialized search available|request_user_input|ask_user_question|wait_for_answer|tool\.monitor|--print/);

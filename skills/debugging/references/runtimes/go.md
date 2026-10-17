@@ -2,7 +2,7 @@
 
 ## Concrete runtime probe and ownership
 
-Scenario: request cancellation leaves consumers blocked on a channel. Capture the failing cancellation path; use the race detector for a suspected real data race, or native debug/dlv to inspect goroutines and closed-channel ok. Compare pprof goroutine snapshots before/after the exact completed batch, not an arbitrary sleep. Preserve existing user servers; use a loopback task-owned profiling listener. All long-running commands use native async bash and collected completion handles. These recipes are alternatives selected for the hypothesis, not a mandatory sequence of installs or test reruns. Native DAP is preferred over text scraping. Keep terminal commands only as documented fallback for a verified missing adapter.
+Scenario: request cancellation leaves consumers blocked on a channel. Capture the failing cancellation path; use the race detector for a suspected real data race, or native debug/dlv to inspect goroutines and closed-channel ok. Compare pprof goroutine snapshots before/after the exact completed batch, not an arbitrary sleep. Preserve existing user servers; use a loopback task-owned profiling listener. All long-running commands use native async bash; results auto-deliver, and native wait() with no arguments is only for a pending job you started when blocked. These recipes are alternatives selected for the hypothesis, not a mandatory sequence of installs or test reruns. Native DAP is preferred over text scraping. Keep terminal commands only as documented fallback for a verified missing adapter.
 
 
 Covers goroutines, `dlv` (Delve), `pprof`, the race detector, and the fact that Go's concurrency model means most bugs are about goroutines doing something quiet and wrong.

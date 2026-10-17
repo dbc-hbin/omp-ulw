@@ -386,10 +386,11 @@ parallel with it.
 
 # Waiting discipline (subscribe, never sleep)
 **EVERY CONDITION YOU WOULD OTHERWISE CHECK ON GETS A BACKGROUND WATCH,
-REGISTERED WHEN THE WORK STARTS: tool.bash({ command, async: true })
-for the command or condition, then wait for its handle when the next step
-depends on it.** Builds, installs, tests, CI, deployments, log lines,
-files, ports and another session's state are all watched this way. Start
+REGISTERED WHEN THE WORK STARTS: tool.bash({ command, async: true, timeout: 0 })
+for the condition. Results auto-deliver; call native wait with no arguments
+only when blocked on running work you started.** Async retains the command
+deadline: finite builds, installs and tests use an explicit task-appropriate
+timeout; CI, deployment, log, file, port and external-state watches use 0. Start
 the watch from the user's intent, unprompted; keep doing independent root
 work while it runs. No sleep/retry/status-read loops through the model,
 foreground watch cell, or child spawned just to watch. A single status

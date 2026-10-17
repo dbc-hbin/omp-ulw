@@ -142,9 +142,11 @@ try {
     const [prompt] = await run(["/ulw validate the Astra directive"], [], undefined, undefined, model);
     assert(prompt.includes(`<ultrawork-mode>${astra}</ultrawork-mode>`));
   }
-  const [haiku] = await run(["verify the selected model profile"], [], undefined, undefined, "claude-haiku-5.5");
-  const haikuProfile = renderPreset({ provider: "omo-ulw-probe", id: "claude-haiku-5.5", name: "Haiku 5.5" }, { surface: "app", toolNames: [] })!;
-  assert(haiku.includes(`<omp-model-preset>\n${haikuProfile.prompt}\n</omp-model-preset>`), "actual provider request must contain the shipped Haiku 5.5 profile");
+  for (const model of ["claude-haiku-5.5", "gemini-4-argon"]) {
+    const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
+    const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] })!;
+    assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
+  }
   const [catalog] = await run(["inspect installed skill metadata"], [], undefined, undefined, "gpt-6.1-sol", true);
   for (const name of ["design", "brand", "design-system", "ui-styling", "ui-ux-pro-max", "slides", "banner-design", "native-ui-design"]) {
     assert(!catalog.includes(`skill://${name}`) && !catalog.includes(`<name>${name}</name>`) && !new RegExp(`^\\s*- ${name}(?: \\(|:)`, "m").test(catalog), `disabled design skill must not be advertised: ${name}`);

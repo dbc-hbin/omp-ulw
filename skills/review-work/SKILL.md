@@ -37,7 +37,7 @@ Cover happy path, changed path, relevant boundary/error/adversarial cases and cl
 
 Create a root-owned QA matrix with criterion, scenario/action, expected, raw observed, PASS/FAIL/UNPROVEN/N/A, artifact path, invocation, content identity and cleanup receipt. Artifact paths must exist and be nonempty; include screenshots plus semantic assertions, not success prose. N/A requires a goal-specific reason; required blocked rows cannot become N/A. Store requested evidence privately when it contains auth/customer data.
 
-Follow repository and host test policy. Capture required reproduction first, then run relevant final lint/type/build/tests once when ready; broaden or repeat for a new change/failure only. Prose-only edits receive review without phrase/word-count tests; machine-consumed values may be validated through the real parser. Start long commands and event/log condition watches through native async bash and collect completion handles. Subscribe to the exact event before triggering; no repeated polling or fixed sleeps.
+Follow repository and host test policy. Capture required reproduction first, then run relevant final lint/type/build/tests once when ready; broaden or repeat for a new change/failure only. Prose-only edits receive review without phrase/word-count tests; machine-consumed values may be validated through the real parser. Start long commands and event/log condition watches through native async bash; results auto-deliver, and call native wait() with no arguments only when blocked on a pending job you started. Subscribe to the exact event before triggering; no repeated polling or fixed sleeps.
 
 ## Phase 2 - ONE fresh reviewer
 
@@ -71,7 +71,7 @@ await tool.task({
 });
 ```
 
-Replace the example input artifact with the actual root-owned artifact, never a nonexistent prompt path. Pass context + tasks; no category, model or agent:task. Record requested role and actual resolved identity. A valid schema alone does not approve a stale tree or nonexistent artifacts.
+Replace the example input artifact with the actual root-owned artifact, never a nonexistent prompt path. Pass context + tasks; no category, model, or agent:task for the ordinary reviewer. Record requested role and actual resolved identity. Use `model` or `sourceSession` only when the exposed `seance` agent is explicitly requested for historical consultation, never to pin the reviewer's ordinary model. A valid schema alone does not approve a stale tree or nonexistent artifacts.
 
 ### Reviewer checklist (complete, not a subset)
 

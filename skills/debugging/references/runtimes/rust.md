@@ -2,7 +2,7 @@
 
 ## Concrete runtime probe and ownership
 
-Scenario: a tokio job disappears without completing its public operation. Run the exact command with scoped RUST_LOG and RUST_BACKTRACE; inspect the JoinHandle result and Result-discarding branches. Use native debug/lldb for unsafe memory or FFI and tokio-console when existing instrumentation is available. Journal any added dbg!, span or console-subscriber config so only owned hunks are removed. All long-running commands use native async bash and collected completion handles. These recipes are alternatives selected for the hypothesis, not a mandatory sequence of installs or test reruns. Native DAP is preferred over text scraping. Keep terminal commands only as documented fallback for a verified missing adapter.
+Scenario: a tokio job disappears without completing its public operation. Run the exact command with scoped RUST_LOG and RUST_BACKTRACE; inspect the JoinHandle result and Result-discarding branches. Use native debug/lldb for unsafe memory or FFI and tokio-console when existing instrumentation is available. Journal any added dbg!, span or console-subscriber config so only owned hunks are removed. All long-running commands use native async bash; results auto-deliver, and native wait() with no arguments is only for a pending job you started when blocked. These recipes are alternatives selected for the hypothesis, not a mandatory sequence of installs or test reruns. Native DAP is preferred over text scraping. Keep terminal commands only as documented fallback for a verified missing adapter.
 
 
 Covers `cargo`, `tokio`, panics, and the fact that you usually don't actually need a debugger — Rust's type system, `dbg!`, and logging cover 80% of sessions faster than gdb would.

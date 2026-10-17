@@ -27,7 +27,7 @@ A phase is the unit checkpointed by the owning loop or plan: a goal criterion, w
 
 A run is a declarative definition: a stable ledger `key` (lead-managed identity and resume, not an automatic runtime idempotency service), a human `name`, and `nodes`. Each node has an `id`, a self-contained task assignment, solutionSpace describing the solution's uncertainty, and a selected available specialist role or the default worker, and optional `dependsOn` listing node ids that must finish first. `dependsOn` is ordering ONLY: no upstream output is substituted into a downstream prompt, so write every prompt to stand alone. Put exact file scope, acceptance and required skill paths in task; shared goals/interfaces belong in context. Node ids and dependsOn are lead-owned graph metadata, not task input fields.
 
-Map the difficulty/specialty metadata in references/planning.md to an actually listed OMP role and record that mapping; omit agent for default task work. OMP selects models and fallbacks. Record resolvedModel only from actual results, never pass a per-task model or category. Dispatch dependency-ready task waves.
+Map the difficulty/specialty metadata in references/planning.md to an actually listed OMP role and record that mapping; omit agent for default task work. OMP selects models and fallbacks for ordinary workers. Record resolvedModel only from actual results; never pass a per-task model or category. The exposed `model` and `sourceSession` fields are reserved for an explicitly selected `seance` historical consultation, not graph execution nodes. Dispatch dependency-ready task waves.
 
 ## Goal before start
 

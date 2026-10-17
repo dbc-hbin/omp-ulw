@@ -117,7 +117,7 @@ A spawned worker is not fire-and-forget. For EACH subagent in the burst, name th
 
 ### Delegation router — recommended task executor category
 
-When the plan annotates a todo with `Recommended task executor category:`, treat it as difficulty/specialty metadata and map it to a listed OMP role under ../ulw-loop/references/omp-contract.md. Never send category or model in a task entry. Omit agent for default task work; choose sonic only for mechanical assignments, scout for exploratory discovery, listed senior-task for difficult reasoning, and reviewer/security-reviewer for reviews. Record any deviation in the ledger and the actual resolved model only after the result. Otherwise classify by shape using the labels below:
+When the plan annotates a todo with `Recommended task executor category:`, treat it as difficulty/specialty metadata and map it to a listed OMP role under ../ulw-loop/references/omp-contract.md. Never send category in a task entry. Do not send model for ordinary workers; use model/sourceSession only with the exposed `seance` agent for read-only historical consultation. Omit agent for default task work; choose sonic only for mechanical assignments, scout for exploratory discovery, listed senior-task for difficult reasoning, and reviewer/security-reviewer for reviews. Record any deviation in the ledger and the actual resolved model only after the result. Otherwise classify by shape using the labels below:
 
 | Category | Route here |
 | --- | --- |

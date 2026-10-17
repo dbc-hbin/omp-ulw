@@ -19,7 +19,7 @@ omp -e ./omp-ulw/index.ts
 
 ## 모델별 프롬프트 위치
 
-- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Haiku 5.5를 포함한 30개 프리셋과 원본 리비전·라이선스를 담습니다.
+- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Haiku 5.5와 Gemini 4 Argon을 포함한 31개 프리셋과 원본 리비전·라이선스를 담습니다.
 - [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
 - [`index.ts`](index.ts): 세션 시작과 모델 변경 시 해당 프롬프트를 적용합니다.
 - [`upstream/update.mjs`](upstream/update.mjs): GitHub 소스를 고정 SHA로 받아 로컬 프리셋을 생성합니다. 바이너리 추출이나 Senpi 패키지 설치는 필요 없습니다.
@@ -47,7 +47,7 @@ bun test
 
 명령은 먼저 ref를 커밋 SHA로 고정하고 그 SHA의 소스만 내려받습니다. 빌드·모든 프리셋 렌더링 검사가 성공한 뒤 `upstream/presets.js` 한 파일을 원자적으로 교체합니다. 다운로드·검증 실패 시 기존 파일은 유지합니다. `--ref`를 생략하면 `main`이며, GitHub API 제한이 있으면 `GITHUB_TOKEN`을 사용할 수 있습니다. 재현하려면 생성 파일 첫 줄의 SHA를 `--ref`로 전달합니다.
 
-자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 이번 스킬 반영 기준은 [OMO v5.1.33](https://github.com/code-yeongyu/oh-my-openagent/tree/5275771d8b38b70ac6e6c737f587abbb4dd36b86)이며, 작업 자원·캐시 수명 관리(#9953), mass-ulw 단계 연결·research handoff(#10050), 체크포인트 실패 경계(#10053)를 포함합니다.
+자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 기존 스킬 반영 기준은 [OMO v5.1.33](https://github.com/code-yeongyu/oh-my-openagent/tree/5275771d8b38b70ac6e6c737f587abbb4dd36b86)이며, 이번 리서치 시각 검증 보강은 [OMO v5.1.35](https://github.com/code-yeongyu/oh-my-openagent/tree/v5.1.35)에서 선별 이식했습니다.
 
 ## 테스트
 
