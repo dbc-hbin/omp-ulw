@@ -216,10 +216,15 @@ are delegating never justify a planner: plan directly in the notepad.
 Never spawn the planner before the discovery wave has returned.
 
 ## 1. Create the goal with binding success criteria
-OMP has no goal tool. Open a binding `# Goal` block and copy it
-in full to the durable notepad.
-That recorded goal is the contract for the whole run; skipping it is a
-defect. Goals are unlimited; never invent a numeric budget or limit.
+OMP's native goal mode is the binding objective for plain ULW invocations:
+the extension routes a direct `ulw`/`ultrawork` request through `/goal`.
+Use the native goal objective and continuation for that mode; do not create a
+second goal record in the notepad. Explicit `ulw-loop`, `ulw-execute` and
+`mass-ulw` workflows keep their own multi-goal ledger because their
+dependency graph and evidence records are richer than one native goal.
+For explicit workflows, that recorded ledger goal is the contract for the
+whole run; skipping it is a defect. Goals are unlimited; never invent a
+numeric budget or limit.
 Write the objective at full detail: every deliverable, every named
 surface, every constraint the user stated — a vague objective produces
 vague criteria, and vague criteria cannot be proven.

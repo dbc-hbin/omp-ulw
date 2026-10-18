@@ -27,7 +27,10 @@ This skill is compact by design: the run contract below is the whole bootstrap. 
 4. Verify every criterion on its real surface, capture artifacts and cleanup, validate the checkpoint, then acquire the next ready goal. Tests alone do not prove completion.
 5. Stop the instant WHEN TO STOP holds with fresh evidence and the final gate passed.
 
-The loop ledger is the ULW notepad; create no competing binding goal. No SDK or native goal API is assumed.
+The loop ledger is the ULW notepad; create no competing native goal. The
+OMP-native goal is reserved for plain ULW. This workflow owns a richer
+multi-goal dependency ledger and must continue to use it as its source of
+truth.
 
 ## Non-Negotiables
 

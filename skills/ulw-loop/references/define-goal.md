@@ -83,7 +83,7 @@ Repaired: "Resolve every open change-requesting review comment on PR 123 touchin
 
 ## Registration protocol
 1. Read the existing binding goal from the durable run directory first. Continue the matching active intent; surface a conflicting active intent rather than silently replacing it.
-2. Before execution write the objective with outcome, deliverables, criteria, constraints and WHEN TO STOP through read/write/edit, using omp-ledger.md. OMP has no native goal tool, so this fallback is REQUIRED.
+2. Before execution write the objective with outcome, deliverables, criteria, constraints and WHEN TO STOP through read/write/edit, using omp-ledger.md. Explicit ulw-loop uses this durable multi-goal ledger instead of opening a second OMP-native goal; plain ULW is routed to the native goal mode by the extension.
 3. Do not invent numeric budgets or deadlines. Register the aggregate once and per-phase goals in goals.json; native todos mirror actions, not a competing objective.
 
 ## Completion honesty

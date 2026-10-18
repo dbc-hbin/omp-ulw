@@ -36,8 +36,8 @@ class Host {
     return this.handlers.get(event)?.(payload as never, this.context);
   }
   prepare(prompt: string, source: "interactive" | "rpc" | "extension" = "interactive", systemPrompt = ["host", "project rules"]): Prepared | undefined {
-    this.emit("input", { text: prompt, source });
-    return this.emit("before_agent_start", { prompt, systemPrompt }) as Prepared | undefined;
+    const inputResult = this.emit("input", { text: prompt, source }) as { text?: string } | undefined;
+    return this.emit("before_agent_start", { prompt: inputResult?.text ?? prompt, systemPrompt }) as Prepared | undefined;
   }
 }
 
@@ -58,9 +58,20 @@ describe("Native ULW session behavior", () => {
     for (const name of ["ulw", "ulw-plan", "ulw-loop", "ulw-execute", "ulw-research", "mass-ulw"]) {
       const host = new Host();
       await host.commands.get(name)!("the requested task", host.context);
-      expect(host.submitted).toBe(`${name}\n\nthe requested task`);
+      expect(host.submitted).toBe(name === "ulw" ? "/goal ulw\n\nthe requested task" : `${name}\n\nthe requested task`);
       expect(host.prepare(host.submitted!, "extension")).toBeDefined();
     }
+  });
+
+  test("direct ULW input enters native goal mode while workflow-specific commands keep their durable loop", () => {
+    const host = new Host();
+    const result = host.emit("input", { text: "ulw ship the fix", source: "interactive" }) as { text?: string };
+    expect(result).toEqual({ text: "/goal ulw ship the fix" });
+    expect(host.prepare("ulw ship the fix")?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
+
+    host.emit("goal_updated", { goal: { status: "active" }, state: { enabled: true } });
+    expect(host.emit("input", { text: "ulw continue the active goal", source: "interactive" })).toBeUndefined();
+    expect(host.emit("input", { text: "ulw-loop continue the ledger", source: "interactive" })).toBeUndefined();
   });
   test("legacy prompt blocks remain inert and are replaced on session resume", () => {
     for (const prefix of ["omo", "omp"]) {
