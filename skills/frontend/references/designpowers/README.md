@@ -4,6 +4,8 @@ This is an internal frontend ruleset, not a standalone skill. `/frontend` remain
 
 Load this reference from the frontend router for EVERY implementation or redesign that creates or updates `DESIGN.md`, and whenever a task needs design operating-layer guidance: personas, cognitive accessibility, critique, design debt, handoff, synthetic user testing, motion guidance, or designpowers-style role references.
 
+These routes do not require ordinary existing-UI work to create `DESIGN.md`, run design research, or start a Lighthouse audit. Apply the frontend router's scoped gates; references to the design contract use existing UI/component patterns when no document is required. Rendered visual QA and accessibility/behavior checks still apply.
+
 The purpose of this ruleset is to enrich the existing frontend workflow while preserving its gates:
 
 - `references/design/README.md` still owns the `DESIGN.md` contract, taste routing, brand references, React dev tooling, and browser-based design QA expectations.

@@ -1,11 +1,11 @@
 # Frontend Design References — Index
 
 All reference files live flat in this directory. Three layers:
-- **Layer 0 — design system architecture** (1 file): the mandatory gate. Defines `DESIGN.md` structure, creation workflow, validation rules. Always loaded by Phase 0 when no design system exists.
+- **Layer 0 — design system architecture** (1 file): the conditional design-system gate. Defines `DESIGN.md` structure, creation workflow, validation rules. Load when the scoped Phase 0 gate applies and no design system exists, or when extracting a design system.
 - **Layer A — taste skills** (12 files): how to execute. Discipline, motion, spacing, anti-slop, output completeness.
 - **Layer B — design systems** (70 files): what it should look like. Brand-specific color/type/component tokens.
 
-**Phase 0 runs first** (check/create `DESIGN.md`), then most non-trivial tasks load **one Layer A + one Layer B** together. See the routing flow in the sibling `README.md`. Specialized phases (interaction and motion, app-shell layout, URL clones, real-product screen research) load the matching project-original operating reference — see the final section of this index.
+**Resolve Phase 0 scope first.** Greenfield, explicit design-system/high-craft, and concrete-reference work follow the gate in the sibling `README.md`; ordinary existing-UI changes follow current rendered UI and component patterns without creating `DESIGN.md` or selecting a new brand direction. When a new direction is required, most non-trivial tasks load **one Layer A + one Layer B** together. Specialized phases (interaction and motion, app-shell layout, URL clones, real-product screen research) load the matching project-original operating reference — see the final section of this index. Rendered visual QA and accessibility/behavior checks remain required.
 
 ---
 
@@ -13,7 +13,7 @@ All reference files live flat in this directory. Three layers:
 
 | File | Purpose | Load when |
 |---|---|---|
-| `design-system-architecture.md` | Defines the `DESIGN.md` structure — 8 sections plus a greenfield-only `## 0. Research Log` (atmosphere, color tokens, typography scale, spacing system, components, motion, depth, accessibility constraints & accepted debt). Creation workflow for new and existing projects. Validation rules and memory management. | Phase 0 fires and no `DESIGN.md` exists in the project. Also load when extracting a design system from existing code. |
+| `design-system-architecture.md` | Defines the `DESIGN.md` structure — 8 sections plus a greenfield-only `## 0. Research Log` (atmosphere, color tokens, typography scale, spacing system, components, motion, depth, accessibility constraints & accepted debt). Creation workflow for new and existing projects. Validation rules and memory management. | The scoped Phase 0 Design System Gate applies and no `DESIGN.md` exists. Also load when the requested work extracts a design system from existing code; absence alone is not a trigger. |
 
 ---
 

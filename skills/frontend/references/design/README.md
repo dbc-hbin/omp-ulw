@@ -102,6 +102,8 @@ when the user has authorized adding the tooling.
 
 Run through this in order and stop at the first match. Do not skip — earlier rules dominate later ones.
 
+For ordinary existing-UI changes with no requested new visual direction, keep the current rendered UI/component patterns instead of selecting a new Layer A/Layer B aesthetic. Load only relevant mechanics references below. Their `DESIGN.md` token instructions refer to the existing project's tokens/patterns when the scoped Design System Gate does not apply; they do not independently require a new document.
+
 ### Step 1 — Did the user name a specific brand or site?
 
 Phrasings: "make it look like Linear", "Stripe-style buttons", "Notion-feel sidebar", "Aside-style browser agent", "like {brand}'s landing page", or pasting a screenshot of a known brand site.
@@ -208,7 +210,7 @@ Triggers: an animated, shader, particle, or grid background; a hero that must fe
 ## Anti-patterns — do not do these
 
 - **Don't load nothing and just freestyle.** That produces the exact "generic AI SaaS slop" — purple-blue gradient backgrounds, rounded-2xl-on-everything, three feature cards in a grid, generic Inter font, lorem ipsum. The skills exist precisely to prevent this.
-- **Don't mark state with a coloured accent border.** `border-l-2 border-primary` on the selected row, a primary outline on the focused card — on a rounded surface that is the generic AI tell. State is ink-alpha washes, a glyph for selection, tonal layering for focus; `focus-visible` rings are the only coloured edge. Includes pre-existing instances on surfaces you touch.
+- **Avoid default accent stripes on rounded surfaces**, whether decorative or state-bearing: one-sided borders, pseudo-element bars, inset-shadow stripes, gradient `border-image`, and thin hard-stop gradient bands all count. Prefer tonal surfaces, ink-alpha state washes, glyphs, accent-ink headings, or spacing. Explicit user references and established project design language take precedence; this is not permission to restyle existing surfaces. Preserve keyboard `focus-visible` indicators, validation cues, neutral hairlines, and table rules (not unrelated cards nested in a table).
 - **Don't ignore the user's named brand.** If they say "Linear-style" and you build something that doesn't match Linear's actual aesthetic (purple, ultra-tight spacing, mono accents, etc.), you have failed the routing.
 - **Don't apply a Layer B brand verbatim if the project is not that brand.** The DESIGN.md captures *inspiration* — extract the tokens (palette, type scale, component patterns) and apply them to the project's own content. Do not copy logos or trademarked imagery.
 - **Don't use imagegen skills to write code.** They are explicitly image-only. The agent has been observed trying to "describe" the image as React code — that is the wrong skill, switch to `image-to-code-skill.md` instead.
@@ -218,16 +220,16 @@ Triggers: an animated, shader, particle, or grid background; a hero that must fe
 
 Once references are loaded, before writing any UI code:
 
-1. **`DESIGN.md` was read** (or created) in Phase 0. If you skipped it, stop and go back now.
+1. **The applicable design contract was established in Phase 0.** Read an existing `DESIGN.md`; create one when the scoped Design System Gate requires it. For ordinary existing-UI work without one, inspect and follow the current rendered UI and component patterns instead.
 2. **Verify dependencies.** Read `package.json`. Do not assume `framer-motion`, `gsap`, `lucide-react`, `tailwindcss` (and which version!) are installed. If missing, output the install command first.
 3. **Tailwind version lock.** Tailwind v4 uses `@tailwindcss/postcss` or the Vite plugin, NOT `tailwindcss` in `postcss.config.js`. v3 uses different config syntax. Pick based on what's in `package.json`.
 4. **No emojis in code, markup, alt text, or visible UI.** Replace with proper icons (Radix, Phosphor, Lucide) or clean SVG. Emojis are slop signal.
 5. **Viewport stability.** Use `min-h-[100dvh]`, never `h-screen`, for full-height heroes — `h-screen` causes catastrophic jumps on iOS Safari.
 6. **Server vs client components (Next.js).** If motion/state/portals are involved, isolate as a `'use client'` leaf component. Don't bleed `'use client'` to the page level.
 7. **Match the project's existing patterns FIRST.** If the codebase already uses CSS Modules, don't introduce Tailwind. If it uses styled-components, don't introduce CSS-in-JS variants. The references guide *style*, not *infrastructure*.
-8. **All tokens trace back to `DESIGN.md`.** No orphan hex codes, no magic px values. If you need a new token, update `DESIGN.md` first.
-9. **New reusable patterns (used 2+ times) get documented back into `DESIGN.md` Section 5.**
-10. **No generic-default drift (expressive briefs).** The shipped CSS must use the `DESIGN.md` material, not the model's priors. Load the declared fonts (do not silently fall back to Inter or system fonts), build elevated surfaces from the declared multi-layer recipe (not a lone `backdrop-filter: blur`), and color from the ramp stops (not one tint at varied opacity). Grep your styles before QA: finding `Inter`, a single blur on "glass", one brand hex reused everywhere, or a coloured accent border marking selected/focused state (`border-l-2 border-primary` et al) means you regressed to priors — fix it before declaring done.
+8. **Tokens trace back to the applicable design contract.** Follow `DESIGN.md` when present, updating it before introducing a new token. Otherwise reuse existing project tokens and nearby patterns; an ordinary edit does not require creating a design-system document.
+9. **New shared patterns get documented in the existing project convention**, or in `DESIGN.md` Section 5 when the scoped design-system workflow applies. Reusing a nearby pattern does not trigger design-system extraction.
+10. **No generic-default drift (expressive briefs).** The shipped CSS must use the `DESIGN.md` material, not the model's priors. Load the declared fonts (do not silently fall back to Inter or system fonts), build elevated surfaces from the declared multi-layer recipe (not a lone `backdrop-filter: blur`), and color from the ramp stops (not one tint at varied opacity). Inspect changed styles before QA for departures from that contract, including accidental decorative or state accent stripes and their pseudo-element, shadow, or gradient equivalents. Apply the exceptions and reference/project precedence above; a text match alone is not a defect or a reason to remove accessible focus or validation.
 
 ## Quick lookup table — most common requests
 
@@ -254,9 +256,9 @@ Once references are loaded, before writing any UI code:
 
 Before declaring the task done, verify the rendered UI. **The verification authority is `/visual-qa`, not a hand-rolled checklist here.** Run `/visual-qa`: its HIG-based checklist (layout, hierarchy, text, targets, themes, consistency, motion, states, keyboard, platform - including the slop-animation and accent-border-state rules this skill builds against) is judged on its capture matrix (every page and every sibling surface, phone and desktop, light and dark, scrolled-end, motion driven and inspected) by the dual-oracle pass, looping until an independent reviewer passes on fresh evidence. For a concrete reference or clone, run it in reference-fidelity mode.
 
-This skill adds the one design-taste judgment `/visual-qa` cannot make for you. **Two kinds of failure count equally — fix both, then re-check.** Defects are what `/visual-qa` reports. Flatness is a surface that reads generic next to the loaded reference. When the render is bug-free but flat, you are NOT done — RAISE the design: deepen the material layering, give the color a real perceptual ramp (multiple stops / OKLCH, not one tint at varied opacity), render the hero focal object as real dimensional material (a generated bitmap, or real light/shadow/gradient/depth — never flat geometric primitives), and add the one signature moment. Patching only bugs while the surface stays at the floor is the single most common way this skill ships clean-but-generic work.
+For an expressive/high-craft brief, this skill adds the one design-taste judgment `/visual-qa` cannot make for you. **Two kinds of failure count equally — fix both, then re-check.** Defects are what `/visual-qa` reports. Flatness is a surface that reads generic next to the loaded reference. When the render is bug-free but flat, you are NOT done — RAISE the design: deepen the material layering, give the color a real perceptual ramp (multiple stops / OKLCH, not one tint at varied opacity), render the hero focal object as real dimensional material (a generated bitmap, or real light/shadow/gradient/depth — never flat geometric primitives), and add the one signature moment. Patching only bugs while the surface stays at the floor is the single most common way this skill ships clean-but-generic work. For ordinary existing-UI work, judge visual consistency against the existing surface; do not add an unrequested expressive redesign.
 
-Report "done" only when `/visual-qa` has passed on fresh evidence AND no floor-level surface remains.
+Report "done" only when `/visual-qa` has passed on fresh evidence, accessibility/behavior checks are satisfied, and the applicable visual contract is met (including the craft bar for expressive briefs).
 
 ## Final notes
 

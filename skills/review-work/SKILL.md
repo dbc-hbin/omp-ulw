@@ -77,7 +77,7 @@ Replace the example input artifact with the actual root-owned artifact, never a 
 
 1. Goal completeness: every explicit and directly implied requirement ACHIEVED/MISSED/PARTIAL with code/artifact evidence; no invented future requirement.
 2. Constraint compliance: every constraint verified, specific violation blocks.
-3. Behavioral correctness: trace at least three representative scenarios and five relevant edge cases (empty, boundary, malformed, concurrent, failure) when that surface exists; justify N/A rather than manufacture cases for prose. Inspect races, leaks, off-by-one/null/error/rejection paths.
+3. Behavioral correctness: trace the relevant changed scenarios and edge cases supported by concrete risks in the diff and its callers/contracts. Cover applicable empty, boundary, malformed, concurrent and failure paths; inspect races, leaks, off-by-one/null/error/rejection paths where they can occur. Tie coverage to the changed behavior and acceptance criteria, not a fixed scenario count; justify N/A rather than manufacture cases for prose.
 4. Code quality: neighboring patterns, names, error handling, type safety without suppressions, hot-path cost, abstraction level, meaningful tests, public API/change hygiene.
 5. Security: trust-boundary validation, SQL/XSS/command/path traversal/SSRF, auth, secrets/log exposure, dependencies/lock consistency, unsafe file/network handling relevant to the diff.
 6. Missed context: history, issues, PR decisions, importing callers, docs/config and surrounding contract.

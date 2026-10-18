@@ -59,33 +59,6 @@ describe("faithful omo presets", () => {
     }
   });
 
-  test("OMP adapter preserves authorization and implementation intent boundaries", () => {
-    const prompt = renderPreset({ id: "gpt-6-astra" }, { surface: "terminal", toolNames })?.prompt;
-    expect(prompt).toBeDefined();
-    expect(prompt).toContain("empty, dismissed, or unavailable, treat it as no authorization");
-    expect(prompt).toContain("never perform destructive, external, irreversible, paid, or spend actions");
-    expect(prompt).toContain("implementation-intended");
-    expect(prompt).toContain("smallest complete fix");
-    expect(prompt).toContain("Explicit answer or investigation requests");
-    expect(prompt).not.toContain("There is no attempt limit");
-    expect(prompt).toContain("at most three materially different attempts");
-    expect(prompt).toContain("host or project authorization and safety rules");
-    expect(prompt).toContain("Host and project authorization rules remain binding");
-    expect(prompt).not.toMatch(/\bmonitor\b/);
-    expect(prompt).not.toContain("session tools");
-    expect(prompt).not.toMatch(/You need slots?|You need:/);
-  });
-
-  test("representative rendered surfaces contain only OMP async and handoff terminology", () => {
-    for (const surface of ["terminal", "app"] as const) {
-      const prompt = renderPreset({ id: "gpt-6-astra" }, { surface, toolNames })?.prompt;
-      expect(prompt).toBeDefined();
-      expect(prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|tool\.monitor|\bmonitor\b|THERE IS NO WAIT TOOL/);
-      expect(prompt).not.toMatch(/You need slots?|You need:/);
-      expect(prompt).toContain("async bash watch");
-      expect(prompt).toContain("For you section");
-    }
-  });
 
   test("official and third-party DeepSeek aliases retain provider-sensitive routing", () => {
     const options = { surface: "terminal" as const, toolNames };

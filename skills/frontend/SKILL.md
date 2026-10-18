@@ -35,6 +35,8 @@ Read `references/runtime.md` before browser, image generation or audit setup. Ge
 
 **For explicit high-craft implementation or audit work, design + perfection load together.** Ordinary UI work follows the existing project's tools and visual language without inventing an audit or research program.
 
+**Draft guard:** before adding a decorative or state accent stripe to a rounded surface, prefer a tonal surface, accent-ink heading/eyebrow, glyph, or spacing; selection can use ink-alpha washes. This includes one-sided borders, pseudo-element bars, inset-shadow stripes, gradient `border-image`, and thin hard-stop gradient bands. The user's explicit reference and established project design language take precedence over this default; preserve visible keyboard focus, validation cues, neutral hairlines, and table rules.
+
 ## Design System and Component Workflow
 
 Every implementation must choose one of these branches before UI code changes:
@@ -62,7 +64,7 @@ The reference library has one architecture file, 12 taste skills (Layer A — *h
 
 | File | Read when |
 |---|---|
-| `design-system-architecture.md` | The project has no `DESIGN.md` (defines the structure you must create first — 8 sections plus a greenfield-only `## 0. Research Log`), or you are extracting a design system from existing UI code. |
+| `design-system-architecture.md` | The scoped Design System Gate applies and the project has no `DESIGN.md`, or the requested work extracts a design system from existing UI code. Missing `DESIGN.md` alone does not trigger creation for ordinary existing-UI work. |
 
 ### Layer A — taste skills (pick AT MOST ONE style skill; they encode opposing philosophies)
 
@@ -95,10 +97,10 @@ When the user names a brand or site — "Linear-style", "like Stripe's landing",
 
 | File | Read when |
 |---|---|
-| `README.md` | Any frontend code is written or audited. Carries the seven tenets: real-browser audits only, explicit-audit score targets, fix-at-the-architecture, never weaken UX for points, design-system compliance checks, and the response format for audit reports. |
+| `README.md` | Explicit high-craft implementation, performance/audit work, or implementation subject to an existing project audit gate. Loading it for design guidance does not itself require Lighthouse. Carries real-browser audit guidance, explicit-audit score targets, architectural fixes, UX preservation, and audit reporting. |
 | `react-perf-tooling.md` | Before ANY React audit. The Playwright + `playwright-lighthouse` + `react-scan/lite` injection recipe, per-route render budgets, and the React-specific root-cause checklist. Lighthouse 100 with 30+ unnecessary renders is NOT done. |
 
-Audit the production build with the project's existing real-Chrome Lighthouse Node API or Playwright audit runner, if installed. Record the runner and package prerequisites; this port does not ship the upstream Python wrapper (it assumes a private Playwright websocket transport and installs global npm packages). Run mobile AND desktop presets, 3-5 runs, take the median, diagnose from the JSON report. No runner available means unverified performance, not an invented score.
+When an explicit performance/audit request or existing project audit gate applies, audit the production build with the project's existing real-Chrome Lighthouse Node API or Playwright audit runner, if installed. Record the runner and package prerequisites; this port does not ship the upstream Python wrapper (it assumes a private Playwright websocket transport and installs global npm packages). Run mobile AND desktop presets, 3-5 runs, take the median, diagnose from the JSON report. No runner available means unverified performance, not an invented score.
 
 ## Ruleset 3 — ui-ux-db (`references/ui-ux-db/`)
 
@@ -118,6 +120,8 @@ Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `
 
 ## Quick routes — most common requests
 
+Apply Phase 0 scope to these shortcuts: `perfection/README.md` loads for explicit high-craft work, performance/audit work, or an existing project audit gate, not merely because code changes. Ordinary existing-UI work keeps its current visual language and uses only the relevant mechanics references; it does not require a new Layer A/Layer B direction or `DESIGN.md`.
+
 | Request | Load |
 |---|---|
 | "Build a landing page" (no direction given) | `design/README.md` + `design/_INDEX.md` shortlist → exactly one Layer B reference + `design/taste-skill.md` + `perfection/README.md` |
@@ -134,7 +138,7 @@ Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `
 | "Where should this go?" / "the layout breaks" / scroll + containment | `design/layout-skill.md` + `design/stylegallery.md` on the current style skill |
 | "What do shipped apps in this space look like?" / design-direction research | `design/lazyweb.md` (curl-only) + `design/_INDEX.md` shortlist |
 | "Set up this React project" | `design/README.md` + `design/react-dev-tooling-skill.md` |
-| "Use designpowers", "make the design workflow stronger", "add personas/accessibility/debt/handoff" | `design/README.md` + `designpowers/README.md` (+ `perfection/README.md` if implementation or audit follows) |
+| "Use designpowers", "make the design workflow stronger", "add personas/accessibility/debt/handoff" | `design/README.md` + `designpowers/README.md` (+ `perfection/README.md` for explicit high-craft implementation, performance/audit work, or an existing project audit gate) |
 
 ## Shared axioms (all four rulesets agree — apply always)
 
@@ -142,7 +146,7 @@ Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `
 - **Concrete reference = contract.** When a screenshot, mockup, or annotated reference exists, match its pixels, copy, component structure, and responsive intent unless the user accepts a deviation.
 - **Never weaken UX OR flatten the surface to buy points.** No dropping animations, hiding content, simplifying interactions, or replacing rendered/lit material with flat fills and flat geometric primitives for an explicitly requested Lighthouse audit or a deadline.
 - **No emojis as icons.** SVG icon sets only (Lucide, Heroicons, Radix, Phosphor).
-- **No coloured accent borders on rounded surfaces.** A `border-l-2 border-primary` stripe on a selected row, a primary-tinted outline on a focused card — any `border-{side}-{primary|warning|destructive|success}` or accent-width rule used to mark selected/focused/active is the most recognizable AI-slop tell in shipped UI. Encode state the way `DESIGN.md` systems do: one ink at many alphas (hover/selected/active wash ramps), a glyph (check) for selection, tonal layering for focus. Keyboard `focus-visible` rings are the only coloured edge allowed. Applies to code you write AND to pre-existing instances on any surface you touch — sweep them out.
+- **Avoid default accent stripes on rounded surfaces**, decorative or state-bearing, including one-sided borders, pseudo-element bars, inset-shadow stripes, gradient `border-image`, and thin hard-stop gradient bands. Prefer tonal surfaces, ink-alpha state washes, glyphs, accent-ink headings, or spacing. Explicit user references and established project design language take precedence; do not sweep out existing styling merely for this preference. Preserve keyboard `focus-visible` indicators, validation cues, neutral hairlines, and table rules; a card nested inside a table is not itself a table rule.
 - **GPU-composited animation only** — `transform`, `opacity`, `filter`; never animate layout properties.
 - **Slop animation is forbidden — motion serves meaning.** Every animation or hover must map to a real interaction, state change, or affordance. A hover that changes nothing, motion on a non-interactive element, or a decorative micro-animation with no informational purpose is slop — do not add it.
 - **Done is the `/visual-qa` gate, not your own glance.** A frontend design task is verified through `/visual-qa` - its HIG-based checklist, its capture matrix (every page and every sibling surface, phone and desktop, light and dark, scrolled-end, motion driven and inspected) and its dual-oracle completion gate on fresh evidence. This skill does not keep its own list of visual checks; the verifier owns it.

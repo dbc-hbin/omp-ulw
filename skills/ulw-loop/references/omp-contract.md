@@ -1,6 +1,6 @@
 # OMP compatibility contract (authoritative)
 
-This is an OMP port of omo 5.1.19, with the native task and tool contract checked against omp 18.11.3. The workflow activates only on an explicit request for its named mode (or an explicit request to perform that specialised workflow); bare ULW does not activate planning, looping, execution, saturation research, or mass orchestration. Host and current user instructions outrank this skill. The native behavioural doctrine remains below; this contract replaces harness-specific machinery.
+This is an OMP port of omo 5.1.19, with native task/tool schemas and goal-mode guidance reconciled for omp 18.12.1. The workflow activates only on an explicit request for its named mode (or an explicit request to perform that specialised workflow); bare ULW does not activate planning, looping, execution, saturation research, or mass orchestration. Host and current user instructions outrank this skill. The native behavioural doctrine remains below; this contract replaces harness-specific machinery.
 
 ## Native delegation and orchestration
 
@@ -34,7 +34,7 @@ Use native blocking ask from the main session for material planning choices and 
 
 ## Durable binding goal and evidence
 
-OMP has no goal SDK or goal tool. Record the binding objective, criteria, constraints and WHEN TO STOP in durable files through read/write/edit before execution. This is the canonical no-goal-tool fallback, not an optional notepad substitute. The lead is the single writer of goal/criteria/ledger state; workers return evidence and cannot safely append concurrently. Read existing state first, preserve its bytes, append ledger entries via edit (or read + write with single ownership), observe the result and read back. No hidden locks, atomic compare-and-swap service, env session binding, or automatic continuation is assumed. Resume from files and actual agent handles after compaction; do not recreate completed work.
+OMP supports native goal mode. This extension routes bare `ulw`/`ultrawork` and `/ulw` through `/goal` and observes `goal_updated`; do not invent a goal SDK or tool call. Native goal mode owns that continuation and does not require a second durable ledger for LIGHT work. Explicit `ulw-loop` and `ulw-execute` retain their existing multi-goal/plan files and extension-owned continuation without creating a duplicate native goal. For those durable workflows, record the binding objective, criteria, constraints and WHEN TO STOP through read/write/edit before execution. The lead is the single writer of goal/criteria/ledger state; workers return evidence and cannot safely append concurrently. Read existing state first, preserve its bytes, append ledger entries via edit (or read + write with single ownership), observe the result and read back. No hidden locks, atomic compare-and-swap service or env session binding is assumed. Resume from existing state and actual agent handles after compaction; do not recreate completed work.
 
 Use OMP todo for every registered action and cleanup resource, updating transitions immediately using its actual schema. With parallel children, the lead's current orchestration step can be the single in-progress todo while per-lane states are durable; do not misreport parallel work as completed. Missing artifacts, inconclusive verdicts, or stale proofs block completion.
 
