@@ -120,7 +120,10 @@ export function registerUlw(pi: UlwApi): void {
         commandPending = true;
         continuationFingerprint = undefined;
         consecutiveContinuations = 0;
-        pi.sendUserMessage(name === "ulw" ? `/goal ulw\n\n${args}` : `${name}\n\n${args}`);
+        // OMP's sendUserMessage() disables slash-command expansion. A
+        // `/goal ...` payload would therefore be persisted as ordinary user
+        // text instead of creating a native goal.
+        pi.sendUserMessage(name === "ulw" ? `ulw${args ? ` ${args}` : ""}` : `${name}\n\n${args}`);
       },
     });
   }

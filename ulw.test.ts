@@ -58,7 +58,7 @@ describe("Native ULW session behavior", () => {
     for (const name of ["ulw", "ulw-plan", "ulw-loop", "ulw-execute", "ulw-research", "mass-ulw"]) {
       const host = new Host();
       await host.commands.get(name)!("the requested task", host.context);
-      expect(host.submitted).toBe(name === "ulw" ? "/goal ulw\n\nthe requested task" : `${name}\n\nthe requested task`);
+      expect(host.submitted).toBe(name === "ulw" ? "ulw the requested task" : `${name}\n\nthe requested task`);
       expect(host.prepare(host.submitted!, "extension")).toBeDefined();
     }
   });
