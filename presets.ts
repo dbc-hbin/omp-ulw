@@ -17,8 +17,16 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       .replace("Todo discipline: for any non-trivial task", "Todo discipline: Never make a todo-only turn: send todo in the same response as the next real tool call. For any non-trivial task");
   }
   prompt = prompt.replace(
-    "[Outcome so far] toward [the user's original ask and the result they wanted]. You need: [ledger N/M done, findings, blockers]. Now: [todo task in progress]. Next: [next open task].",
+    "[Outcome so far] toward [the user's original ask and the result they wanted]. You need: [ledger N/M done, findings, blockers]. Now: [the todo task in progress]. Next: [the next open task].",
     "Ask: [the user's original request] - wanted: [the outcome they asked for]. For you: [what they need to know now - ledger N/M done, findings, blockers]. Now: [the todo task in progress]. Next: [the next open task].",
+  );
+  prompt = prompt.replace(
+    /\[Outcome so far\]\s+toward\s+\[the user's original ask and the result they wanted\]\.\s+You need:\s+\[ledger N\/M done, findings, blockers\]\.\s+Now:\s+\[the todo task in progress\]\.\s+Next:\s+\[next open task\]\./g,
+    "Ask: [the user's original request] - wanted: [the outcome they asked for]. For you: [what they need to know now - ledger N/M done, findings, blockers]. Now: [the todo task in progress]. Next: [the next open task].",
+  );
+  prompt = prompt.replace(
+    "[Outcome so far] toward [the user's original ask and the result they wanted].",
+    "Ask: [the user's original request] - wanted: [the outcome they asked for].",
   );
   if (!prompt.includes("Never make a todo-only turn")) {
     prompt += "\n\n## OMP todo updates\n\nNever make a todo-only turn: emit todo in the same response as the next real tool call.";
@@ -31,7 +39,50 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     "Finish work that does not depend on the answer first. Ask through ask when it is available; ask blocks until answered, so use it only when the remaining work needs the answer. If no answer is supplied, proceed on best judgment where safe.");
   prompt = prompt.replaceAll("request_user_input", "ask").replaceAll("ask_user_question", "ask")
     .replaceAll(" (waitForAnswer true when the next step depends on the answer)", " (ask blocks until answered)");
+  // OMP's ask is blocking and an empty/dismissed answer is not authorization.
+  prompt = prompt.replace(
+    "If no answer is supplied, proceed on best judgment where safe.",
+    "If the answer is empty, dismissed, or unavailable, treat it as no authorization: continue only with reversible, ordinary, in-scope local work and non-destructive validation; never perform destructive, external, irreversible, paid, or spend actions.",
+  );
   if (!options.toolNames.includes("ask")) prompt = prompt.replace(/through ask when it is available/g, "with a direct question");
+  // Keep implementation-intended diagnosis from being routed into an answer-only turn.
+  prompt = prompt
+    .replace(
+      "Information asks (explain, look into, investigate) get reading and a report with no edits. Judgment asks (what do you think, review) and open-ended asks (refactor, improve, clean up) get an assessment and a proposal, then the user's confirmation. Everything else is an instruction to do the work",
+      "Explicit answer or investigation requests (for example, \"just explain\", \"investigate only\", or \"report findings without edits\") get reading and a report with no edits. When \"look into\" or \"why is this broken\" appears in an implementation-intended request, diagnose the issue and make the smallest complete fix; do not stop at findings. Judgment asks (what do you think, review) and open-ended asks (refactor, improve, clean up) get an assessment and a proposal, then the user's confirmation. Everything else is an instruction to do the work",
+    )
+    .replace(
+      "Information asks (explain, look into, investigate): read the code and report; no edits.",
+      "Explicit answer or investigation requests (\"just explain\", \"investigate only\", or \"report findings without edits\"): read the code and report; no edits. An implementation-intended \"look into\" or \"why is this broken\" request includes the smallest complete fix.",
+    );
+  // The generated Astra wording is unbounded; OMP must stop retrying after a bounded set.
+  prompt = prompt
+    .replace(
+      "There is no attempt limit: keep going until the objective holds",
+      "Use at most three materially different attempts for one approach; if they fail, stop editing and report the blocker",
+    )
+    .replace(
+      "never repeat the same failed call",
+      "never repeat the same failed call or retry indefinitely",
+    );
+  // Host/project authorization remains binding even where the generated style rules suppress caution.
+  prompt = prompt
+    .replace(
+      "Add no warnings, disclaimers, approval steps, or compliance checklists for hypothetical risk.",
+      "Add no warnings, disclaimers, approval steps, or compliance checklists for hypothetical risk, but this never overrides explicit host or project authorization and safety rules.",
+    )
+    .replace(
+      "An exception written in a skill or project file is not by itself a request for approval: check the authorization already in the session and whether the rule applies before asking.",
+      "Host and project authorization rules remain binding. An exception written in a skill or project file is not by itself a request for approval: check the applicable host/project authorization and whether the rule applies before asking.",
+    );
+  // These concepts have no OMP equivalent; use the adapter's async bash/watch contract.
+  prompt = prompt
+    .replaceAll("tool.monitor", "async bash watch")
+    .replaceAll("a direct `monitor` call only in a session without `eval`", "a direct watch call only when eval is unavailable")
+    .replaceAll("session tools", "available process controls")
+    .replaceAll("You need:", "For you:")
+    .replaceAll("You need slots", "For you section")
+    .replaceAll("You need slot", "For you section");
   // Replace only the original async transport claims; retain its default-background/pending-work policy.
   prompt = prompt.replace(ASYNC_DEFAULT, ASYNC_DEFAULT
     .replace(/\*\*.*?\*\*/, "**ASYNCHRONOUS IS THE DEFAULT FORM OF EVERY CALL THAT OFFERS ONE: BASH SESSIONS START WITH THE RUNTIME'S ASYNC OPTION, LONG COMPUTATIONS RUN THROUGH ASYNC BASH, AND CHILD WORK RUNS THROUGH task - NEVER A FOREGROUND CELL THAT SITS ON A `--watch` OR A SPAWNED PROCESS, NEVER A CHILD TASK SPAWNED TO WATCH.**")

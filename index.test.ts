@@ -64,3 +64,72 @@ test("ULW policy follows request-model fallback without touching user or tool te
     expect(hook({ payload } as never, ctx as never)).toEqual({ messages: [{ role: "system", content: expected }, payload.messages[1], payload.messages[2]] });
   }
 });
+
+test("child assignments are not replaced by the main-agent preset", () => {
+  const handlers = new Map<string, Handler[]>();
+  omoPrompts({
+    setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
+    registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
+    getFlag: () => false, appendEntry: () => {},
+    on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
+  });
+  const ctx: UlwContext & { mode: "rpc"; model: { id: string; name: string; provider: string; api: string } } = {
+    cwd: ".", mode: "rpc", agent: { kind: "sub" },
+    sessionManager: { getSessionId: () => "child-assignment", getBranch: () => [] },
+    ui: { notify: () => {} },
+    model: { id: "gpt-6-astra", name: "GPT 6 Astra", provider: "openai", api: "openai-completions" },
+  };
+  const assignment = ["Host role", "Child assignment: edit only src/owned.ts", "Delegation contract: report to parent"];
+  let blocks = assignment;
+  for (const handler of handlers.get("before_agent_start") ?? []) {
+    const result = handler({ prompt: "implement the assigned unit", systemPrompt: blocks } as never, ctx as never);
+    if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt)) blocks = result.systemPrompt as string[];
+  }
+  expect(blocks).toEqual(assignment);
+});
+
+test("inactive tools mentioned by the host do not enable preset branches", () => {
+  const handlers = new Map<string, Handler[]>();
+  omoPrompts({
+    setLabel: () => {}, getActiveTools: () => ["read"], getAllTools: () => [{ name: "read" }, { name: "ask" }],
+    registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
+    getFlag: () => false, appendEntry: () => {},
+    on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
+  });
+  const ctx: UlwContext & { mode: "rpc"; model: { id: string; name: string; provider: string; api: string } } = {
+    cwd: ".", mode: "rpc", agent: { kind: "main" },
+    sessionManager: { getSessionId: () => "tool-availability", getBranch: () => [] },
+    ui: { notify: () => {} },
+    model: { id: "gpt-6-astra", name: "GPT 6 Astra", provider: "openai", api: "openai-completions" },
+  };
+  const base = "Host\n§ Role\nRole\n§ Runtime\nRuntime\n§ Tool Policy\nPolicy mentions `ask`\n# Tool I/O\nTools\n# Delegation\nDelegation\n§ Workflow\nWorkflow";
+  const result = handlers.get("before_agent_start")![1]({ prompt: "implement this", systemPrompt: [base] } as never, ctx as never) as { systemPrompt: string[] };
+  expect(result.systemPrompt.join("\n")).not.toContain("through ask when it is available");
+});
+
+test("print and json surfaces use app routing without terminal-only preambles", () => {
+  for (const mode of ["print", "json"] as const) {
+    const handlers = new Map<string, Handler[]>();
+    omoPrompts({
+      setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
+      registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
+      getFlag: () => false, appendEntry: () => {},
+      on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
+    });
+    const ctx: UlwContext & { mode: typeof mode; model: { id: string; name: string; provider: string; api: string } } = {
+      cwd: ".", mode, agent: { kind: "main" },
+      sessionManager: { getSessionId: () => `surface-${mode}`, getBranch: () => [] },
+      ui: { notify: () => {} },
+      model: { id: "gpt-6-astra", name: "GPT 6 Astra", provider: "openai", api: "openai-completions" },
+    };
+    const base = "Host\n§ Role\nRole\n§ Runtime\nRuntime\n§ Tool Policy\nPolicy\n# Tool I/O\nTools\n# Delegation\nDelegation\n§ Workflow\nWorkflow";
+    let blocks = [base];
+    for (const handler of handlers.get("before_agent_start") ?? []) {
+      const result = handler({ prompt: "implement this", systemPrompt: blocks } as never, ctx as never);
+      if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt)) blocks = result.systemPrompt as string[];
+    }
+    const preset = blocks.join("\n");
+    expect(preset).not.toContain("Open every turn with one short routing line");
+    expect(preset).not.toContain("I read this as [intent]");
+  }
+});

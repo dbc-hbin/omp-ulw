@@ -101,8 +101,8 @@ Landing rules, regardless of topology:
 1. Read the full selected plan.
 2. Find the first pending `- [ ]` column-0 checkbox in `## Todos` or `## Final verification wave` whose dependencies are met. Skip `[~]` rows and their transitive dependents; continue independent pending tasks.
 3. Ignore nested checkboxes under acceptance criteria, evidence, and definition-of-done sections.
-4. Classify the checkbox tier and record it in its ledger entry. Default is LIGHT — a narrow change inside existing layers. Take HEAVY only on a fact you can point to: a new module / abstraction / domain model; auth, security, or session; an external integration; a DB schema or migration; concurrency or transaction boundaries; a cross-domain refactor; or the plan or user signals care. When unsure, take HEAVY; upgrade and redo skipped gates the moment a HEAVY fact surfaces; never downgrade.
-5. Decompose that checkbox into atomic sub-tasks sized for ONE worker in ONE run — a sub-task that would need mid-flight steering is two sub-tasks. Collect every other unchecked checkbox in the same plan wave whose dependencies are met — their lanes execute concurrently. A wave that could split further but holds fewer than 3 independent sub-tasks is under-split.
+4. Classify the checkbox tier and record it in its ledger entry. Default is LIGHT — a narrow change inside existing layers. Take HEAVY only on a fact you can point to: a new module / abstraction / domain model; auth, security, or session; an external integration; a DB schema or migration; concurrency, transaction boundaries, or a cross-domain refactor; or the plan or user signals care. When no concrete HEAVY fact is present, remain LIGHT; upgrade and redo skipped gates the moment a HEAVY fact surfaces; never downgrade.
+5. Decompose that checkbox into atomic sub-tasks sized for ONE worker in ONE run — a sub-task that would need mid-flight steering is two sub-tasks. Collect every other unchecked checkbox in the same plan wave whose dependencies are met — their lanes execute concurrently. Do not impose an artificial minimum or maximum number of independent sub-tasks.
 6. Route independent sub-tasks through the delegation router below, then dispatch ALL independent sub-tasks across those checkboxes in one parallel worker-spawn burst (a single batched spawn call where the harness supports it); route named dependencies per the lane-topology decision above. Verification and checkbox marking stay per-checkbox.
 7. Give every dispatched sub-task its completion condition and watch for it per the section below. A dispatch whose completion nobody watches is an unfinished dispatch.
 
@@ -125,7 +125,7 @@ When the plan annotates a todo with `Recommended task executor category:`, treat
 | `unspecified-low` (low) | small tasks that fit no other category |
 | `unspecified-high` (medium) | standard features across a few files with known patterns |
 | `visual-engineering` (medium) | frontend, UI/UX, styling, animation |
-| `writing` (low) | documentation and prose |
+| documentation/prose (low) | documentation and prose |
 | `git` (low) | git operations |
 | `deep-low` (medium) | hairy debugging, research-heavy or subtle cross-module work the worker can settle from what it reads |
 | `deep-high` (high) | the same, when the central decision cannot be settled from evidence: a trade-off, a cross-package contract, or correctness argued from invariants |

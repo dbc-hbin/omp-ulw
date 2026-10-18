@@ -65,7 +65,7 @@ if (unnecessary.length > 0) {
 await browser.close();
 ```
 
-This is the canonical integration. Run twice per route (mobile + desktop), same as the base Lighthouse workflow. Both must hit 100/100/100/100 AND zero unnecessary renders.
+This is the canonical integration for an explicitly requested React performance audit. Run the profiles requested by that audit (normally mobile + desktop); target 100/100/100/100 and zero unnecessary renders within the audit's stated iteration bound.
 
 ## react-doctor — static perf gate
 

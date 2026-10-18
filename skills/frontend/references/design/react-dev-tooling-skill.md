@@ -1,6 +1,6 @@
 # React Dev Tooling Defaults
 
-When setting up or working on a React project, install three dev-only tools by default unless the user explicitly opts out. They make every coding agent's frontend work measurably faster and the resulting code measurably better.
+When a user explicitly authorizes React tooling changes, these optional dev-only tools can improve inspection and render diagnostics. Do not install them by default: dependency changes require explicit authorization, and ordinary work should use the project's existing tools.
 
 ## The three tools
 
@@ -12,9 +12,9 @@ When setting up or working on a React project, install three dev-only tools by d
 
 All three are **dev-only** (`process.env.NODE_ENV === 'development'` or `import.meta.env.DEV`). None ship to production.
 
-## Default install for a React project
+## Authorized install for a React project
 
-Run from project root. This is the canonical setup. Skip ONLY if the user says "no extra dev tools" or the project README explicitly forbids them.
+Run from project root only after explicit authorization to add dependencies or modify the entrypoint. If not authorized, skip installation and continue with existing tooling.
 
 ```bash
 # 1. react-grab — adds itself to package.json + entry file with dev gate
@@ -198,7 +198,7 @@ For Vite use `VITE_DISABLE_REACT_DEVTOOLS`, for CRA use `REACT_APP_DISABLE_REACT
 ## When NOT to install these
 
 - **The project is not React.** None of these apply to Solid, Svelte, Vue, Qwik, or any non-React framework. Skip silently.
-- **The user explicitly said "no extra dev dependencies"** or the README forbids them. Respect that.
+- **The user did not explicitly authorize dependency or entrypoint changes.** Respect the existing toolchain.
 - **The project ships React 16 or earlier.** react-scan and react-doctor target modern React (17+, often 18+). Check `package.json` first; if the project is on legacy React, skip the runtime tools and only run react-doctor's static scan (it's framework-tolerant).
 - **The project is a library, not an app.** Libraries have no entry file to inject into; only consumers (apps) should run the runtime tools. The static scan still applies.
 
@@ -223,8 +223,8 @@ If any of those leak into production, the dev gate is broken. Fix the gate befor
 
 - For **render performance / Lighthouse 100** work, see `../perfection/react-perf-tooling.md` — Playwright + `react-scan/lite` integration used during automated audits.
 - For **debugging an in-flight React bug**, see the project's existing React debugging tools — runtime/static use during a bug hunt rather than initial setup.
-- The Phase 0 Design System Gate (in `README.md`) and this React Dev Tooling Gate are both pre-implementation gates. Run Phase 0 first (design system must exist), then this gate (dev tooling must be installed).
+- The Phase 0 Design System Gate (in `README.md`) is conditional on task scope. This tooling gate is an opt-in diagnostic workflow, not a prerequisite for ordinary implementation.
 
 ## Mantra
 
-> **Every React project the agent sets up gets these three tools wired with dev-only gates by default. The user opts out, not in.**
+> **React dev tooling is opt-in: obtain authorization before changing dependencies or entrypoints, then keep every tool behind a development-only gate.**

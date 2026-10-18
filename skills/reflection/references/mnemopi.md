@@ -19,10 +19,10 @@ Recall before retaining or editing. Qualify queries by project/user/topic so ano
 
 ## Capability-gated learning and managed skills
 
-`learn` and `manage_skill` are optional host capabilities, not guaranteed OMP tools. Check the live tool inventory and schema before constructing a call; do not infer availability or arguments from another host or role. Extension, deprecation and split describe workflow decisions, not API actions. Managed skills belong only in the host-owned managed store; read their actual definitions and establish ownership first. Never edit user-authored/project/installed skills as a substitute. Check the receipt and discovery result rather than assuming a write succeeded.
+Native learned-workflow management is an optional host capability, not guaranteed. Check the live tool inventory and schema before constructing a call; do not infer availability or arguments from another host or role. Extension, deprecation and split describe workflow decisions, not API actions. Managed skills belong only in the host-owned managed store; read their actual definitions and establish ownership first. Never edit user-authored/project/installed skills as a substitute. Check the receipt and discovery result rather than assuming a write succeeded.
 
-- If learn is exposed, provide the supported evidence/workflow fields required by that live schema and check whether it persists or only proposes a learning. A proposal is not a write receipt.
-- If manage_skill is exposed, inspect the existing skill and establish it is agent-owned learned memory before modification. Use only supported operations/fields. The labels update/extend/deprecate/split/create are workflow decisions, not guaranteed method or argument names.
+- If a learned-workflow capability is exposed, provide only the supported evidence/workflow fields and check whether it persists or only proposes a learning. A proposal is not a write receipt.
+- If a management capability is exposed, inspect the existing skill and establish it is agent-owned learned memory before modification. Use only supported operations/fields. The labels update/extend/deprecate/split/create are workflow decisions, not guaranteed method or argument names.
 - If ownership, persistence, or a required operation cannot be established, return a concrete proposal/capability gap. Do not patch an installed or user-authored SKILL.md, edit system prompts, invent a manager, or start a memory daemon.
 - If useful, retain the supported durable workflow lesson as ordinary memory when managed-skill persistence is unavailable. Clearly report that this is a memory episode, not an installed executable skill.
 
@@ -82,7 +82,7 @@ Only successful observed writes belong in memoryChanges/skillChanges. Record fai
 These values are assembled by the lead from approved transcript coverage, real schemas, and allowed native persistence scope.
 
 ```js
-task({
+await tool.task({
   context: boundedEvidenceAndPersistenceScope,
   tasks: [{
     name: "DurableReflection",

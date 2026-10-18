@@ -10,13 +10,14 @@ export function replaceHostBehavior(blocks: string[], behavior: string): HostPro
   const role = base.indexOf("\n§ Role\n");
   const runtime = base.indexOf("\n§ Runtime\n", role);
   const policy = base.indexOf("\n§ Tool Policy\n", runtime);
-  const io = base.indexOf("\n# Tool I/O\n", policy);
-  const delegation = base.indexOf("\n# Delegation\n", io);
-  const workflow = base.indexOf("\n§ Workflow\n", io);
-  const protocolEnd = delegation >= 0 ? delegation : workflow;
-  if (role < 0 || runtime <= role || policy <= runtime || io <= policy || protocolEnd <= io || workflow <= policy) return undefined;
-  // ponytail: template section boundaries, leave unfamiliar/custom templates untouched rather than deleting unknown instructions.
-  const originalBehavior = base.slice(role, runtime) + base.slice(policy, io) + base.slice(protocolEnd);
-  const host = base.slice(0, role) + "\n" + behavior + "\n" + base.slice(runtime, policy) + "\n§ Tool Policy\n" + base.slice(io, protocolEnd);
+  const workflow = base.indexOf("\n§ Workflow\n", policy);
+  if (role < 0 || runtime <= role || policy <= runtime || workflow <= policy) return undefined;
+  // Replace only the role body. Everything from Runtime onward is host-owned,
+  // including Tool Policy's # General and all delegation/workflow/delivery,
+  // memory, completion, and critical sections. Prefix context in block 0 is
+  // host/project-owned too and remains before the role.
+  const roleBodyStart = role + "\n§ Role\n".length;
+  const originalBehavior = base.slice(roleBodyStart, runtime);
+  const host = base.slice(0, roleBodyStart) + behavior + "\n" + base.slice(runtime);
   return { blocks: [host, ...blocks.slice(1)], originalBehavior };
 }

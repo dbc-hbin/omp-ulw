@@ -55,11 +55,18 @@ export default function omoPrompts(pi: ExtensionApi): void {
   pi.on("before_agent_start", (event, ctx) => {
     originalBehavior = undefined;
     profiles.clear();
+    // Worker prompts carry an assignment and delegation context owned by the
+    // host. Do not replace their role with the main-agent model preset.
+    if (ctx.agent.kind !== "main") return;
     const active = new Set(pi.getActiveTools());
-    const host = event.systemPrompt.join("\n");
     options = {
-      surface: ctx.mode === "rpc" ? "app" : "terminal",
-      toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name) || host.includes("`" + name + "`") || host.includes("tool." + name)),
+      // print/json are non-interactive machine/app surfaces: terminal routing
+      // lines would become user-visible output. Only the TUI gets terminal
+      // routing instructions.
+      surface: ctx.mode === "tui" ? "terminal" : "app",
+      // The active tool set is authoritative. Do not enable prompt branches
+      // merely because a host or skill mentions a tool that is unavailable.
+      toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name)),
     };
     const preset = ctx.model ? renderPreset(ctx.model, options) : undefined;
     const marked = "<omp-model-preset>\n" + (preset?.prompt ?? "") + "\n</omp-model-preset>";
@@ -78,7 +85,7 @@ export default function omoPrompts(pi: ExtensionApi): void {
   });
 
   pi.on("before_provider_request", (event, ctx) => {
-    if (!ctx.model) return;
+    if (!ctx.model || ctx.agent.kind !== "main") return;
     const payload = rewritePresetPayload(event.payload, ctx.model.api,
       `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omp-ulw-policy>`,
       /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g);

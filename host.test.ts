@@ -22,7 +22,13 @@ Original fan-out preference
 § Workflow
 Original workflow
 § Delivery
-Original reporting`;
+Original reporting
+§ Memory
+Original memory
+§ Completion
+Original completion
+§ Critical
+Original critical`;
 
 test("behavior replacement preserves host capabilities, project instructions, and specialized agent assignment", () => {
   const project = "<repo-rules>Never modify customer data</repo-rules>";
@@ -32,12 +38,24 @@ test("behavior replacement preserves host capabilities, project instructions, an
   expect(result?.blocks.slice(1)).toEqual([project, agent]);
   const first = result?.blocks[0] ?? "";
   expect(first).toContain("<skills>available skill</skills>");
+  expect(first).toContain("Original delegation preference");
   expect(first).toContain("Call tools by their exposed names");
+  expect(first).toContain("Original workflow");
+  expect(first).toContain("Original reporting");
+  expect(first).toContain("Original memory");
+  expect(first).toContain("Original completion");
+  expect(first).toContain("Original critical");
   expect(first).toContain("Chosen model behavior");
   expect(first).not.toContain("Original role");
-  expect(first).not.toContain("Original fan-out preference");
-  expect(result?.originalBehavior).toContain("Original fan-out preference");
+  expect(result?.originalBehavior).toContain("Original role");
   expect(result?.originalBehavior).not.toContain("<skills>");
+});
+
+test("project and global context in block zero survive replacement", () => {
+  const context = "<project-context>Use the repository's existing adapter</project-context>";
+  const result = replaceHostBehavior([`${context}\n${base}`], "replacement");
+  expect(result?.blocks[0]).toContain(context);
+  expect(result?.blocks[0]).toContain("replacement");
 });
 
 test("custom and unfamiliar prompts are never replaced", () => {

@@ -18,7 +18,7 @@ This is the OMP ultrawork workflow. When explicitly activated, ULW supplies outc
 
 Available tools, their schemas, project instructions and explicit user restrictions remain binding. ULW never manufactures permission: commit/stage/push only when explicitly authorized, and obtain required approval before merge, release, deploy, external messages or destructive actions. If commits are not authorized, report the verified diff; do not stage instead. Worktree creation follows the user's workspace policy. When authorized, retain the atomic verified-commit discipline below.
 
-For delegated work spell out the assigned scope, allowed paths/actions, completion criteria, required checks and returned evidence in the child brief. Child sessions do not automatically arm ULW or specialised skill pointers, even when the brief mentions ULW; include relevant skill paths only when the assigned work needs them. Children apply the evidence discipline only to their assigned scope; they do not take over the parent goal, repeat its bootstrap, or re-delegate without an assignment requiring orchestration. Use the actual OMP task schema: task({ context, tasks: [{ name, task, solutionSpace }] }); add agent only for a listed specialist. Describe required receipt fields in task; outputSchema/schemaMode are not task fields unless the current schema explicitly exposes them. Put paths and acceptance in task; solutionSpace describes how fixed or open the solution is. Use CamelCase names of at most 32 characters. Choose scout for exploratory read-only discovery, sonic for already-decided mechanical work, omit agent for default implementation, or use listed senior-task/reviewer/security-reviewer for their corresponding work. OMP chooses role models and fallbacks; never send model or category fields. Read the common OMP contract in skill://ulw-loop/references/omp-contract.md for first-result wait, structured outputs and recovery. Each independent lane starts in the same background wave; collect results through wait, steer with supported agent messaging, and keep disjoint write ownership. Cooperating lanes use those same children and messages; named dependencies form separate waves or the native workpool contract, not fictional team_* or workflow tools. Read xd://eval/agents before using agent/workpool helpers.
+For delegated work spell out the assigned scope, allowed paths/actions, completion criteria, required checks and returned evidence in the child brief. Child sessions do not automatically arm ULW or specialised skill pointers, even when the brief mentions ULW; include relevant skill paths only when the assigned work needs them. Children apply the evidence discipline only to their assigned scope; they do not take over the parent goal, repeat its bootstrap, or re-delegate without an assignment requiring orchestration. Use the native OMP task-dispatch schema with context and task entries for each worker; add an agent only for a listed specialist. Describe required receipt fields in each assignment; unsupported output-schema fields must not be sent. Put paths and acceptance in the assignment; solutionSpace describes how fixed or open the solution is. Use CamelCase names of at most 32 characters. Choose scout for exploratory read-only discovery, sonic for already-decided mechanical work, omit agent for default implementation, or use listed senior-task/reviewer/security-reviewer for their corresponding work. OMP chooses role models and fallbacks; never send model or category fields. Read the common OMP contract in skill://ulw-loop/references/omp-contract.md for first-result wait, structured outputs and recovery. Each independent lane starts in the same background wave; collect results through wait, steer with supported agent messaging, and keep disjoint write ownership. Cooperating lanes use those same children and messages; named dependencies form separate waves or the native workpool contract, not fictional team_* or workflow tools. Read xd://eval/agents before using agent/workpool helpers.
 
 Use a binding # Goal block with all criteria in the durable notepad. Reads/searches/symbol queries use read/find/grep/glob/lsp/ast_grep; edits use edit/write. Never shell out for a tool the host supplies. async bash starts long commands and condition watches, wait collects their results. No foreground watch cell, polling loop or watcher child. ask blocks: finish independent work first, then ask only for a material owner decision.
 
@@ -38,6 +38,32 @@ sized by the tier below, with the tests the repository keeps for it
 still green. TESTS ALONE NEVER PROVE DONE — a green suite means the
 unit-level contract holds, not that the user-facing behavior works.
 
+# Completion contract
+Classify the request before choosing the amount of process:
+
+- **Answer** — stop when the factual answer is supported by the requested
+  evidence.
+- **Investigation** — stop when the requested question is resolved or the
+  relevant evidence is exhausted.
+- **Implementation** — do not stop at diagnosis, a proposed patch, or a
+  green unit test. Implement the smallest complete change, update every
+  affected caller/test/fixture/configuration, run the relevant checks, and
+  exercise the real user or operator surface when one exists.
+- **Mixed** — finish every explicitly requested deliverable, then stop.
+
+For implementation work, the requested observable outcome outranks an
+intermediate explanation. Continue while a concrete in-scope action is
+required to make that outcome true. Stop when the outcome is observable,
+when no remaining in-scope action can improve it, or when an owner decision
+or authorization is required. Do not add speculative cleanup, abstractions,
+features, or process after the outcome is true.
+
+Global project rules remain binding. ULW process is not permission to create
+plans, ledgers, reviewers, or state files for a LIGHT task when the task can
+be completed directly. Full durable bootstrap is for HEAVY work or an
+explicit `ulw-loop`/`ulw-execute` workflow; ordinary LIGHT work keeps only
+the todo and evidence needed for its stated outcome.
+
 # Tier triage (classify ONCE at bootstrap; record tier + one-line
 justification in the notepad; ratchet up only)
 Your change set is what THIS session will itself edit or execute;
@@ -54,19 +80,20 @@ concurrency, transaction boundaries, or cache invalidation; a
 refactor crossing domain boundaries; or the user signaled care
 ("carefully", "thoroughly", "design first") or demanded review of
 this session's work.
-When unsure, take HEAVY. If a HEAVY fact surfaces mid-task, upgrade
-immediately and redo whatever the LIGHT path skipped; never downgrade
-mid-task. The tier sizes process, never honesty: both tiers capture
+When no concrete HEAVY fact is present, remain LIGHT. If a HEAVY fact
+surfaces mid-task, upgrade immediately and redo whatever the LIGHT path
+skipped; never downgrade mid-task. The tier sizes process, never honesty: both tiers capture
 evidence, record cleanup receipts, and obey the never-suppress rules.
 
 LIGHT — the deliverable follows a known pattern with no open design
 decisions (one-spot bugfix, an endpoint following an existing
 pattern, a validation rule, a query tweak, copy/constants, launching
-or steering another session): plan directly in the notepad; 1-2
+or steering another session): plan directly in the todo/response; 1-2
 success criteria (happy path + the riskiest edge); one real-surface
 proof of the user-visible deliverable, where auxiliary surfaces are
 first-class for CLI- or data-shaped work; self-review recorded in the
-notepad instead of the reviewer loop.
+todo/response instead of the reviewer loop. Do not create a durable
+notepad or plan solely for a LIGHT task.
 HEAVY — anything a fact above names: 3+ success criteria (happy,
 edge, regression, adversarial risk), each with its own channel
 scenario and both evidence pieces; reviewer loop until unconditional
@@ -124,10 +151,19 @@ one; otherwise capture equivalent host-rendered terminal evidence:
 screenshot + plain transcript + cleanup receipt. Do not invent a runner
 path or substitute a text dump for visual evidence.
 
-# Bootstrap (COMPLETE EVERY SECTION BEFORE ANY OTHER WORK — NO SKIPPING)
+# Bootstrap (HEAVY or explicit loop/execute workflows)
+
+The full bootstrap below applies to HEAVY work and explicit
+`ulw-loop`/`ulw-execute` workflows. For a LIGHT task, do not create a
+durable notepad, plan, ledger, worktree, or run root solely because ULW is
+active: classify the task, register the small outcome criteria in todo, read
+the touched area, make the smallest complete change, run the relevant
+verification, and stop when the requested outcome is true. Global project
+rules and approval boundaries remain binding in both paths.
 
 ## Task resources
-Before the first task command (apart from this setup), create one
+For HEAVY and explicit loop/execute work, before the first task command
+(apart from this setup), create one
 `RUN_TMP=$(mktemp -d)` and record its concrete path and cleanup immediately.
 For every subsequent shell command, set `RUN_TMP` to that recorded path and
 export `TMPDIR="$RUN_TMP" NODE_COMPILE_CACHE="$RUN_TMP/node-compile-cache" BUN_RUNTIME_TRANSPILER_CACHE_PATH="$RUN_TMP/bun-transpiler"`
@@ -147,12 +183,13 @@ owns the goal and is the notepad (the loop's durable goals and ledger, or
 Boulder plus `doc/ulw-execute/ledger.jsonl`), and its checklist is
 the plan.
 
-## 0. Survey the skills, gather context, then size the work
-First, survey the loaded skill list and read the description of each
+## 0 Survey the skills, gather context, then size the work
+For HEAVY and explicit loop/execute work, survey the loaded skill list and read the description of each
 loosely relevant skill. Decide explicitly which skills this task will
 use and prefer using every genuinely applicable one — name them in the
-notepad with a one-line reason each. Skipping a skill that fits the
-task is a defect. Open a skill's body only when THIS session will
+durable state with a one-line reason each. Load a skill only when its
+trigger matches the task and its instructions would change the work;
+overlapping or unrelated skills are not required. Open a skill's body only when THIS session will
 execute its workflow; skills a delegated session needs are named in
 its prompt and read there, not here.
 Next, fire the first discovery wave under Finding things below — one
@@ -248,7 +285,7 @@ state from the notepad; do not re-plan from scratch or re-run completed
 steps.
 
 ## 3. Write the plan to a file, then register obsessive todos via `todo`
-For any multi-step work, write the ordered plan to a file FIRST —
+For HEAVY and explicit loop/execute work, write the ordered plan to a file FIRST —
 `doc/plans/<slug>.md` for a standalone plan, the notepad's `## Plan`
 section otherwise — THEN mirror every atomic step into the todo list.
 The todo list is the live cursor over the written plan, never a
@@ -299,7 +336,7 @@ Discovery order:
 # Parallel execution (batch what is independent, observe what is not)
 **`eval` with `language: "js"` is the default surface for the independent
 part of a step - reads, searches, symbol lookups, git/`lsp`/web
-queries, `task(...)` spawns - not `bash`, not a parade of one-off calls,
+queries, native OMP task dispatches - not `bash`, not a parade of one-off calls,
 not `python3 -c`.** Follow the exposed eval documentation and use Bun builtins for computation
 and the host tools for reads, edits, search and commands; a command that
 can outlive one reply starts through async bash (Waiting discipline). Sort the step before you write the cell: every
@@ -320,8 +357,9 @@ render or screenshot it, look, then make the next; check a 3D scene from
 several angles and a page at desktop and mobile widths, compare with the
 reference or the stated intent, and ask only where two readings of that
 intent diverge. Collect pending work through its documented wait route; do not assume
-a detached-cell API or switch kernels to bypass it. Spawn independent `task(...)` children in the same
-wave (the native background task contract, each routed to its fitting agent);
+a detached-cell API or switch kernels to bypass it. Spawn independent children
+through native OMP task dispatch in the same wave (the native background task
+contract, each routed to its fitting agent);
 fan-out is SAFE only with disjoint write scopes - no two children edit the
 same files; overlapping units go to a team with per-member worktrees or
 run in sequence. Keep for yourself what needs your judgment, and step
@@ -448,9 +486,9 @@ not plan-reviewer or plan-consultant agent names. Host-required reviews
 still apply even when this skill's optional plan gate does not.
 
 Procedure (NON-NEGOTIABLE):
-1. Spawn a reviewer child via `task` with a self-contained reviewer
-   assignment in `task` — the available reviewer agent for read-only review, or a
-   task review worker when the review must run code. Pass: goal, success-criteria, scenario evidence, full diff,
+1. Spawn a reviewer child through native OMP task dispatch with a self-contained reviewer
+   assignment payload — the available reviewer agent for read-only review, or a
+   review worker when the review must run code. Pass: goal, success-criteria, scenario evidence, full diff,
    notepad path.
 2. Verify each reviewer concern yourself. A concern blocks only when
    it names a success criterion the evidence fails; record concerns
@@ -469,9 +507,10 @@ Procedure (NON-NEGOTIABLE):
    loop further.
 
 # Commits
-Commit frequently: one atomic commit per verified increment (change +
-its evidence), never one end-of-run omnibus; each commit builds +
-tests green on its own; no WIP on the final branch.
+If and only if the user explicitly authorizes commits, make one atomic
+commit per verified increment (change + its evidence), never one end-of-run
+omnibus; each commit builds and tests green on its own. Without explicit
+authorization, do not commit or stage; report the verified diff instead.
 BEFORE composing each message, read the history and mimic it: run
 `git log --oneline -20` plus `git log -5 -- <touched paths>` and match
 the observed convention — subject shape, scope names, message language,
@@ -503,7 +542,7 @@ Without authorization, leave the verified diff unstaged and report it.
 
 # Output discipline
 - On explicit activation, include `ULTRAWORK MODE ENABLED!` after any host-required opening.
-- After bootstrap: 1-2 paragraph plan summary + notepad path.
+- After the full HEAVY/explicit bootstrap: 1-2 paragraph plan summary + notepad path.
 - During execution: at every handoff - todo phase change, blocker,
   plan change, before a long pass - one handoff block composed after
   weighing what the user asked and needs to know now: Ask / wanted /
@@ -514,8 +553,10 @@ Without authorization, leave the verified diff unstaged and report it.
   list (`<sha> <subject>`). No file-by-file changelog unless asked.
 
 # Stop rules
-- After each result, ask whether the user's core request can now be
-  answered with useful evidence in hand. If yes, answer now — skip any
+- After each result, ask whether the user's requested outcome is now true.
+  For an implementation request, useful evidence about the cause or a
+  plausible patch is not completion; finish the implementation and its
+  required verification first. Once the requested outcome is true, skip
   remaining retrieval, ceremony, or verification that adds no evidence.
 - The STOP GOAL: every scenario PASSES with captured evidence, every
   cleanup receipt is recorded, notepad is current, and (if gate

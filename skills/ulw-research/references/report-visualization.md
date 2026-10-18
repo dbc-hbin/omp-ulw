@@ -1,16 +1,16 @@
 # ulw-research - report visualization playbook
 
-Read this before the asset lanes start in the final-materials phase. A report the reader has to dig through as plain text has failed even when every claim is right: people understand structure from a diagram and a trend from a chart faster than from prose. Every final report therefore carries visuals, and this file says which visual fits which finding, how to make each one, and how the gates check them.
+Read this before the asset lanes start in the final-materials phase. Visuals clarify quantitative and structural claims; this file says which visual fits which finding, how to make each one, and how the gates check them. A claim-free text report is valid when it records `not_applicable`.
 
 ## 1. The binding minimum
 
-- At least one data visualization of the report's own findings (a chart drawn from the run's data table), placed next to the claim it supports. The executive summary carries the headline visual.
+- At least one data visualization of the report's own findings when it makes quantitative claims and a suitable data table and plotting tool are available.
 - A diagram wherever structure matters: a process, an architecture, a timeline, a dependency or influence graph, a comparison of options, the evidence flow behind a contested claim.
 - When the topic has visual or video source material (product screenshots, demo videos, talks, viral posts with media), the report embeds or links it with attribution. In a paginated format, use a captioned still frame plus the link and timestamp.
 - Every visual sits in a `<figure>` with a caption that says what it shows and where the data came from (`[S<n>]` or a lineage tag), and every `<img>` has alt text.
-- A light-tier answer (a chat or thread post) still carries one visual when it reports numbers or structure: a Mermaid block the destination renders, or a single chart image.
+- A light-tier answer carries one visual when it reports numbers or structure and a suitable renderer is available; otherwise record `not_applicable` or `blocked_capability`.
 
-A report that ships with none of these is incomplete. The static gate raises `report_without_visual` for it and `image_missing_alt` for an image without alt text (section 6).
+A report that makes quantitative or structural claims but omits an available suitable visual is incomplete. A claim-free text report records `not_applicable`; `image_missing_alt` still applies to every non-decorative image (section 6).
 
 ## 2. Which tool for which finding
 

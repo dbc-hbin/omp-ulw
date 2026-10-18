@@ -7,11 +7,11 @@ description: "Runs rigorous visual QA across web, terminal, and paginated surfac
 
 Resolve relative reference paths from this skill's directory, not the project working directory; use `skill://visual-qa/<relative-path>` with `read`. Cross-skill reads use `skill://<name>`. Workflow labels such as `/visual-qa` name skills to load, not shell commands or guaranteed slash-command APIs.
 
-Verify a rendered UI against the platform baseline (the checklist below), against its reference when one exists, and against the stated intent: objective script evidence plus two parallel read-only oracle passes, synthesized into one per-item PASS/FAIL verdict. The script numbers focus the reviewers. They are not the verdict.
+Verify a rendered UI against the platform baseline, against its reference when one exists, and against the stated intent. Use two independent read-only oracles for an actual rendered surface; pixel/reference-fidelity gates are conditional on an explicit visual-fidelity request or a concrete reference packet. Script numbers focus reviewers and are never the verdict.
 
 ## Purpose and when to use
 
-- Use after you build or change any UI, before calling it done. Covers web/page UIs, TUI/terminal UIs, and paginated documents.
+- Use after you build or change a rendered UI, before calling it done. Covers web/page UIs, TUI/terminal UIs, and paginated documents.
 - Use with or without a reference: a mock, a baseline, or a source site when one exists; otherwise the checklist is the reference. Also when you suspect a regression, when CJK (Korean/Japanese/Chinese) text may clip, misalign, or wrap awkwardly, when a claimed design system might actually be a flat image, or when a terminal layout may overflow or its borders may break.
 - Skip when there is no rendered surface (pure backend or library logic with no visual or terminal output). For broad post-implementation review use review-work; this skill is the visual specialist.
 
@@ -22,7 +22,7 @@ In the commands below, set `SKILL_DIR` to the observed absolute directory contai
 - Web/page UI: renders in a browser (HTML/CSS/JS, components, canvas, SVG). Evidence is screenshots.
 - TUI/terminal UI: renders as text in a terminal (box-drawing, panes, status lines, REPL/TUI apps). Evidence is terminal captures.
 - Paginated document: renders as ordered pages (PDF report, printed HTML, exported deck). Evidence is every page rendered to an image - `pdftoppm -png -r 150 <file>.pdf <prefix>` or the pipeline's own renderer. Extracted text is not evidence here: layout is exactly what extraction discards, so a stranded block, a split table, or a near-empty page survives a clean text check.
-- Reference-fidelity UI: any web/page UI built from a concrete reference packet, including screenshots, generated Imagen/Stitch mockups, Figma exports, overview text, annotations, or source-site captures. Evidence is the full reference packet plus same-size actual captures.
+- Reference-fidelity UI: any web/page UI built from a concrete reference packet. Evidence is the full reference packet plus same-size actual captures; pixel diffs are required only in this mode.
 
 If the change touches both, run both capture tracks and feed both into the passes.
 
@@ -50,7 +50,7 @@ Before any reviewer sees an image, verify each capture yourself: the file signat
 
 ### Web
 
-1. Read `references/browser-setup.md` and capture the ACTUAL surface through the exposed browser tools. For every enumerated page capture 390 CSS px with mobile/touch/DPR emulation, 1440 desktop, plus 1920 for page layouts, each in light AND dark; include scrolled-to-end viewports and applicable interaction/state captures. Do not infer emulation from a narrow desktop window. Record actual dimensions, DPR, mobile/touch, theme, state, build digest and capture time. If an emulation capability is absent, identify that exact gap rather than claim the matrix passed.
+1. Read `references/browser-setup.md` and capture the ACTUAL surface through exposed browser tools when available. Scale captures to the requested surface and available capability; do not claim absent mobile/touch/DPR/theme emulation. Record each exact gap as `blocked_capability` and continue with authoritative native/CLI capture where possible. Full 390/1440/1920 light/dark matrix is required only for explicit visual-fidelity/reference work or when those surfaces are actually part of the acceptance criteria.
 2. When a REFERENCE exists (the user's mock, a generated page snapshot, a Figma export, a source-site capture, a known-good baseline), capture it as PNG at the same viewport, scroll position, color mode, density, and state as its ACTUAL counterpart, keep any overview text or annotations next to it as part of the reference packet, and run the diff for each pair, keeping the JSON:
 
 ```
@@ -79,7 +79,7 @@ This JSON (diff ratio, similarity score, hotspots or overflow lines, border alig
 
 Static screenshots miss what moves. For every interactive element and every animated region, do NOT settle for a single resting frame — capture the motion as evidence:
 
-- **Interaction states:** drive the real browser to each state before capturing. Hover the element, focus it, click/press it, and for scroll-driven surfaces scroll to trigger the effect. Capture three frames per transition: **rest** (before), **mid-transition** (at a recorded active animation progress point, to prove the animation exists and is smooth), and **settled** (after it completes).
+- **Interaction states:** drive the real browser when available; otherwise record the unavailable interaction-capture capability and use source/state evidence without claiming pixel proof. Capture rest/mid/settled frames when motion or interaction fidelity is an explicit acceptance criterion.
 - **Entrance and scroll motion:** capture scroll-triggered reveals and any load animation as a short frame sequence (start, mid, end), not one frame. A reveal that never fires, janks, or lands in the wrong place is a defect only the sequence exposes.
 - **Reference clones:** when the reference site has its own motion, capture the reference's motion the same way and compare it to the actual — timing, easing feel, and end state.
 - **Reduced-motion and interruption passes:** repeat the motion captures with `prefers-reduced-motion: reduce` emulated (the fallback must exist and keep fades, progress and gesture tracking), and once more while interrupting at the mid frame (press, hover-out or dismiss) - a snap, a queue or blocked input is a defect.
@@ -183,7 +183,7 @@ Read `skill://visual-qa/references/verdict-schema.json` and include its JSON res
 
 ## Step 3 - Dispatch two read-only QA subagents in parallel
 
-This independent review is REQUIRED before any "done" claim. Do not self-review inside the main agent and call the UI verified - a self-graded pass is the failure mode this step exists to stop. Dispatch it yourself, every time, without waiting to be told. Give each reviewer the captures for every enumerated page from Step 2, not a sample, tell it the page count so it can confirm none were skipped, and paste the checklist sections it owns verbatim.
+For an actual rendered surface, independent review is REQUIRED before a "done" claim. Do not self-review and call the UI verified. Dispatch both oracles when the surface and reviewer capability exist; if a reviewer or capture capability is unavailable, record `blocked_capability` and do not claim that oracle passed. Pixel-perfect comparison is REQUIRED only for explicit reference-fidelity work. Give each reviewer every enumerated page, not a sample.
 
 Use one native task dispatch with two tasks so both passes run concurrently, following `skill://ulw-loop/references/omp-contract.md`. Each oracle is read-only: it reviews and reports, it cannot modify files. Each returns PASS, REVISE, or FAIL with concrete, located findings. Pass A proves the surface is a real design-system implementation, not a mock-only or faked-image substitute, and judges behaviour: motion, states, keyboard, platform (checklist G-J). Pass B directly opens screenshots and judges what is seen: layout, hierarchy, text, targets, themes, consistency (checklist A-F), reference fidelity and CJK.
 
@@ -289,15 +289,15 @@ BLOCKING: items that must be fixed; empty if PASS
 
 When both passes return, merge them into a single report: one row per checklist item with its verdict and proving capture, then the non-checklist dimensions. For each FAIL or bad item, state what is wrong, where (file/line, hotspot grid, or capture line), and the concrete fix. Call out what is genuinely good so it is not regressed later. Any FAIL makes the verdict NEEDS WORK.
 
-### Completion gate - loop until an independent pass on fresh evidence
+### Completion gate - bounded loop on fresh evidence
 
-This is a hard stop rule, not a guideline. The UI is NOT done until ALL of these hold at once on the SAME current build:
+This is a hard stop rule, not a guideline. The UI is NOT done until ALL applicable conditions hold on the SAME current build:
 
-- Both independent read-only passes returned PASS with no blocking findings.
+- Both applicable independent read-only passes returned PASS with no blocking findings (both are required when the surface is rendered and the capability exists).
 - That reviewer judged a FRESH capture of every enumerated page from Step 2 - no stale artifacts, no skipped pages.
 - Every CJK and layout finding is resolved in the rendered output, not merely noted.
 
-If any page fails, you are not done - but treat the two blocker kinds differently. `[product]` findings: fix the source, re-capture the pages the fix touched, and dispatch a FRESH reviewer (never a followup to the previous one - stale reviewer context re-litigates settled findings). `[evidence]` findings: the product is not implicated - repair the capture pipeline, re-shoot only the defective artifacts, verify them against the live build, and re-dispatch without touching product code. Loop until the independent reviewer passes on the current build, and make the final approving round judge a complete fresh capture set. Do not stop because the automated script reports zero issues - the script aims the reviewer, it does not replace it. Do not stop because an earlier pass approved an older build. The only non-loop exit is to list the exact remaining gaps and get explicit user acceptance; never self-certify a silent PASS.
+If any page fails, treat product and evidence findings differently and allow at most 3 repair/review rounds (or the shared repair tracker's earlier stop). `[product]` findings require source fixes and fresh reviewers; `[evidence]` findings require capture repair without touching product code. If the bound is exhausted, record the residual findings and capability gaps; never self-certify a silent PASS.
 
 ```markdown
 # Visual QA - Verdict: GOOD | NEEDS WORK

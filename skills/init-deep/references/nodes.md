@@ -90,7 +90,7 @@ Every digest-declared location and changed guidance path must appear exactly onc
 The lead resolves directories and task-owned report paths before making this call; values below are already assembled from discovery, not transport placeholders.
 
 ```js
-task({
+await tool.task({
   context: repositoryAndPreservationContract,
   tasks: chunks.map(chunk => ({
     name: chunk.uniqueCamelCaseName,

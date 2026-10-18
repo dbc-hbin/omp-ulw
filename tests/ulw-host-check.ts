@@ -175,6 +175,8 @@ try {
   assert.equal(armed.length, 2);
   for (const prompt of armed) {
     assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`), "actual provider request must contain the shipped complete directive");
+    assert(prompt.includes("# Completion contract"), "implementation requests must use the outcome completion gate");
+    assert(prompt.includes("useful evidence about the cause or a plausible patch is not completion"), "implementation work must not stop at diagnosis");
     assert.equal(prompt.split("<omp-ulw-policy>").length - 1, 1, "policy must not duplicate on follow-up");
     assert.equal(prompt.split("<omp-model-preset>").length - 1, 1, "model preset must coexist with ULW");
   }

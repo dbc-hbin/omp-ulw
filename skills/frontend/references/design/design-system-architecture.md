@@ -1,22 +1,22 @@
 ---
 name: design-system-architecture
-description: "Mandatory reference for the Design System Gate. Defines DESIGN.md structure, creation workflow, validation rules, and memory management. Loaded automatically when the agent needs to create or update a project's design system."
+description: "Reference for explicit design-system, greenfield, or high-craft work. Defines DESIGN.md structure, creation workflow, validation rules, and memory management."
 ---
 
 # Design System Architecture
 
-Every frontend project MUST have a `DESIGN.md` at its root. This file is the single source of truth for all visual decisions. No component is written without reading it first.
+Greenfield projects and explicit design-system/high-craft work MUST have a `DESIGN.md` at the project root. Existing projects may use their rendered UI and component patterns as the source of truth for ordinary changes; create or update `DESIGN.md` when the task asks for a system or introduces shared visual decisions.
 
 ## When to Create
 
-- **New project**: If the user gave no concrete visual reference, select one Layer A style skill and one Layer B brand/design-system reference first. Treat them as source material for tokens, layout, component anatomy, states, motion, and taste; customize for the user's product without freestyling past the selected references. Then create `DESIGN.md` before UI, with Section 5 primitives and states defined before implementation.
-- **Existing project without one, but with implicit patterns/components**: Extract the design system from existing code before continuing work.
-- **Existing project without one and without a reusable component layer**: Ask whether to preserve the current look with copy-nearby styling or extract a `DESIGN.md` plus reusable components first. Do not silently choose.
+- **New project**: For an explicit design-system/high-craft request without a concrete visual reference, select one Layer A style skill and one Layer B brand/design-system reference first. Ordinary UI setup may follow the brief and existing conventions without forcing this research sequence.
+- **Existing project without one, but with implicit patterns/components**: For explicit design-system/high-craft work, extract the design system from existing code; ordinary changes may follow the existing patterns directly.
+- **Existing project without one and without a reusable component layer**: For explicit design-system/high-craft work, ask whether to preserve the current look with copy-nearby styling or extract a `DESIGN.md` plus reusable components first. Ordinary changes preserve the current look and use rendered evidence.
 - **Existing project with one**: Read it. Follow it. Update it only when a genuinely new pattern emerges.
 
 ## DESIGN.md Structure
 
-The file has 8 sections plus a greenfield-only `## 0. Research Log`. Every section is mandatory. Skip nothing.
+For explicit design-system work, the file has 8 sections plus a greenfield-only `## 0. Research Log`. Sections are required when they govern the requested surface; do not invent tokens or research lanes unrelated to the task.
 
 ```markdown
 # [Project Name] Design System
@@ -216,12 +216,12 @@ New debt is recorded here at the moment it is accepted — never silently.
 
 ### For New Projects
 
-1. **Select references before taste** — no visual reference means `_INDEX.md` shortlist of 2-3 Layer B candidates, then exactly one Layer A style skill and one Layer B brand/design-system reference. Use external design research through the exposed browser tools only when the curated set has no fit.
+1. **Select references before taste** — for explicit high-craft/design-system work without a visual reference, use `_INDEX.md` to shortlist 2-3 Layer B candidates, then exactly one Layer A style skill and one Layer B brand/design-system reference. Ordinary work may infer direction from existing UI.
 2. **Assemble from references** — extract tokens, layout grammar, component anatomy, states, motion, and taste decisions, then recombine them into project-specific primitives. Customize for the user's product; never copy logos, trademarked assets, or brand-specific copy.
 3. **Define the system** — atmosphere, palette, typography, spacing, and one depth strategy, grounded in the selected references and product semantics. Sanity-check the palette and type pairing with one `ui-ux-db` domain search (CLI in `references/ui-ux-db/README.md`).
 4. **Document initial primitives** — only components you are about to build, including variants and states.
 5. **Write it to `DESIGN.md`** at project root.
-6. **Build a primitive showcase first** — exercise each primitive's default, hover, active, focus, disabled, loading, empty, and error states at mobile/tablet/desktop widths before composing product screens.
+6. **For greenfield or explicit high-craft/design-system work, build a primitive showcase first** — exercise each primitive's required states at mobile/tablet/desktop widths before composing product screens. Existing UI changes retain rendered visual QA without requiring a new showcase.
 
 ### For Existing Projects (Extraction)
 

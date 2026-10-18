@@ -17,6 +17,16 @@ import { createTracker, decide, deserializeState, isArtifactOk, serializeState }
 
 const SEVERITY_ORDER = { blocker: 0, major: 1, minor: 2 }
 
+function visualRequirement(args, source) {
+	const explicit = args.flags["visual-requirement"]
+	if (explicit === "required" || explicit === "not_applicable" || explicit === "blocked_capability") return explicit
+	if (/<(?:table|ol|ul|svg|img|figure|mermaid)\b/i.test(source)) return "required"
+	const prose = source.replace(/<[^>]+>/g, " ").replace(/\[S\d+\]|\[Source\s*\d+\]/gi, " ")
+	return /(?:\b\d+(?:\.\d+)?\s*%?|\b(?:trend|comparison|architecture|process|timeline|dependency|flow|structure|distribution|rate|count|ratio)\b)/i.test(prose)
+		? "required"
+		: "not_applicable"
+}
+
 function readText(path) {
 	try {
 		return readFileSync(path, "utf8")
@@ -41,14 +51,16 @@ function sessionDirFrom(flags) {
 export function runCheck(argv) {
 	const args = parseArgs(argv, { repeatable: ["require-section"] })
 	const reportPath = args.positionals[0]
-	if (!reportPath) throw new CliError("usage: check <report.html> --design-spec <design-spec.md> [--layout <boxes.json>] [--require-section <regex>]... [--max-defects N]")
+	if (!reportPath) throw new CliError("usage: check <report.html> --design-spec <design-spec.md> [--layout <boxes.json>] [--visual-requirement <auto|required|not_applicable|blocked_capability>] [--require-section <regex>]... [--max-defects N]")
 	const specText = readText(args.required("design-spec"))
-	const doc = parseHtml(readText(reportPath))
+	const source = readText(reportPath)
+	const doc = parseHtml(source)
 	const requireSections = (args.flags["require-section"] ?? []).map((source) => new RegExp(source, "i"))
 	const result = checkStatic(doc, {
 		palette: parsePalette(specText),
 		lineageMode: parseLineageMode(specText),
 		requireSections,
+		visualRequirement: visualRequirement(args, source),
 		baseDir: dirname(resolve(reportPath)),
 	})
 	const defects = [...result.defects]

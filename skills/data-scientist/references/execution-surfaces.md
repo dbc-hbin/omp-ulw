@@ -11,7 +11,7 @@ available = {name: importlib.util.find_spec(name) is not None
 print(available)
 ```
 
-Import only the needed installed packages. A DuckDB connection and cached tables persist across eval cells; direct CSV/Parquet/JSON queries avoid eager loads. Use `.fetchall()` for plain values; `.pl()` needs Polars and pyarrow. Never `.df()` (pandas). Polars scans stay lazy until collect. Save charts as artifacts and visually inspect the real output; this Python subprocess is not IPython, so no get_ipython, magic matplotlib or assumed rich figure display.
+Import only the needed installed packages. A DuckDB connection and cached tables persist across eval cells; direct CSV/Parquet/JSON queries avoid eager loads. Use `.fetchall()` for plain values; `.pl()` needs Polars and pyarrow. Prefer `.pl()`; use `.df()` only when pandas is installed and the user, project, or available-engine constraints require it. Polars scans stay lazy until collect. Save charts as artifacts and visually inspect the real output; this Python subprocess is not IPython, so no get_ipython, magic matplotlib or assumed rich figure display.
 
 ## JavaScript resident kernel
 

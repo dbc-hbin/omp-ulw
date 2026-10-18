@@ -110,7 +110,7 @@ Construct each actual call from the current native task schema, not a copied ups
 ```js
 // context, assignments and round1Schema are lead-owned values assembled
 // from the actual request, discovered scope and the schema above.
-task({
+await tool.task({
   context: sharedRequestAndReadOnlyConstraints,
   tasks: assignments.map(assignment => ({
     name: assignment.uniqueCamelCaseName,

@@ -110,9 +110,9 @@ Interpretation:
 
 ---
 
-## 2. MANDATORY IMAGE-FIRST RULE
+## 2. IMAGE-FIRST RULE (SCOPED)
 
-For generated-reference website design requests where visual quality matters and no concrete user reference exists, image generation is first.
+For explicit generated-reference, image/reference-led, or high-craft website requests where no concrete user reference exists, image generation is first. Ordinary UI work and existing-project changes should infer from the current surface and start with implementation.
 
 This means:
 1. generate the design image or image set yourself first
@@ -368,7 +368,7 @@ Only after this deep analysis should you implement the frontend.
 
 ## 10. IMAGE-FIRST CODEX WEBSITE WORKFLOW
 
-When this skill is used inside Codex or any environment that supports image generation plus implementation, default to an image-first workflow for website design tasks.
+When this skill is explicitly selected for an image/reference-led or high-craft website task, use an image-first workflow for that task.
 
 Preferred execution order:
 1. infer the section count
@@ -380,8 +380,7 @@ Preferred execution order:
 7. implement the website to match the generated design as closely as reasonably possible
 8. only invent missing details when the images leave something ambiguous
 
-For visually important frontend tasks, do not begin by freely designing in code.
-Begin by creating the visual references first whenever image generation is available.
+For explicitly visual/high-craft frontend tasks, do not begin by freely designing in code; begin by creating visual references when image generation is available. This is not a default requirement for ordinary UI work.
 
 The images are the primary art-direction source.
 The code is the implementation layer.
@@ -390,20 +389,14 @@ The code is the implementation layer.
 
 ## 11. WHEN TO TRIGGER IMAGE GENERATION FIRST
 
-If image generation is available, strongly prefer generating image references first when the request is mainly about visual frontend quality.
+If image generation is available, strongly prefer generating image references first when the request explicitly asks for visual exploration, a reference, or high-craft art direction.
 
-Trigger image-first workflow when the user asks for:
-- a beautiful hero section
-- a premium landing page
-- a creative website
-- a redesign
-- a more modern website
-- a more aesthetic interface
-- a polished marketing page
-- a portfolio site
-- a startup site where visual taste matters heavily
-- a multi-section website concept
-- anything described mainly in visual terms
+Trigger image-first workflow when the user explicitly asks for:
+- a visual concept or mockup before code
+- a premium/high-craft landing page or creative website
+- a screenshot/reference match or image-led redesign
+- a multi-section website concept where images are part of the requested deliverable
+- an explicit request to make visual exploration the primary deliverable
 
 Direct-code first is more acceptable only when:
 - the task is mostly technical

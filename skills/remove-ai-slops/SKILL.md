@@ -6,7 +6,7 @@ argument-hint: "[file ...]"
 
 # Remove AI slops - Bounded behavior-preserving cleanup
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Activate when explicitly requested. Follow the host intent gate for an open-ended cleanup assessment/proposal before implementation; an explicit instruction to perform this bounded pass authorizes ordinary owned edits. No commits or external writes are implied.
+Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Activate when explicitly requested. An explicit request naming this bounded cleanup and its file set or established diff authorizes ordinary owned edits. For an open-ended assessment, or when the requested scope is ambiguous or destructive, produce a proposal before editing and obtain the needed scope decision. No commits or external writes are implied.
 
 This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
 
@@ -66,7 +66,7 @@ Module size can signal multiple responsibilities, but there is NO mandatory 250-
 
 ## Phase 0 + 1 - Bind ownership and scope
 
-Use native todo if exposed; no TodoWrite alias is assumed. Inspect the user's explicit files first. Otherwise discover the actual branch/PR target and merge-base plus relevant staged/unstaged/untracked changes; never assume main/HEAD~1 or sweep the whole repository. Record pre-existing dirty hunks and exact owned edits. Filter generated/vendored/binary/deleted artifacts from source cleanup; lockfiles change only if an explicitly authorized dependency removal requires them. Discover files with find/glob/read; literals via grep, definitions/references/callers via LSP.
+Use the host's documented task tracking if exposed. Inspect the user's explicit files first. Otherwise discover the actual branch/PR target and merge-base plus relevant staged/unstaged/untracked changes; never assume main/HEAD~1 or sweep the whole repository. Record pre-existing dirty hunks and exact owned edits. Filter generated/vendored/binary/deleted artifacts from source cleanup; lockfiles change only if an explicitly authorized dependency removal requires them. Discover files with find/glob/read; literals via grep, definitions/references/callers via LSP.
 
 Name the final files and allowed adjacent owner-test paths before changes. Reading neighboring patterns/callers is context, not authorization to edit them. Out-of-scope slop goes in findings. If ambiguous scope matters, finish read-only assessment and ask one focused question.
 

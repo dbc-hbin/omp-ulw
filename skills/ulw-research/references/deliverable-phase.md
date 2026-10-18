@@ -133,7 +133,7 @@ Nothing reaches the requester until the gates for its QA tier pass, in this orde
    node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json   # .source is one async expression
    ```
 3. **Visual QA.** Render the artifact to images (PDF pages to PNG, the HTML in the browser skill's engine at desktop and phone widths) and look at the pixels for what a machine cannot see: composition, hierarchy, page breaks, figure legibility.
-4. **Proofread.** A dedicated writing lane proofreads the final text only (grammar, spelling, punctuation, terminology, native register); it never composes or rewrites content.
+4. **Proofread.** Assign a default worker a writing-only charter to proofread the final text (grammar, spelling, punctuation, terminology, native register); it never composes or rewrites content. Do not request an unsupported `writing` role.
 
 The light tier runs gate 1 and one render (recorded as `visual`) and records `layout` and `proofread` as `not_run`. The full tier runs all four.
 

@@ -5,14 +5,14 @@ description: "Diagnose runtime failures, test hypotheses, and verify scoped fixe
 
 # Debugging
 
-Start with the reported failure, existing code and logs, and the smallest safe reproduction. An investigation-only request produces findings, not edits. Preserve unrelated user changes and require the applicable authorization for destructive actions, external writes, and commits.
+Start with the reported failure, existing code and logs, and the smallest safe reproduction. An investigation-only or debug-only request produces findings, not edits. An explicit “review and fix” or “debug/fix” request authorizes only the minimal root-cause fix within the named scope, plus its regression proof; it does not authorize unrelated cleanup, destructive actions, external writes, or commits. Preserve unrelated user changes and require the applicable authorization for those actions.
 
 ## Working loop
 
 1. Identify the actual launcher, runtime, inputs and expected behavior. Inspect existing tests and logs before adding instrumentation.
 2. Form competing hypotheses and choose the observation that distinguishes them. Use bounded runtime values, timings, errors and state; code reading alone does not prove a cause.
 3. Run the smallest relevant experiment. Batch independent reads; serialize debuggee mutations. Re-observe process identity and stopped/running state before debugger actions.
-4. When fixes are authorized, change the root cause and use the repository's regression coverage. Capture the failing reproduction before editing, then verify the same scenario and relevant checks after the fix. Never weaken a failing test or suppress errors.
+4. When a minimal fix is authorized, change the root cause and use the repository's regression coverage. Capture the failing reproduction before editing, then verify the same scenario and relevant checks after the fix. Never weaken a failing test or suppress errors.
 5. Remove only owned instrumentation and resources. Report observed evidence, remaining uncertainty and anything that could not be verified. Stop when the requested outcome and checks hold.
 
 Keep a record of temporary files, processes, ports, scoped environment overrides and instrumentation before creating them; preserve requested evidence and verify cleanup. Ordinary code/log inspection and CLI timing probes do not require a separate debug bootstrap, journal file, debugger, specialist tool or phase-reference read.
@@ -41,6 +41,8 @@ Read a specialist's reference only after choosing that tool for a concrete hypot
 - Structured debugger launch/attach: [DAP](references/tools/dap.md).
 - Browser reproduction or browser QA: [browser QA](references/tools/browser-qa.md); use the actual installed browser skills and real rendered surface.
 - Native decompilation, debugging, crafted interactions or live instrumentation: [Ghidra](references/tools/ghidra.md), [pwndbg](references/tools/pwndbg.md), [pwntools](references/tools/pwntools.md), or [Frida](references/tools/frida.md), respectively. An unavailable tool is a capability gap, not evidence or a mandatory installation.
+
+Retry a failed reproduction or investigation step only once with a changed, evidence-based setup. If it still fails, or runtime access remains unavailable, record the exact blocked gap and stop that branch; continue only with unrelated authorized work or explicit user-directed recovery. Never retry-to-green or turn an investigation-only request into a fix.
 
 Use methodology references when the working loop cannot resolve that specific step, rather than reading one before every phase:
 

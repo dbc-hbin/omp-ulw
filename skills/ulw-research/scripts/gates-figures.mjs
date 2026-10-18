@@ -189,6 +189,9 @@ export const figureGates = [
 	},
 	{
 		codes: ["report_without_visual"],
+		skip(ctx) {
+			return ctx.visualRequirement === "not_applicable" || ctx.visualRequirement === "blocked_capability"
+		},
 		run(ctx) {
 			if (visuals(ctx).some((node) => !hasZeroDimension(node) && !isDecorative(node))) return []
 			return [ctx.defect("report_without_visual", ctx.body, "the report has no chart, diagram, or figure image")]

@@ -56,7 +56,7 @@ Record actual child ids in a pending set and logical node ledger immediately. Wo
 
 Validate the actual terminal response from task/wait or the actual agent URI; use structured.status and structured.data only when returned, and never treat previews as completion. Validate path receipts and evidence before marking the node successful. Wait again only when dependent work is blocked. A reducer starts only after all its input nodes have terminal success. A root writer starts only after all required digest reductions succeed.
 
-For a failed terminal node, preserve verified unrelated outputs, record the failure/attempt, and dispatch only that node with exact failure context and a new actual id. Changed input invalidates its descendants; unchanged completed branches remain valid. Send clarification to `agent://<actual-id>`, never to invented DAG/node recipients. No shell polling, sleeps, fake retry/send APIs, or duplicate live writers.
+For a failed terminal node, preserve verified unrelated outputs, record the failure/attempt, and dispatch only that node with exact failure context and a new actual id, at most once per logical node. Changed input invalidates its descendants; unchanged completed branches remain valid. Send clarification to `agent://<actual-id>`, never to invented DAG/node recipients. No shell polling, sleeps, fake retry/send APIs, or duplicate live writers. If the replacement also fails, or a required capability/decision is blocked, preserve the gap as blocked and recover only when the user explicitly supplies the missing direction or capability; do not retry indefinitely or claim a complete inventory.
 
 ## 3. Reduce: score and write disjoint subtrees
 

@@ -1,6 +1,6 @@
 # Relevance contract
 
-Source: omo 5.1.19 `plugin/extensions/kibitzer-persona.md`, translated to finite native tasks and Mnemopi. Read [the entry](../SKILL.md).
+Source: prior OMO memory-advisor guidance, translated to finite native tasks and Mnemopi. Read [the entry](../SKILL.md).
 
 ## JSON receipt schema
 
@@ -40,7 +40,7 @@ Semantic validation: `none` has null note and task delivery; no message or user 
 Read the current native schema. This example uses values already prepared from the actual decision and retrieved schema; it does not assume any named role or transport id.
 
 ```js
-task({
+await tool.task({
   context: leadGoalKnownFactsAndNextAction,
   tasks: [{
     name: "MemoryRelevance",
@@ -51,7 +51,7 @@ task({
 });
 ```
 
-The assignment instructs the child to read this skill, use `recall({query})` and optionally `reflect({query, context})`, perform only bounded relevant source reads, and make no memory/file/project mutations. No retain, memory_edit, learn, manage_skill, shell, daemon, nudge, or memory filesystem operations belong in this advisor. Its only write capability used is an explicitly needed structured note to the actual lead's agent URI.
+The assignment instructs the child to read this skill, use `recall({query})` and optionally `reflect({query, context})`, perform only bounded relevant source reads, and make no memory/file/project mutations. No persistence, shell, daemon, injection, or memory filesystem operations belong in this advisor. Its only write capability used is an explicitly needed structured note to the actual lead's agent URI.
 
 Record the returned actual child id. Wait through first wakes, keeping the child pending until terminal structured output arrives. An urgent message is advisory evidence, not a terminal completion. Do not spawn a second advisor to watch the first.
 

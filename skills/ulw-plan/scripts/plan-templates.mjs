@@ -138,7 +138,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 
 ## Execution strategy
 ### Parallel execution waves
-> Target 5-8 todos per wave. Fewer than 3 (except the final) means you under-split.
+> Group todos by actual dependency waves; do not impose artificial minimum or maximum counts.
 
 ### Dependency matrix
 | Todo | Depends on | Blocks | Can parallelize with |
@@ -146,7 +146,7 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 
 ## Todos
 > Implementation + Test = ONE todo. Never separate.
-<!-- APPEND TASK BATCHES BELOW THIS LINE WITH edit/apply_patch - never rewrite the headers above. -->
+<!-- APPEND TASK BATCHES BELOW THIS LINE WITH native edit/write tools - never rewrite the headers above. -->
 - [ ] 1. <title>
   What to do / Must NOT do: <...>
   Closes: GAP-<n>

@@ -11,7 +11,7 @@ Your goal is to aggressively break these defaults. Your outputs must be highly c
 DO NOT USE EMOJIS IN YOUR CODE, COMMENTS, OR OUTPUT. Maintain strictly professional formatting.
 
 ## 1. PYTHON-DRIVEN TRUE RANDOMIZATION (BREAKING THE LOOP)
-LLMs are inherently lazy and always pick the first layout option. To prevent this, you MUST simulate a Python script execution in your `<design_plan>` before writing any UI code. 
+For an explicitly requested Awwwards/high-craft or image/reference-led brief, simulate a Python script execution in your `<design_plan>` before writing UI code. Ordinary frontend work does not require this preflight or its forced layout randomization.
 Use a deterministic seed (e.g., character count of the user prompt modulo math) to simulate `random.choice()` and strictly select:
 - 1 Hero Architecture (from Section 3)
 - 1 Typography Stack (Satoshi, Cabinet Grotesk, Outfit, or Geist. NEVER Inter)
@@ -20,7 +20,7 @@ Use a deterministic seed (e.g., character count of the user prompt modulo math) 
 You are forbidden from defaulting to the same UI twice. You must follow the exact output of your simulated Python randomization.
 
 ## 2. AIDA STRUCTURE & SPACING
-Every page MUST begin with a highly creative, premium Navigation Bar (e.g., floating glass pill, or minimal split nav).
+For an explicitly routed Awwwards/high-craft brief, the page MUST begin with a highly creative, premium Navigation Bar (e.g., floating glass pill, or minimal split nav).
 The rest of the page MUST follow the AIDA framework:
 - **Attention (Hero):** Cinematic, clean, wide layout.
 - **Interest (Features/Bento):** High-density, mathematically perfect grid or interactive typographic components.
@@ -44,7 +44,7 @@ The Hero must breathe. It must NOT be a narrow, 6-line text wall.
 - **Card Restraint:** Do not use too many cards. 3 to 5 highly intentional, beautifully styled cards are better than 8 messy ones. Fill them with a mix of large imagery, dense typography, or CSS effects.
 
 ## 5. ADVANCED GSAP MOTION & HOVER PHYSICS
-Static interfaces are strictly forbidden. You must write real GSAP (`@gsap/react`, `ScrollTrigger`).
+For an explicitly motion-rich/high-craft brief, use real GSAP (`@gsap/react`, `ScrollTrigger`) where the interaction serves meaning; ordinary interfaces may remain static or use the project's existing motion tools.
 - **Hover Physics:** Every clickable card and image must react. Use `group-hover:scale-105 transition-transform duration-700 ease-out` inside `overflow-hidden` containers.
 - **Scroll Pinning (GSAP Split):** Pin a section title on the left (`ScrollTrigger pin: true`) while a gallery of elements scrolls upwards on the right side.
 - **Image Scale & Fade Scroll:** Images must start small (`scale: 0.8`). As they scroll into view, they grow to `scale: 1.0`. As they scroll out of view, they smoothly darken and fade out (`opacity: 0.2`).
@@ -64,8 +64,8 @@ Select components from this arsenal based on your randomization:
 - **Creative Backgrounds:** Inject subtle, professional ambient design. Use deep radial blurs, grainy mesh gradients, or shifting dark overlays. Avoid flat, boring colors.
 - **Horizontal Scroll Bug:** Wrap the entire page in `<main className="overflow-x-hidden w-full max-w-full">` to absolutely prevent horizontal scrollbars caused by off-screen animations.
 
-## 8. MANDATORY PRE-FLIGHT <design_plan>
-Before writing ANY React/UI code, you MUST output a `<design_plan>` block containing:
+## 8. HIGH-CRAFT PRE-FLIGHT <design_plan>
+Before writing React/UI code for an explicitly routed Awwwards/high-craft or image/reference-led brief, output a `<design_plan>` block containing:
 1. **Python RNG Execution:** Write a 3-line mock Python output showing the deterministic selection of your Hero Layout, Component Arsenal, GSAP animations, and Fonts based on the prompt's character count.
 2. **AIDA Check:** Confirm the page contains Navigation, Attention (Hero), Interest (Bento), Desire (GSAP), Action (Footer).
 3. **Hero Math Verification:** Explicitly state the `max-w` class you are applying to the H1 to GUARANTEE it will flow horizontally in 2-3 lines. Confirm NO stamp icons or spam tags exist.

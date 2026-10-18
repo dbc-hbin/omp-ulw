@@ -127,6 +127,7 @@ function buildContext(doc, options) {
 		styleAttrs,
 		tokens: customProperties(styleBlocks.map((entry) => entry.css).join("\n")).light,
 		palette: new Set(options.palette ?? []),
+		visualRequirement: options.visualRequirement ?? "required",
 		requireSections: (options.requireSections ?? []).map(toRegExp),
 		baseDir: options.baseDir ?? null,
 		fs: options.fs ?? nodeFs,
