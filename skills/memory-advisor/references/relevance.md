@@ -1,6 +1,6 @@
 # Relevance contract
 
-Source: prior OMO memory-advisor guidance, translated to finite native tasks and Mnemopi. Read [the entry](../SKILL.md).
+Source: prior memory-advisor guidance, translated to finite native tasks and Mnemopi. Read [the entry](../SKILL.md).
 
 ## JSON receipt schema
 

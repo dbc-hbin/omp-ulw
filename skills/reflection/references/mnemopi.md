@@ -1,6 +1,6 @@
 # Native Mnemopi operations and report contract
 
-Read [reflection](../SKILL.md). Source: omo 5.1.19 `plugin/extensions/reflection-persona.md`, translated to tool-backed Mnemopi rather than memory Git/filesystem tiers.
+Read [reflection](../SKILL.md). Source: the upstream reflection persona, translated to tool-backed Mnemopi rather than memory Git/filesystem tiers.
 
 ## Known exposed operations
 

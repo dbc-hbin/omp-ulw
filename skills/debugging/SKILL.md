@@ -59,4 +59,4 @@ Use methodology references when the working loop cannot resolve that specific st
 
 ## Source
 
-Adapted from omo 5.1.19 `plugin/skills/debugging` and `packages/shared-skills/skills/debugging/SKILL.md`, checked 2026-10-08. Runtime and specialist references retain their operational safeguards; the entry provides an immediate working loop and loads detailed guidance only for the operation that needs it.
+OMP-native adaptation of the debugging workflow and shared specialist guidance, checked 2026-10-08. Runtime and specialist references retain their operational safeguards; the entry provides an immediate working loop and loads detailed guidance only for the operation that needs it.

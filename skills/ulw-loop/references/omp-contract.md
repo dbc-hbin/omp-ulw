@@ -1,6 +1,6 @@
 # OMP compatibility contract (authoritative)
 
-This is an OMP port of omo 5.1.19, with native task/tool schemas and goal-mode guidance reconciled for omp 18.12.1. The workflow activates only on an explicit request for its named mode (or an explicit request to perform that specialised workflow); bare ULW does not activate planning, looping, execution, saturation research, or mass orchestration. Host and current user instructions outrank this skill. The native behavioural doctrine remains below; this contract replaces harness-specific machinery.
+This is the OMP-native compatibility contract, with native task/tool schemas and goal-mode guidance reconciled for omp 18.12.1. The workflow activates only on an explicit request for its named mode (or an explicit request to perform that specialised workflow); bare ULW does not activate planning, looping, execution, saturation research, or mass orchestration. Host and current user instructions outrank this skill. The native behavioural doctrine remains below; this contract replaces harness-specific machinery.
 
 ## Native delegation and orchestration
 

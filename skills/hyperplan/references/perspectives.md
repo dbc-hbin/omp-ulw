@@ -1,6 +1,6 @@
 # Five adversarial perspectives
 
-Adapted from omo 5.1.19 `plugin/skills/hyperplan/SKILL.md` and current native `packages/omo-senpi/skills/hyperplan/SKILL.md` at upstream revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`. These are task instructions, not system-prompt edits, categories, model selectors, or native role names. Include the relevant section in every round's assignment.
+Adapted for OMP from the upstream hyperplan variants at revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`. These are task instructions, not system-prompt edits, categories, model selectors, or native role names. Include the relevant section in every round's assignment.
 
 ## skeptic: Pragmatist Skeptic
 

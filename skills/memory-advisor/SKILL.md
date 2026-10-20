@@ -11,7 +11,7 @@ This conditional OMP-contract loading and same-session reuse policy applies thro
 
 ## Source and exact native translation
 
-Ported from the prior OMO memory-advisor guidance. Preserve its high relevance threshold, observation-only hints, duplicate suppression, strict read-only stance, and silence by default. Remove the resident service, automatic wake envelopes/cursors, private memory filesystem search/read API, and injection transport. These are not OMP capabilities.
+Ported from the prior memory-advisor guidance. Preserve its high relevance threshold, observation-only hints, duplicate suppression, strict read-only stance, and silence by default. Remove the resident service, automatic wake envelopes/cursors, private memory filesystem search/read API, and injection transport. These are not OMP capabilities.
 
 Use a finite native background `task` child only on explicit activation, with the lead's current goal, known facts, and concrete next action in top-level `context`. Do not start an automatic duplicate process or daemon; this port is a command/pointer workflow, not a runtime extension hook. New consultation is warranted only when new evidence or a changed next decision makes it useful.
 

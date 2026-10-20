@@ -14,7 +14,7 @@ This is adversarial filtering, not consensus building. Attack claims ruthlessly;
 
 ## Exact native translation
 
-Source: omo 5.1.19 `plugin/skills/hyperplan/SKILL.md`, compared with `code-yeongyu/oh-my-openagent` at `9815894eb71f47dd2b9e0bfb70901e9913241cbe`, `packages/omo-senpi/skills/hyperplan/SKILL.md`.
+Source: OMP-native hyperplan workflow, reconciled with the upstream development variant at revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`.
 
 OMP uses background `task` children, not a resident team service. `team_create`, `task_send`, `team_delete`, category routing, injected system identities, and foreground task flags are not available contracts. Perspective instructions belong in each child's `task`; use only roles listed in the current native schema, or omit `agent` for the default worker. Never pass category, subagent_type, prompt, load_skills, or run_in_background. Do not pass model for ordinary workers; `model` and `sourceSession` are only valid with the exposed `seance` agent for read-only historical consultation. A perspective name is a logical lane, not an agent id or native role.
 

@@ -11,7 +11,7 @@ This conditional OMP-contract loading and same-session reuse policy applies thro
 
 ## Source and exact native translation
 
-Ported from omo 5.1.19 `plugin/extensions/reflection-persona.md`. Preserve its investigate -> extract -> integrate -> review -> report phases, durable-versus-ephemeral filters, latest-evidence contradiction handling, preference for existing topics/workflows over fragmentation, and conservative learned-workflow creation.
+Ported from the upstream reflection persona. Preserve its investigate -> extract -> integrate -> review -> report phases, durable-versus-ephemeral filters, latest-evidence contradiction handling, preference for existing topics/workflows over fragmentation, and conservative learned-workflow creation.
 
 Replace `$MEMORY_DIR` files, tier promotion, system/self-aware edits, Git persistence and auto-commits with native Mnemopi tools. `recall` discovers stored evidence; `reflect` synthesizes a qualified history question; `retain` stores durable episodes; `memory_edit` corrects known memories by actual id. When a native learned-workflow capability is exposed, use only its actual schema. Do not invent tool arguments, storage paths, tiers, or daemon APIs. No filesystem or Git workaround is permitted when an API is absent.
 

@@ -127,4 +127,4 @@ Do not manufacture missing tests for prose, force abstractions/splits, optimize 
 
 ## Source
 
-Ported nine categorized passes, deletion ladder, adversarial guard proof, behavior lock, critical review and report from installed omo 5.1.19 plugin/skills/remove-ai-slops/SKILL.md and current dev packages/shared-skills/skills/remove-ai-slops/SKILL.md, code-yeongyu/oh-my-openagent, checked 2026-10-08. The fixed LOC enforcement and its scripts, unconditional five-wide fanout, obsolete harness tools and unsafe whole-file rollback were intentionally replaced by the OMP host contract.
+Ported nine categorized passes, deletion ladder, adversarial guard proof, behavior lock, critical review and report from the upstream cleanup workflow, checked 2026-10-08. Fixed LOC enforcement, unconditional fanout, obsolete harness tools and unsafe whole-file rollback were intentionally replaced by the OMP host contract.

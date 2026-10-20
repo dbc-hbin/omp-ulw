@@ -1,6 +1,6 @@
 # OMP visual runtime
 
-Source: omo 5.1.19 frontend workflow, adapted to exposed OMP APIs. Use exposed browser tools for pages; read `skill://cua-driver` before using its browser or native-window route. Capture and emulation guidance: [browser setup](skill://visual-qa/references/browser-setup.md). Use only documented capabilities; do not assume locator, context or emulation helpers.
+Source: upstream frontend workflow, adapted to exposed OMP APIs. Use exposed browser tools for pages; read `skill://cua-driver` before using its browser or native-window route. Capture and emulation guidance: [browser setup](skill://visual-qa/references/browser-setup.md). Use only documented capabilities; do not assume locator, context or emulation helpers.
 
 ## Image generation
 

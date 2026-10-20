@@ -4,7 +4,7 @@
 // Zero external dependencies (node:fs/path/process/url builtins only) so it runs
 // byte-identically under `node` and `bun` on macOS, Linux, and Windows with no uv
 // bootstrap, no npm/pip install, and no POSIX-shell or python3 precondition - the
-// two things genuinely not guaranteed on native Windows across the omo harnesses.
+// two things genuinely not guaranteed on native Windows across agent harnesses.
 //
 // Usage:  node "<skill-root>/scripts/scaffold-plan.mjs" <slug> [--clear|--unclear] [--draft-only] [--review-required] [--reset [--force]]
 //

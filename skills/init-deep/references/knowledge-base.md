@@ -1,6 +1,6 @@
 # Knowledge-base scoring and templates
 
-Adapted from omo 5.1.19 init-deep and both native/shared upstream variants at revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`. Read [the workflow](../SKILL.md). Measurements come from actual discovery, LSP and AST evidence, not guessed framework conventions.
+Adapted for OMP from the upstream init-deep variants at revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`. Read [the workflow](../SKILL.md). Measurements come from actual discovery, LSP and AST evidence, not guessed framework conventions.
 
 ## Scoring matrix
 

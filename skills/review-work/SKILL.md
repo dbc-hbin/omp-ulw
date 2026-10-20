@@ -104,4 +104,4 @@ Report overall verdict; both lanes' verdict/confidence with row/artifact counts;
 
 ## Source
 
-Ported from installed omo 5.1.19 plugin/skills/review-work/SKILL.md and current dev packages/shared-skills/skills/review-work/SKILL.md in code-yeongyu/oh-my-openagent, checked 2026-10-08. Preserves the two lanes, context mining, eight-point audit, fresh leaf reviewer and evidence gate; replaces Codex/Senpi/OpenCode tools, assumed HEAD~1 and mandatory worktree teardown with OMP ownership contracts.
+Ported from the upstream review-work workflow, checked 2026-10-08. Preserves the two lanes, context mining, eight-point audit, fresh leaf reviewer and evidence gate; replaces legacy dispatch tools, assumed HEAD~1 and mandatory worktree teardown with OMP ownership contracts.

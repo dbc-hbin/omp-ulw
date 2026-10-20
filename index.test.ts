@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import omoPrompts from "./index";
+import ompUlw from "./index";
 import { renderPreset } from "./presets";
 import type { UlwContext } from "./ulw";
 import { selectUlwDirective } from "./ulw";
@@ -8,7 +8,7 @@ type Handler = (event: never, ctx: never) => unknown;
 
 test("provider fallback refreshes the profile even with identical model id and name", () => {
   const handlers = new Map<string, Handler[]>();
-  omoPrompts({
+  ompUlw({
     setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
     registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
     getFlag: () => false, appendEntry: () => {},
@@ -38,7 +38,7 @@ test("provider fallback refreshes the profile even with identical model id and n
 
 test("ULW policy follows request-model fallback without touching user or tool text", () => {
   const handlers = new Map<string, Handler[]>();
-  omoPrompts({
+  ompUlw({
     setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
     registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
     getFlag: () => false, appendEntry: () => {},
@@ -67,7 +67,7 @@ test("ULW policy follows request-model fallback without touching user or tool te
 
 test("child assignments are not replaced by the main-agent preset", () => {
   const handlers = new Map<string, Handler[]>();
-  omoPrompts({
+  ompUlw({
     setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
     registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
     getFlag: () => false, appendEntry: () => {},
@@ -90,7 +90,7 @@ test("child assignments are not replaced by the main-agent preset", () => {
 
 test("inactive tools mentioned by the host do not enable preset branches", () => {
   const handlers = new Map<string, Handler[]>();
-  omoPrompts({
+  ompUlw({
     setLabel: () => {}, getActiveTools: () => ["read"], getAllTools: () => [{ name: "read" }, { name: "ask" }],
     registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
     getFlag: () => false, appendEntry: () => {},
@@ -110,7 +110,7 @@ test("inactive tools mentioned by the host do not enable preset branches", () =>
 test("print and json surfaces use app routing without terminal-only preambles", () => {
   for (const mode of ["print", "json"] as const) {
     const handlers = new Map<string, Handler[]>();
-    omoPrompts({
+    ompUlw({
       setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
       registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
       getFlag: () => false, appendEntry: () => {},

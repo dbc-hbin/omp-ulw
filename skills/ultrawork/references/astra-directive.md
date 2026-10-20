@@ -1,6 +1,3 @@
-<!-- Derived from omo d06f901785cc / packages/omo-senpi/skills/ultrawork/references/astra-variant.md, retaining the current port's OMP contract. Astra/Astra-fast only; other models retain the complete baseline. -->
-
-
 On explicit activation, after any host-required opening, say:
 `ULTRAWORK MODE ENABLED!`
 

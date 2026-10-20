@@ -3,7 +3,7 @@ name: ultrawork
 description: "OMP ultrawork: explicitly activated, outcome-first, evidence-driven execution"
 ---
 
-<!-- Source: omo Native 5.1.19 plugin/skills/ultrawork/SKILL.md. OMP transport/authority adaptations are explicit. -->
+<!-- OMP-native adaptation; transport and authority rules are explicit. -->
 
 <ultrawork-mode>
 

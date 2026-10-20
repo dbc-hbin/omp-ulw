@@ -8,12 +8,13 @@
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
  * Additional commands: /debugging, /review-work, /visual-qa, /visualize,
  * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
- * /reflection and /init-deep. These do not implicitly arm ULW.
- * Exact Astra/Astra-fast model IDs select the shorter ULW doctrine; provider
- * hooks refresh it when the request model changes. Other models keep baseline.
+ * /reflection, /init-deep, /ast-grep, /lsp-setup and /refactor. These do not
+ * implicitly arm ULW.
+ * GPT-6 family model IDs select the shorter ULW doctrine; provider hooks
+ * refresh it when the request model changes. Other models keep baseline.
  * The existing prompts/ulw.md template remains a native-discovery fallback.
  * ULW keywords arm the session; flags can disable arming/pointers/continuation.
- * Native omp transports and approval rules replace Senpi-only APIs.
+ * Native OMP transports and approval rules replace legacy transport APIs.
  * User/custom prompts, project rules, skills and worker assignments are preserved.
  * Unrecognized templates are left unchanged with a warning. Unsupported models
  * retain omp behavior; runtime requires neither upstream packages nor network access.
@@ -44,8 +45,8 @@ interface ModelPromptApi {
 
 type ExtensionApi = ModelPromptApi & UlwApi;
 
-export default function omoPrompts(pi: ExtensionApi): void {
-  pi.setLabel("OMP model prompts");
+export default function ompUlw(pi: ExtensionApi): void {
+  pi.setLabel("omp-ulw");
   registerUlw(pi);
   let originalBehavior: string | undefined;
   let options: PresetOptions = { surface: "terminal", toolNames: [] };

@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import { replaceHostBehavior } from "./host";
 
 const base = `<system-conventions>Host message conventions</system-conventions>
@@ -49,6 +50,34 @@ test("behavior replacement preserves host capabilities, project instructions, an
   expect(first).not.toContain("Original role");
   expect(result?.originalBehavior).toContain("Original role");
   expect(result?.originalBehavior).not.toContain("<skills>");
+});
+
+test("current OMP system template replaces only the role block", () => {
+  const ompTemplate = readFileSync(new URL("./tests/fixtures/omp-system-prompt.md", import.meta.url), "utf8");
+  const project = "<repo-rules>Keep the existing task contract</repo-rules>";
+  const agent = "Review only; do not edit outside the assigned paths";
+  const replacement = "<omp-model-preset>Model-specific role</omp-model-preset>";
+  const result = replaceHostBehavior([ompTemplate, project, agent], replacement);
+
+  expect(result).toBeDefined();
+  expect(result?.blocks.slice(1)).toEqual([project, agent]);
+  const first = result?.blocks[0] ?? "";
+  expect(first).toContain(replacement);
+  expect(first).not.toContain("You are omp's trusted coding assistant.");
+  for (const marker of [
+    "§ Runtime",
+    "§ Scratchpad",
+    "§ Tool Policy",
+    "§ Workflow",
+    "§ Delivery",
+    "§ Critical",
+    "skill://<name>",
+    "native `task` schema",
+  ]) {
+    expect(first).toContain(marker);
+  }
+  expect(result?.originalBehavior).toContain("You are omp's trusted coding assistant.");
+  expect(result?.originalBehavior).not.toContain("§ Runtime");
 });
 
 test("project and global context in block zero survive replacement", () => {

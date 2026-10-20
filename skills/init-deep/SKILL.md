@@ -12,7 +12,7 @@ This conditional OMP-contract loading and same-session reuse policy applies thro
 
 ## Exact native translation
 
-Source: omo 5.1.19 `plugin/skills/init-deep/SKILL.md`, compared with upstream revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe`, both `packages/omo-senpi/skills/init-deep/SKILL.md` (hierarchical map/reduce) and `packages/shared-skills/skills/init-deep/SKILL.md` (discovery, scoring, templates).
+Source: OMP-native init-deep workflow, reconciled with the upstream revision `9815894eb71f47dd2b9e0bfb70901e9913241cbe` and shared init-deep guidance (hierarchical map/reduce, discovery, scoring and templates).
 
 The native DAG SDK, runtime configuration knobs, category-selected workers, fixed worker context-window assumptions, and delete-all regeneration are removed. OMP uses explicit dependency waves through background `task` and first-wake `wait({})`, unless a real documented native workpool is exposed. No DAG SDK is required. `scout` is suitable for discovery when listed; use default workers or a listed suitable specialist for writing/review. Do not send category/subagent_type/load_skills/prompt/run_in_background fields. Do not send `model` or `sourceSession` for ordinary nodes; those fields are only valid with the exposed `seance` agent for a read-only historical consultation. Use top-level `context`, `tasks` and uncertainty-based `solutionSpace`. Include the workflow-specific JSON receipt schema in the assignment and validate the returned payload; do not pass unsupported `outputSchema` or `schemaMode` fields.
 

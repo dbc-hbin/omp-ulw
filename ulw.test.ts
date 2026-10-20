@@ -42,14 +42,28 @@ class Host {
 }
 
 describe("Native ULW session behavior", () => {
-  test("Astra selects its shipped variant while other model identities keep the baseline", () => {
+  test("GPT-6 family selects its shipped variant while other model identities keep the baseline", () => {
     const baseline = readFileSync(new URL("./skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
     const astra = readFileSync(new URL("./skills/ultrawork/references/astra-directive.md", import.meta.url), "utf8");
-    for (const id of ["gpt-6-astra", "OpenAI/GPT-6-ASTRA-FAST", "gpt-6.1-sol", "gpt-6-astra-extra", "gpt-6-astral", "claude-opus-5", undefined]) {
+    expect(astra).not.toMatch(/senpi/i);
+    for (const id of [
+      "gpt-6-astra",
+      "OpenAI/GPT-6-ASTRA-FAST",
+      "gpt-6.1-sol",
+      "gpt-6.1-sol-fast",
+      "gpt-6-sol",
+      "gpt-6-luna",
+      "gpt-6-luna-fast",
+      "gpt-6-astra-extra",
+      "gpt-6-astral",
+      "claude-opus-5",
+      undefined,
+    ]) {
       const host = new Host();
       host.context.model = id === undefined ? undefined : { id };
-      const body = id === "gpt-6-astra" || id === "OpenAI/GPT-6-ASTRA-FAST" ? astra : baseline;
+      const body = id !== undefined && /gpt[._-]?6(?:[._-]\d+|\d)?[._-](?:astra|sol|luna)(?:[-_.][a-z0-9]+)*$/i.test(id.split("/").at(-1)!) ? astra : baseline;
       expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omp-ulw-policy>`);
+      expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).not.toMatch(/senpi/i);
       host.context.model = { id: "gpt-6-astra" };
       expect(host.prepare("continue")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${astra}</ultrawork-mode>\n</omp-ulw-policy>`);
     }

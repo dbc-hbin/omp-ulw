@@ -7,7 +7,7 @@
 
 This reference is derived from a live capture of `https://aside.com/` on 2026-06-30, plus a reconnaissance pass following `JCodesMore/ai-website-cloner-template` at commit `8dd9cb47dde0d49fec06ee1d69bedd04840f3c95`.
 
-Reviewer-run evidence artifacts for the source capture were written under `.omo/evidence/20260630-aside-frontend-reference/`:
+Reviewer-run evidence artifacts for the source capture were written under `evidence/20260630-aside-frontend-reference/`:
 
 - `aside-live-extraction.json`
 - `aside-home.png`
@@ -16,7 +16,7 @@ Reviewer-run evidence artifacts for the source capture were written under `.omo/
 - `cloner-tablet-768.png`
 - `cloner-mobile-390.png`
 
-Those `.omo/evidence` files are local review artifacts, not shipped package assets. Downstream agents should recapture the live site when fidelity to the current Aside page matters. This file carries the stable, reviewer-visible digest from that capture.
+Those `evidence` files are local review artifacts, not shipped package assets. Downstream agents should recapture the live site when fidelity to the current Aside page matters. This file carries the stable, reviewer-visible digest from that capture.
 
 ### Reviewer-Visible Capture Digest
 

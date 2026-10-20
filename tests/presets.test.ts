@@ -15,11 +15,13 @@ describe("faithful omo presets", () => {
         const original = buildPreset(name, { surface, selectedTools: toolNames });
         expect(original?.name).toBe(name);
         expect(original?.prompt.length).toBeGreaterThan(1000);
+        expect(original?.prompt).not.toMatch(/senpi/i);
         expect(original?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
         // gpt-5 is an explicit-only upstream preset, never selected by original auto resolution.
         if (name === "gpt-5") continue;
         const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames });
         expect(rendered?.name).toBe(name);
+        expect(rendered?.prompt).not.toMatch(/senpi/i);
         expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
         expect(rendered?.prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|tool\.monitor|--print|THERE IS NO WAIT TOOL/);
         expect(rendered?.prompt).not.toMatch(/\[Outcome so far\]|\bYou need:/);
