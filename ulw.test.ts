@@ -79,12 +79,23 @@ describe("Native ULW session behavior", () => {
 
   test("direct ULW input enters native goal mode while workflow-specific commands keep their durable loop", () => {
     const host = new Host();
-    const result = host.emit("input", { text: "ulw ship the fix", source: "interactive" }) as { text?: string };
-    expect(result).toEqual({ text: "/goal ulw ship the fix" });
+    for (const text of ["ulw ship the fix", "/ulw ship the fix", "/ULW 사진에서 셰이더 후보를 좁혀줘.", "/ulw"]) {
+      const result = host.emit("input", { text, source: "interactive" });
+      expect(result).toEqual({ text: `/goal ${text.replace(/^\//, "")}` });
+    }
     expect(host.prepare("ulw ship the fix")?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
 
+    for (const text of ["/ulw-loop continue the ledger", "/ulw-plan plan the fix", "Explain `/ulw`", "Read /ulw/notes.md"]) {
+      expect(host.emit("input", { text, source: "interactive" })).toBeUndefined();
+    }
+    for (const source of ["rpc", "extension"]) {
+      for (const text of ["ulw ship the fix", "/ulw ship the fix"]) {
+        expect(host.emit("input", { text, source })).toBeUndefined();
+      }
+    }
     host.emit("goal_updated", { goal: { status: "active" }, state: { enabled: true } });
     expect(host.emit("input", { text: "ulw continue the active goal", source: "interactive" })).toBeUndefined();
+    expect(host.emit("input", { text: "/ulw continue the active goal", source: "interactive" })).toBeUndefined();
     expect(host.emit("input", { text: "ulw-loop continue the ledger", source: "interactive" })).toBeUndefined();
   });
   test("legacy prompt blocks remain inert and are replaced on session resume", () => {

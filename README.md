@@ -11,11 +11,11 @@ git clone https://github.com/dbc-hbin/omp-ulw.git
 omp -e ./omp-ulw/index.ts
 ```
 
-- `/ulw <작업>`: ULW를 활성화하는 명령 별칭입니다. native goal이 필요하면 직접 `ulw <작업>` 또는 `/goal ulw <작업>`을 사용합니다.
+- `/ulw <작업>`: 대화형 TUI에서 ULW와 native goal을 함께 활성화합니다. 직접 `ulw <작업>` 또는 `/goal ulw <작업>`을 입력해도 됩니다.
 - `/ulw-plan`, `/ulw-execute`, `/ulw-loop`, `/ulw-research`, `/mass-ulw`: 계획, 실행, 목표 루프, 리서치, 의존 작업 실행.
 - `/debugging`, `/review-work`, `/visual-qa`, `/frontend`, `/ast-grep`, `/lsp-setup`, `/refactor` 등: 필요한 전문 스킬 호출.
 
-일반 `/ulw`는 전문 워크플로를 자동으로 켜지 않습니다. 직접 입력한 `ulw`/`ultrawork`는 `/goal`로 변환되어 native goal objective로 시작합니다. `/ulw` 명령은 OMP의 `sendUserMessage()`가 slash-command expansion을 끄므로 native goal을 만들지 않습니다. `ulw-loop`와 `ulw-execute`는 다중 목표·증거 ledger를 사용하므로 native goal을 중복 생성하지 않습니다. 참조 문서는 필요한 시점에만 읽으며, 기존 프로젝트 지침과 권한 규칙을 보존합니다.
+일반 `/ulw`는 전문 워크플로를 자동으로 켜지 않습니다. 대화형 TUI의 입력 단계에서 `/ulw`와 `ulw`/`ultrawork`를 `/goal`로 변환하므로, 작업 실행 중 입력해도 native goal objective가 생성됩니다. 이미 활성 goal이 있으면 새 goal로 교체하지 않습니다. OMP 18.12.5에서 `/goal`은 TUI 전용 명령이므로 RPC·프로그램 호출은 ULW 지침만 활성화하며, RPC 클라이언트는 native `goal` 요청을 별도로 사용해야 합니다. `ulw-loop`와 `ulw-execute`는 다중 목표·증거 ledger를 사용하므로 native goal을 중복 생성하지 않습니다. 참조 문서는 필요한 시점에만 읽으며, 기존 프로젝트 지침과 권한 규칙을 보존합니다.
 
 ## OMP skill set
 
@@ -76,6 +76,10 @@ bun test
 ```bash
 cd omp-ulw
 bun test
+
+# 설치된 OMP와 로컬 provider로 실제 호스트 경로 검증
+bun tests/ulw-host-check.ts
+bun tests/ulw-goal-host-check.ts
 ```
 
 모델 프롬프트와 워크플로를 OMP에 맞게 이식했습니다. 원본 출처와 개별 리소스의 라이선스는 `upstream/` 및 각 스킬의 출처·라이선스 파일을 참고하세요.

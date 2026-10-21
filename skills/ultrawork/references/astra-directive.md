@@ -205,7 +205,10 @@ Never spawn the planner before the discovery wave has returned.
 
 ## 1. Create the goal with binding success criteria
 OMP's native goal mode is the binding objective for plain ULW invocations:
-the extension routes a direct `ulw`/`ultrawork` request through `/goal`.
+in the interactive TUI, the extension routes `/ulw` and direct
+`ulw`/`ultrawork` input through `/goal`, unless a goal is already active.
+RPC and programmatic activation alone do not create a goal; the client must
+use the host's native goal API. Never infer a goal record from ULW policy alone.
 Use the native goal objective and continuation for that mode; do not create a
 second goal record in the notepad. Explicit `ulw-loop`, `ulw-execute` and
 `mass-ulw` workflows keep their own multi-goal ledger because their

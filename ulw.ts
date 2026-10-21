@@ -111,10 +111,14 @@ export function registerUlw(pi: UlwApi): void {
   pi.on("input", (event, ctx) => {
     inputSource = event.source;
     if (event.source !== "extension") { continuationFingerprint = undefined; consecutiveContinuations = 0; }
-    if (ctx.agent.kind !== "main" || event.source === "extension" || nativeGoalActive) return;
-    const visible = visibleUlwText(event.text);
+    // Native /goal is a TUI command; RPC text would only persist a fake command.
+    if (ctx.agent.kind !== "main" || event.source !== "interactive" || nativeGoalActive) return;
+    // Route the slash alias before its handler calls sendUserMessage(), which
+    // bypasses command expansion and cannot create a native goal.
+    const text = event.text.replace(/^(\s*)\/(ulw)(?=\s|$)/i, "$1$2");
+    const visible = visibleUlwText(text);
     if (nativeGoalKeyword.test(visible) && !/^\s*\/goal(?:\s|$)/i.test(event.text)) {
-      return { text: `/goal ${event.text}` };
+      return { text: `/goal ${text}` };
     }
   });
   for (const name of ["ulw", ...workflows.map(workflow => workflow.name)]) {
