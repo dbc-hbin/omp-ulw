@@ -1,3 +1,5 @@
+import { adaptResearchRouting } from "./host";
+
 const PRESET_REGION = /<(om[op]-model-preset)>[\s\S]*?<\/\1>/g;
 
 type PayloadObject = Record<string, unknown>;
@@ -74,6 +76,75 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: string, region: R
 			});
 		}));
 	});
+}
+
+function rewriteTaskDefinition(value: unknown): unknown {
+	const object = payloadObject(value);
+	if (!object || object.name !== "task") return value;
+	return rewriteField(object, "description", description =>
+		typeof description === "string" ? adaptResearchRouting(description) : description);
+}
+
+/** Change only the native task description; schemas, execution and other tools stay intact. */
+export function rewriteTaskGuidancePayload(payload: unknown, api: string): unknown {
+	const object = payloadObject(payload);
+	if (!object) return payload;
+	const rewriteFunctions = (value: unknown): unknown => rewriteArray(value, tool => {
+		const entry = payloadObject(tool);
+		if (!entry) return tool;
+		if (entry.type === "namespace" && entry.name === "functions") {
+			return rewriteField(entry, "tools", rewriteFunctions);
+		}
+		return entry.type === "function" ? rewriteTaskDefinition(entry) : tool;
+	});
+	const rewriteChatTools = (value: unknown): unknown => rewriteArray(value, tool => {
+		const entry = payloadObject(tool);
+		return entry?.type === "function" ? rewriteField(entry, "function", rewriteTaskDefinition) : tool;
+	});
+	const rewriteGoogleTools = (value: unknown): unknown => rewriteArray(value, tool => {
+		const entry = payloadObject(tool);
+		return entry ? rewriteField(entry, "functionDeclarations", declarations => rewriteArray(declarations, rewriteTaskDefinition)) : tool;
+	});
+	const rewriteBedrock = (value: unknown): unknown => {
+		const entry = payloadObject(value);
+		return entry ? rewriteField(entry, "toolConfig", config => {
+			const configObject = payloadObject(config);
+			return configObject ? rewriteField(configObject, "tools", tools => rewriteArray(tools, tool => {
+				const definition = payloadObject(tool);
+				return definition ? rewriteField(definition, "toolSpec", rewriteTaskDefinition) : tool;
+			})) : config;
+		}) : value;
+	};
+	switch (api) {
+		case "openai-responses":
+		case "openai-codex-responses":
+		case "azure-openai-responses":
+			return rewriteField(object, "tools", rewriteFunctions);
+		case "openai-completions":
+		case "openrouter":
+		case "ollama":
+		case "ollama-chat":
+			return rewriteField(object, "tools", rewriteChatTools);
+		case "anthropic-messages":
+			return rewriteField(object, "tools", tools => rewriteArray(tools, rewriteTaskDefinition));
+		case "google-generative-ai":
+		case "google-vertex": {
+			const rewritten = rewriteField(object, "tools", rewriteGoogleTools);
+			return rewriteField(rewritten, "config", config => {
+				const entry = payloadObject(config);
+				return entry ? rewriteField(entry, "tools", rewriteGoogleTools) : config;
+			});
+		}
+		case "google-gemini-cli":
+			return rewriteField(object, "request", request => {
+				const entry = payloadObject(request);
+				return entry ? rewriteField(entry, "tools", rewriteGoogleTools) : request;
+			});
+		case "bedrock-converse-stream":
+			return rewriteField(rewriteBedrock(object) as PayloadObject, "commandInput", rewriteBedrock);
+		default:
+			return payload;
+	}
 }
 
 /** Replace only complete extension-owned regions in known provider system-prompt paths.

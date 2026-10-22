@@ -7,6 +7,8 @@ Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when c
 
 Read this before the brief is written and again before Phase 6. It replaces the old blocking format question with a contract that never stalls collection: the deliverable is derived from the request and its destination, the requester is asked only what is genuinely missing, and every promise made about the output is tracked in a manifest until it is delivered, skipped, or blocked with a reason.
 
+Within this explicitly activated research workflow, the requested report remains a deliverable alongside any promised screenshot/video/3D/figure reproduction. A demo alone does not fulfill a report promise. Preserve the requested destination and format, including chat or text; HTML is not mandatory.
+
 Every helper named here is one command of the dispatcher:
 
 ```bash
@@ -132,7 +134,7 @@ Nothing reaches the requester until the gates for its QA tier pass, in this orde
    ```bash
    node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json   # .source is one async expression
    ```
-3. **Visual QA.** Render the artifact to images (PDF pages to PNG, the HTML in the browser skill's engine at desktop and phone widths) and look at the pixels for what a machine cannot see: composition, hierarchy, page breaks, figure legibility.
+3. **Visual QA.** Render the artifact to images (PDF pages to PNG, the HTML in the browser skill's engine at desktop and phone widths) and look at the pixels for what a machine cannot see: composition, hierarchy, page breaks, figure legibility. Only when the requested deliverable reproduces a screenshot, video, 3D scene, or figure, also follow [Reference compare](report-visualization.md#reference-compare--requested-visual-reproductions-only): inspect real source and actual render side-by-side at matching states/views and dimensions, record concrete gaps and relevant corrections, and report residual limitations. Select representative states from the actual reference, without adding a fixed frame count, separate repair-round quota, or comparison manifest.
 4. **Proofread.** Assign a default worker a writing-only charter to proofread the final text (grammar, spelling, punctuation, terminology, native register); it never composes or rewrites content. Do not request an unsupported `writing` role.
 
 The light tier runs gate 1 and one render (recorded as `visual`) and records `layout` and `proofread` as `not_run`. The full tier runs all four.
@@ -154,6 +156,8 @@ Defaults: 3 repair attempts, a plateau of 2 consecutive attempts that do not imp
 ## 9. Outcome manifest and closing briefing
 
 `$SESSION_DIR/outcome.json` tracks every promise made about the output, so a promised format is never silently dropped.
+
+Deliver the report and any promised reproduction, including applicable comparison evidence and residual gaps. When HTML is the selected report format, follow [the visualization playbook's output handoff](report-visualization.md#4-choosing-the-output-format): open and inspect the actual report through exposed OMP browser tools, leave it available in the browser or a retained task-owned tab, and include a clickable artifact link to that file. A displayed demo is not a displayed report. If browser display is unavailable, disclose that limitation and link the file; do not claim an inline preview or call absent HTML-render APIs. This adds no HTML requirement to chat/text delivery.
 
 ```bash
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome init --promised pdf,docx --lane template-vibe --session-dir "$SESSION_DIR"

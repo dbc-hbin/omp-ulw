@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
-import { replaceHostBehavior } from "./host";
+import { adaptResearchRouting, replaceHostBehavior } from "./host";
 
 const base = `<system-conventions>Host message conventions</system-conventions>
 § Role
@@ -85,6 +85,22 @@ test("project and global context in block zero survive replacement", () => {
   const result = replaceHostBehavior([`${context}\n${base}`], "replacement");
   expect(result?.blocks[0]).toContain(context);
   expect(result?.blocks[0]).toContain("replacement");
+});
+
+test("research routing changes only the host policy region, never project or runtime text", () => {
+  const directive = "Map unknown code via `task`, not reading file after file yourself.";
+  const context = `<project-context>${directive}</project-context>`;
+  const runtime = `<skills>${directive}</skills>`;
+  const template = `${context}\n${base.replace("<skills>available skill</skills>", runtime).replace("Original fan-out preference", directive)}`;
+  const project = `<repo-rules>${directive}</repo-rules>`;
+  const result = replaceHostBehavior([template, project], "<omp-model-preset>role</omp-model-preset>")!;
+  const policy = template.slice(template.indexOf("\n§ Tool Policy\n"), template.indexOf("\n§ Workflow\n"));
+  expect(adaptResearchRouting(policy)).not.toBe(policy);
+  expect(result.blocks[0].slice(0, result.blocks[0].indexOf("\n§ Role\n"))).toBe(template.slice(0, template.indexOf("\n§ Role\n")));
+  expect(result.blocks[0].slice(result.blocks[0].indexOf("\n§ Runtime\n"), result.blocks[0].indexOf("\n§ Tool Policy\n"))).toBe(template.slice(template.indexOf("\n§ Runtime\n"), template.indexOf("\n§ Tool Policy\n")));
+  expect(result.blocks[0].slice(result.blocks[0].indexOf("\n§ Tool Policy\n"), result.blocks[0].indexOf("\n§ Workflow\n"))).toBe(adaptResearchRouting(policy));
+  expect(result.blocks[0].slice(result.blocks[0].indexOf("\n§ Workflow\n"))).toBe(template.slice(template.indexOf("\n§ Workflow\n")));
+  expect(result.blocks[1]).toBe(project);
 });
 
 test("custom and unfamiliar prompts are never replaced", () => {

@@ -24,7 +24,7 @@
  * reproducible updater live in upstream/; presets.ts contains transport adaptations.
  */
 import { replaceHostBehavior } from "./host";
-import { rewritePresetPayload } from "./payload";
+import { rewritePresetPayload, rewriteTaskGuidancePayload } from "./payload";
 import { renderPreset } from "./presets";
 import type { PresetModel, PresetOptions } from "./presets";
 import { registerUlw, selectUlwDirective } from "./ulw";
@@ -98,7 +98,8 @@ export default function ompUlw(pi: ExtensionApi): void {
       replacement = "<omp-model-preset>\n" + (preset?.prompt ?? originalBehavior) + "\n</omp-model-preset>";
       profiles.set(key, replacement);
     }
-    // The adapter touches only our system-prompt marker, never advisor/custom/user messages.
-    return rewritePresetPayload(payload, ctx.model.api, replacement);
+    // Adapt only native task routing prose alongside our owned profile marker.
+    // Tool schemas, custom prompts and child assignments remain host-owned.
+    return rewriteTaskGuidancePayload(rewritePresetPayload(payload, ctx.model.api, replacement), ctx.model.api);
   });
 }

@@ -179,17 +179,19 @@ This is the platform baseline, distilled from Apple's Human Interface Guidelines
 
 ## OMP reviewer output contract
 
-Read `skill://visual-qa/references/verdict-schema.json` and include its JSON response contract in each reviewer task. Require every field, including confidence, summary, checklist, evidenceTrace, findings, good, blocking and artifacts; validate returned JSON against that schema before accepting it. Do not pass `outputSchema` or `schemaMode` unless the exposed task schema supports them. Pass A owns G-J; Pass B owns A-F. Put shared intent, complete capture manifest/reference packet, source paths and diff, script JSON and freshness digest in top-level `context`; put each independent read-only charter, allowed reads, no-edit scope, checklist ids and stop condition in its `task`. Set `solutionSpace` to the uncertainty being reviewed. Omit agent and assign read-only reviewer behavior because this workflow requires its own JSON receipt rather than a specialist's fixed response format. Use only exposed dispatch fields. Record actual child ids in a pending set; native `wait({})` wakes on the first settlement/message, so reconcile terminal payloads individually and wait again only while blocked on remaining children. A malformed payload, missing image access or incomplete coverage is not PASS. Read `skill://visual-qa/references/final-verdict-schema.json` and validate the final synthesized verdict against it.
+Read `skill://visual-qa/references/verdict-schema.json` as the parent's normalization contract, not a replacement for the specialist's native response format. Select `agent: "reviewer"` in each `tasks[]` entry. Retain each raw response and normalize only its supported assessment, confidence, checklist coverage, evidenceTrace, findings, good, blocking and artifacts into that schema. Never bypass the specialist for custom JSON or invent missing evidence to complete a receipt. Do not pass `outputSchema` or `schemaMode` unless exposed and compatible with the specialist contract. Pass A owns G-J; Pass B owns A-F. Put shared intent, complete capture manifest/reference packet, source paths and diff, script JSON and freshness digest in top-level `context`; put each independent read-only charter, allowed reads, no-edit scope, checklist ids and stop condition in its `task`. Set `solutionSpace` to the uncertainty being reviewed. Use only exposed dispatch fields. Record actual child ids in a pending set; native `wait({})` wakes on the first settlement/message, so reconcile terminal responses individually and wait again only while blocked on remaining children. Native non-JSON output is not itself a failure; missing image access, unsupported required fields or incomplete coverage cannot become PASS. Read `skill://visual-qa/references/final-verdict-schema.json` and validate the parent's final synthesized verdict against it.
 
 ## Step 3 - Dispatch two read-only QA subagents in parallel
 
 For an actual rendered surface, independent review is REQUIRED before a "done" claim. Do not self-review and call the UI verified. Dispatch both oracles when the surface and reviewer capability exist; if a reviewer or capture capability is unavailable, record `blocked_capability` and do not claim that oracle passed. Pixel-perfect comparison is REQUIRED only for explicit reference-fidelity work. Give each reviewer every enumerated page, not a sample.
 
-Use one native task dispatch with two tasks so both passes run concurrently, following `skill://ulw-loop/references/omp-contract.md`. Each oracle is read-only: it reviews and reports, it cannot modify files. Each returns PASS, REVISE, or FAIL with concrete, located findings. Pass A proves the surface is a real design-system implementation, not a mock-only or faked-image substitute, and judges behaviour: motion, states, keyboard, platform (checklist G-J). Pass B directly opens screenshots and judges what is seen: layout, hierarchy, text, targets, themes, consistency (checklist A-F), reference fidelity and CJK.
+Use one native task dispatch with two `agent: "reviewer"` entries so both passes run concurrently, following `skill://ulw-loop/references/omp-contract.md`. Each oracle is read-only: it reviews and reports, it cannot modify files or delegate. Each returns its native assessment with concrete, located findings; the parent derives PASS, REVISE, or FAIL only when the evidence supports that verdict. Pass A proves the surface is a real design-system implementation, not a mock-only or faked-image substitute, and judges behaviour: motion, states, keyboard, platform (checklist G-J). Pass B directly opens screenshots and judges what is seen: layout, hierarchy, text, targets, themes, consistency (checklist A-F), reference fidelity and CJK.
 
 Paste evidence directly into each prompt: source code, the plain-text TUI captures, the script JSON, and the screenshot paths plus your described observations for web. Never fork parent history into a reviewer - the message carries everything it needs. Require each blocking finding to be tagged `[product]` (the rendered UI is wrong) or `[evidence]` (the capture artifact is defective - wrong signature, partial compositing, stale file); the loop treats the two differently. The two passes differ in depth by charter, not by any model or effort setting, which cannot be pinned per call.
 
 ### Pass A - Design-system and functional integrity (deeper, strict)
+
+The OUTPUT sections below describe information needed for parent normalization. Ask the specialist to cover it within its native response format, not to replace that format.
 
 ```text
 REVIEW TYPE: DESIGN-SYSTEM AND FUNCTIONAL INTEGRITY (read-only)
@@ -293,7 +295,7 @@ When both passes return, merge them into a single report: one row per checklist 
 
 This is a hard stop rule, not a guideline. The UI is NOT done until ALL applicable conditions hold on the SAME current build:
 
-- Both applicable independent read-only passes returned PASS with no blocking findings (both are required when the surface is rendered and the capability exists).
+- Both applicable independent reviewer assessments support the parent's normalized PASS with no blocking findings and complete coverage (both are required when the surface is rendered and the capability exists).
 - That reviewer judged a FRESH capture of every enumerated page from Step 2 - no stale artifacts, no skipped pages.
 - Every CJK and layout finding is resolved in the rendered output, not merely noted.
 
@@ -338,9 +340,9 @@ node "$SKILL_DIR/scripts/visual-qa.mjs" image-diff <reference.png> <actual.png>
 
    It judges whether layout geometry, spacing, design tokens (color, type, radius, shadow), and the design itself are identical to the target, region by region. Anything off by more than rounding is a finding.
 
-2. Code-level design-system fidelity (code oracle). Dispatch through your harness's own subagent tool.
+2. Code-level design-system fidelity (code oracle). Dispatch through native task with `agent: "reviewer"` inside its `tasks[]` entry.
 
-   Its charter is read-only source/token/DOM/layer fidelity: inspect the current diff, source and reference artifacts; reject pasted-image substitutes, one-off hardcoded styling, wrong hierarchy and unmatched target design. Return the strict reviewer payload described in `references/verdict-schema.json`, with concrete blockers and inspected evidence.
+   Its charter is read-only source/token/DOM/layer fidelity: inspect the current diff, source and reference artifacts; reject pasted-image substitutes, one-off hardcoded styling, wrong hierarchy and unmatched target design. Both reference-fidelity oracles return native assessments with concrete blockers and inspected evidence. The parent preserves each raw response and normalizes the supported findings into `references/verdict-schema.json` under the OMP reviewer output contract; neither oracle must emit that custom schema. Missing evidence or coverage blocks completion.
 
 RULE (mandatory, non-negotiable): the reference-fidelity task is NOT done until BOTH the pixel-compare AND the code-level design-system fidelity reviewer confirm that the **layer structure, the design system, and the design itself** match the target. If EITHER fails, it is a MANDATORY retry: re-implement the gaps and re-run BOTH verifications from the top. Repeat the retry loop until both pass on the same revision. Never declare reference-fidelity complete on a single pass, on visual-only evidence, or on code-only evidence - both oracles must confirm on the same build.
 

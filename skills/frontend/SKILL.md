@@ -1,6 +1,6 @@
 ---
 name: frontend
-description: "Builds, styles, and polishes web UI and UX. Use for any frontend, page, component, styling, layout, animation, or visual-quality task, or when asked to make an interface look or feel a certain way."
+description: "Builds, styles, and polishes web UI and UX, HTML/CSS/SVG reports, figures and diagrams, slides, and print artifacts. Use for frontend, page, component, styling, layout, animation, or visual-quality work, or when asked to make a visual artifact look or feel a certain way; not for plain-prose reports."
 ---
 
 # Frontend

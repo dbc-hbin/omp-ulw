@@ -1,10 +1,44 @@
 import { describe, expect, test } from "bun:test";
-import { rewritePresetPayload } from "./payload";
+import { rewritePresetPayload, rewriteTaskGuidancePayload } from "./payload";
+import { adaptResearchRouting } from "./host";
 
 const oldPreset = "<omp-model-preset>old profile</omp-model-preset>";
 const newPreset = "<omp-model-preset>new profile $& $` $' $$</omp-model-preset>";
 const oldText = `Host instructions\n\n${oldPreset}\n\nProject rules`;
 const newText = `Host instructions\n\n${newPreset}\n\nProject rules`;
+
+test("task routing adaptation preserves transport structure, schemas, unrelated tools and messages", () => {
+	const description = "Read-only research MUST use `scout` only when files unknown.";
+	const schema = { type: "object", properties: { tasks: { type: "array" } }, required: ["tasks"] };
+	const task = { name: "task", description, parameters: schema, strict: true };
+	const other = { name: "custom_task", description, parameters: schema };
+	const changed = { ...task, description: adaptResearchRouting(description) };
+	expect(changed.description).not.toBe(description);
+	const messages = [{ role: "user", content: description }, { role: "tool", content: description }];
+	const shapes = [
+		{ api: "openai-responses", payload: { tools: [{ type: "function", ...task }, { type: "function", ...other }] }, expected: { tools: [{ type: "function", ...changed }, { type: "function", ...other }] } },
+		{ api: "openai-codex-responses", payload: { tools: [{ type: "namespace", name: "functions", tools: [{ type: "function", ...task }] }, { type: "namespace", name: "custom", tools: [{ type: "function", ...task }] }] }, expected: { tools: [{ type: "namespace", name: "functions", tools: [{ type: "function", ...changed }] }, { type: "namespace", name: "custom", tools: [{ type: "function", ...task }] }] } },
+		{ api: "openai-completions", payload: { tools: [{ type: "function", function: task }, { type: "function", function: other }] }, expected: { tools: [{ type: "function", function: changed }, { type: "function", function: other }] } },
+		{ api: "anthropic-messages", payload: { tools: [{ name: task.name, description, input_schema: schema, cache_control: { type: "ephemeral" } }, other] }, expected: { tools: [{ name: task.name, description: changed.description, input_schema: schema, cache_control: { type: "ephemeral" } }, other] } },
+		{ api: "google-generative-ai", payload: { config: { tools: [{ functionDeclarations: [task, other] }] } }, expected: { config: { tools: [{ functionDeclarations: [changed, other] }] } } },
+		{ api: "google-vertex", payload: { tools: [{ functionDeclarations: [task] }] }, expected: { tools: [{ functionDeclarations: [changed] }] } },
+		{ api: "google-gemini-cli", payload: { request: { tools: [{ functionDeclarations: [task] }] } }, expected: { request: { tools: [{ functionDeclarations: [changed] }] } } },
+		{ api: "bedrock-converse-stream", payload: { toolConfig: { tools: [{ toolSpec: task }] } }, expected: { toolConfig: { tools: [{ toolSpec: changed }] } } },
+		{ api: "bedrock-converse-stream", payload: { commandInput: { toolConfig: { tools: [{ toolSpec: task }] } } }, expected: { commandInput: { toolConfig: { tools: [{ toolSpec: changed }] } } } },
+	];
+	for (const { api, payload, expected } of shapes) {
+		const input = { ...payload, messages, metadata: { description } };
+		const snapshot = structuredClone(input);
+		const result = rewriteTaskGuidancePayload(input, api);
+		expect(result).toEqual({ ...expected, messages, metadata: { description } });
+		expect(input).toEqual(snapshot);
+		expect(rewriteTaskGuidancePayload(result, api)).toBe(result);
+	}
+	const custom = { tools: [{ type: "function", function: { ...task, description: "User-authored task contract" } }] };
+	expect(rewriteTaskGuidancePayload(custom, "openai-completions")).toBe(custom);
+	const unknown = { tools: [task], messages };
+	expect(rewriteTaskGuidancePayload(unknown, "unknown-api")).toBe(unknown);
+});
 
 const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = [
 	... ["ollama", "ollama-chat"].map(api => ({

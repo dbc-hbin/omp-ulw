@@ -32,7 +32,9 @@ Planning is read-only against project code. Use a task-owned artifact location f
 
 ## 1. Round 1: independent analysis
 
-Dispatch all five perspectives together: Pragmatist Skeptic, Integration Tester, Autonomous Researcher, Architect Strategist, Creative Challenger. Omit `agent` and put each read-only perspective in its task: these rounds require custom JSON receipts rather than specialist-fixed response formats. Do not substitute fictional architect/artistry roles.
+Dispatch all five perspectives together: Pragmatist Skeptic, Integration Tester, Autonomous Researcher, Architect Strategist, Creative Challenger. Omit `agent` and put each read-only perspective in its task: these rounds develop, debate and refine planning hypotheses rather than perform a separate independent review of an existing plan, code or artifact. Default workers serve that deliberative reasoning role; the JSON receipt format is not the routing reason. Do not substitute fictional architect/artistry roles.
+
+For a separate actual plan, code or artifact assessment, set `tasks[].agent = "reviewer"` (`security-reviewer` only for security scope). Accept its native response format; the parent retains the raw response and normalizes any needed workflow receipt using only observed verdicts, evidence and verified task identity. Missing review coverage remains unresolved, never fabricated PASS. If the required specialist is unavailable, record a capability gap rather than silently using a default worker; custom JSON never justifies bypassing it. This does not turn the perspective debate or planner synthesis into reviewer assignments.
 
 Each child reads relevant project evidence and returns 3-7 stable, numbered findings, each at most three sentences. Finding ids are unique across the run, such as `skeptic-1`. Cite file:line for code, official URLs for library claims, and user statements for preferences; explicitly mark missing evidence. No member sees another's findings yet. No synthesis or executable plan.
 

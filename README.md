@@ -63,6 +63,17 @@ bun test
 
 자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
 
+### 2026-10-22 선별 이식
+
+- **탐색과 추론 분리:** scout는 위치 탐색·근거 수집에 사용하고, 원인 분석·경쟁 가설·계약 트레이드오프·불변식 판단은 부모 또는 적합한 일반 작업자에게 맡깁니다. 읽기 전용은 작업 권한이지 추론 난도가 아닙니다. 탐색으로 해결하지 못한 판단은 근거와 미해결 선택지를 반환해 부모가 처리하거나 다시 배정합니다. 일반 작업자의 수정 금지는 명시하되 읽기 전용 샌드박스로 오인하지 않습니다.
+- `host.ts`는 기본 호스트 템플릿의 Tool Policy에서 알려진 탐색 강제 문구만 보정합니다. `payload.ts`는 지원 provider 요청의 native `task` 설명에 같은 보정을 적용합니다. 도구 이름·인자 스키마·실행·모델 배정은 변경하지 않으며, 프로젝트 지침·사용자 메시지·커스텀 시스템 프롬프트·자식 역할은 보존합니다. OMO의 `deep-high`·`ultrabrain` 카테고리를 OMP 도구 인자로 추가하지 않습니다.
+- 이 보정은 현재 알려진 OMP 문구에 한정됩니다. OpenAI Responses/Codex/Completions, Anthropic, Google 및 Bedrock 도구 설명 경로를 지원하며, provider hook을 거치지 않는 전송과 미지원 요청 형식은 변경하지 않습니다. 역할 이름만으로 큰 모델이 선택된다고 보장하지 않으며, 필요한 모델을 배정할 수 없으면 부모가 추론하거나 해당 제한을 보고합니다.
+- **`wait` 계약:** 시작한 작업뿐 아니라 이번 실행에서 보낸 메시지의 답장을 기다릴 수 있고, 실행 중인 작업과 대기 중인 답장이 모두 없으면 즉시 반환한다는 OMP 18.12.4+ 의미를 공통 계약에 반영했습니다.
+- **시각 재현:** 요청된 스크린샷·영상·3D·도표 재현은 실제 원본과 렌더를 같은 상태·시점·뷰포트에서 비교합니다. 대표 상태는 원본에서 선택하며 고정 프레임 수·새 비교 manifest·별도 반복 횟수를 강제하지 않습니다. 약속한 보고서는 데모와 함께 전달하고, HTML을 선택했을 때만 실제 브라우저 표시와 artifact 링크를 사용합니다.
+- **frontend 범위:** HTML/CSS/SVG 보고서·그림·슬라이드·인쇄 산출물을 포함합니다. 일반 텍스트 답변에는 적용하지 않습니다.
+- **전용 리뷰어:** 코드·계획·산출물 검토는 `tasks[].agent: "reviewer"`를 기본으로 사용하고, 보안 전용 검토만 `security-reviewer`로 보냅니다. 자체 JSON 형식을 이유로 일반 task로 우회하지 않습니다. 부모가 원본 리뷰를 보존하고 필요한 결과 형식으로 변환하며, 누락된 근거·검토 범위·승인·신뢰도를 만들어 채우지 않습니다. 원인 탐색·설계 토론·문서 작성은 별도 작업 성격에 맞는 역할을 유지합니다.
+- 출처: [OMO `d98fe7ac`의 추론 라우팅](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/packages/senpi-task/src/category/openai-categories.ts), [시각 비교 변경](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/changes/unreleased/10812.md), [OMP wait 계약](https://github.com/can1357/oh-my-pi/blob/v18.12.6/packages/coding-agent/src/prompts/tools/wait.md). Senpi `71e88e1`은 기존 pin과 31개 프리셋의 terminal/app 렌더 62개가 동일해 원본 번들을 갱신하지 않았습니다.
+
 ### 2026-10-19 호환성 점검
 
 - upstream 프리셋 후보 `83d3ea5`는 리비전 헤더를 제외하면 기존 프리셋 번들과 동일해 원본 pin을 유지했습니다. `--check`의 `changed:true`는 헤더 변경도 포함하므로 새 프롬프트가 있다는 뜻은 아닙니다.

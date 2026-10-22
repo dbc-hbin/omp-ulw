@@ -2,6 +2,8 @@
 
 Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). Include the appropriate JSON schema below in the task assignment as the required receipt shape; validate the actual terminal response yourself. Do not send outputSchema/schemaMode unless exposed by the current task schema. Every nested object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
 
+These schemas govern deliberative perspective rounds and planner synthesis, which use default workers for their reasoning/writing role, not to evade a specialist's native format. A separate independent review of an existing plan, code or artifact uses `tasks[].agent = "reviewer"` (`security-reviewer` only for security scope). The parent retains that specialist's raw native response and normalizes the needed workflow receipt from observed evidence and verified task identity; do not impose these round schemas on it. Missing coverage or verdicts remain unresolved, not fabricated PASS. An unavailable specialist is a capability gap, not a silent default-worker substitution; output-format incompatibility alone never justifies omitting it.
+
 The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`, `creative`. Stable finding ids are lead-validated, globally unique, and never renumbered between rounds. Evidence strings contain an actual file:line, official URL, user statement provenance, or explicit `no evidence found`; never fabricated citations.
 
 ## Round 1 receipt schema
@@ -120,6 +122,6 @@ await tool.task({
 });
 ```
 
-Omitted `agent` selects the native default. Select a specialist only if that role is listed. The task text supplies exact allowed read paths, no-write scope, perspective instructions, finding id prefix, actual lead id if messaging is needed, and observable completion. Shared material belongs in top-level context, not solutionSpace. Later rounds replace the task instructions and schema with the relevant round contract and evidence bundle.
+Omitted `agent` selects the native default for these deliberative perspective assignments. Separate artifact review follows the reviewer routing and parent normalization rule above; select only listed roles and preserve missing capabilities as gaps. The task text supplies exact allowed read paths, no-write scope, perspective instructions, finding id prefix, actual lead id if messaging is needed, and observable completion. Shared material belongs in top-level context, not solutionSpace. Later rounds replace the task instructions and schema with the relevant round contract and evidence bundle.
 
 Record actual returned child ids before any further action. Native `wait({})` is first-wake: reconcile terminal payloads/messages, keep unfinished ids pending, and repeat only while the next step is blocked. Never advance on the first reply alone. Clarifications use `write` to `agent://<actual-id>` only after that id is returned; logical perspective names are never transport recipients. There is no team SDK or invented category/model field.

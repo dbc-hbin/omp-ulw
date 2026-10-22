@@ -95,6 +95,23 @@ pdftocairo -svg arch.pdf "$SESSION_DIR/assets/arch.svg"   # for an HTML report; 
 - Capture product and page screenshots through the browser skill while the source is open, at a readable width, and crop to the part the claim is about. Caption with the source and the access date.
 - Embed a video in a web report with the platform's embed and a timestamp; in a paginated report, use a still frame from the moment the claim refers to, with the link and timestamp in the caption.
 
+### Reference compare — requested visual reproductions only
+
+Apply this comparison only when the requested deliverable reproduces a screenshot, video, 3D scene, or figure. Merely citing or discussing visual source material does not require a reproduction. The user's instructions and actual reference remain the visual contract, ahead of report-style defaults.
+
+- Inspect the real reference, then select representative states from it: the composition, motion transitions, camera views, or figure details needed to judge the requested fidelity. Do not invent source states or impose a fixed frame count.
+- Capture the actual running or rendered reproduction, not just its source code. Pair source and render at the same source moment or corresponding animation state, viewpoint/camera, viewport, and aspect ratio where applicable. Record timestamps or state/view identifiers and any alignment limits; a different moment or camera angle cannot prove a match.
+- Look at each pair side-by-side. Record concrete gaps in geometry, framing, scale, layout, typography, color, lighting/materials, labels/data, or motion as relevant, and the corrections they motivate. Correct the reproduction against the reference and inspect fresh matching pairs under the existing repair policy; no separate fixed-round loop or comparison manifest is required.
+- Preserve the source/render pairs and first/final captures when useful to show what changed. Put comparison findings and evidence links in the existing report or research journal, and disclose residual gaps or unavailable source/render access rather than claiming unobserved fidelity.
+
+Use existing authorized source access; a reproduction request does not authorize bypassing access restrictions or downloading otherwise unauthorized media. If a video segment is needed and both `yt-dlp` and `ffmpeg` are already available, this conditional example preserves the selected cut:
+
+```bash
+yt-dlp --download-sections "*00:00:12-00:00:18" --force-keyframes-at-cuts --remux-video mp4 -o "$SESSION_DIR/assets/reference.%(ext)s" "<authorized-source-url>"
+```
+
+Choose the interval from the actual reference, not the example. Run long downloads/extractions through native async bash and retain the returned handle; do not use an installer or `uvx` to obtain missing tools. If the capability is missing, retain accessible source links and record the comparison limitation under the existing `blocked_capability` policy.
+
 ### Generated illustrations
 
 Use the image-generation skill only for a cover or a concept illustration that helps the reader, prompted from the design spec's palette and register. Never let generated images carry text, numbers, or logos the reader could read as fact.
@@ -105,8 +122,12 @@ A post by Andrej Karpathy on 2026-10-02 ranks the formats that make model output
 
 - Prose: write in the direction of ASD-STE100 (simplified technical English): short sentences, one idea per sentence, active voice, the same word for the same thing. The post suggests asking for about "80% of the way" when the full spec is too strict.
 - Before writing a long explanation of structure, draw it. A diagram usually replaces several paragraphs.
-- When the destination allows it, prefer a self-contained HTML report with interactive elements (hover values, toggles between series, expandable evidence) over a static document.
+- When the destination allows it and no requested format takes precedence, prefer a self-contained HTML report with interactive elements (hover values, toggles between series, expandable evidence) over a static document. Do not convert a requested chat or text report to HTML.
 - When the requester asks for it, or the topic is a process best seen in motion, an explainer video (for example a 3Blue1Brown-style animation, narrated with a speech API or a local text-to-speech model) is a valid extra deliverable. Record it in `outcome.json` like any other promised format.
+
+Within an explicitly requested ulw-research workflow, deliver the requested report as well as any promised reproduction. A working demo, scene, or video alone does not satisfy a promised report. Include the comparison findings, relevant corrections, evidence links, and residual gaps in that report when reproduction was requested.
+
+When HTML is the selected report format, display the actual report through the exposed OMP browser tools and provide a clickable Markdown artifact link to that same file. Use the existing browser-display approach in `skill://visualize` (open the resolved `file://` URL, or an already available local static server through native async bash if file navigation is refused); this does not import its compact-page or asset-inlining constraints into a report. Inspect the report itself, not only its embedded demo, and leave it open in the browser or a retained task-owned tab. If browser display is unavailable, report that limitation and link the artifact without claiming it was shown. OMP has no inline HTML display API; never call absent `show_html_page` or `html_render` tools.
 
 ## 5. Quality bar
 
@@ -132,4 +153,5 @@ The static gate (`report-tools check`) enforces the machine-checkable rows; visu
 | Each major quantitative finding has a chart and each structural finding has a diagram | visual QA |
 | Diagram and chart text renders in the spec font and is legible at phone width | visual QA |
 | Source videos and screenshots are embedded or linked with attribution where the topic has them | visual QA |
+| A requested visual reproduction is compared side-by-side with the real source at matching states/views; concrete corrections and residual gaps are reported | visual QA, only for requested reproductions |
 | Generated illustrations carry no fake data or text and are captioned as illustrations | visual QA |

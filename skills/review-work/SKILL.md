@@ -41,14 +41,16 @@ Follow repository and host test policy. Capture required reproduction first, the
 
 ## Phase 2 - ONE fresh reviewer
 
-After QA capture, launch one native background task; do independent root teardown/report work while it reads. Omit agent and prescribe read-only reviewer behavior: this workflow requires its own JSON receipt, not a specialist's fixed response format. It cannot implement fixes, modify inputs, spawn agents, or substitute for the root QA. It receives self-contained context, exact scope/diff, goal/constraints/background, current input identity, history findings, code/neighbor paths, QA matrix and existing artifact paths. Use this example only after discovering the actual paths and native task schema:
+After QA capture, launch one native background task with `agent: "reviewer"` inside its `tasks[]` entry; do independent root teardown/report work while it reads. Use `security-reviewer` instead only for an explicitly security-only review. Do not omit the specialist merely to obtain custom JSON. The reviewer uses its native response format and cannot implement fixes, modify inputs, spawn agents, or substitute for the root QA. It receives self-contained context, exact scope/diff, goal/constraints/background, current input identity, history findings, code/neighbor paths, QA matrix and existing artifact paths. If the required specialist is not advertised, report the capability gap rather than silently treating a general worker as an equivalent review. Use this example only after discovering the actual paths and native task schema:
+
+The receipt schema below belongs to the parent. Preserve the reviewer's raw terminal response and derive the receipt from its actual findings, assessment and coverage plus the parent's bound input identity and QA records. A native no-findings result is not automatically APPROVE: the parent must establish that the requested scope and applicable QA were covered. Do not invent a reviewer confidence, finding, checked criterion or approval that the response does not support. Missing substantive coverage leaves the gate INCONCLUSIVE; JSON formatting alone is not a failed review.
 
 ```js
 const reviewReceiptSchema = {
       type:"object",
       properties:{
         verdict:{type:"string",enum:["APPROVE","REJECT","INCONCLUSIVE"]},
-        confidence:{type:"string",enum:["HIGH","MEDIUM","LOW"]},
+        confidence:{type:["string","null"],enum:["HIGH","MEDIUM","LOW",null]},
         summary:{type:"string"},
         contentIdentity:{type:"string"},
         goalBreakdown:{type:"array",items:{type:"object",properties:{criterion:{type:"string"},status:{type:"string",enum:["ACHIEVED","MISSED","PARTIAL"]},evidence:{type:"string"}},required:["criterion","status","evidence"],additionalProperties:false}},
@@ -64,14 +66,15 @@ await tool.task({
   context: "Review the final change and root QA recorded at local://submit-review-inputs.md. That artifact contains the original goal, all constraints, exact current diff/content identity, source paths, history findings and QA matrix with evidence paths. No writes or nested delegation.",
   tasks: [{
     name: "SubmitGate",
-    task: "TASK: Gate-review the completed submit change against the supplied goal/constraints and audit every QA artifact. Read skill://review-work and local://submit-review-inputs.md. DELIVERABLE: the strict verdict receipt, criterion evidence and exact blockers/notes. SCOPE: read-only paths and final diff recorded in the input artifact, no fixes or new product requirements. VERIFY: apply all eight checklist items in that skill; inspect every QA artifact, missing proof is unproven. STOP WHEN: every goal/constraint/QA row is assessed and APPROVE/REJECT/INCONCLUSIVE with confidence is recorded." + "\nReturn JSON matching: " + JSON.stringify(reviewReceiptSchema),
+    agent: "reviewer",
+    task: "TASK: Gate-review the completed submit change against the supplied goal/constraints and audit every QA artifact. Read skill://review-work and local://submit-review-inputs.md. DELIVERABLE: use your native review format for findings, assessment, evidence coverage and unverified criteria; the parent creates the workflow receipt. SCOPE: read-only paths and final diff recorded in the input artifact, no fixes or new product requirements. VERIFY: apply all eight checklist items in that skill; inspect every QA artifact, missing proof is unproven. STOP WHEN: the assigned scope and evidence are assessed and concrete blockers or remaining uncertainty are reported. Do not spawn agents.",
     solutionSpace: "Approval is uncertain; skeptically falsify the submitted claims using current code and artifacts, without judging hypothetical future designs."
 
   }]
 });
 ```
 
-Replace the example input artifact with the actual root-owned artifact, never a nonexistent prompt path. Pass context + tasks; no category, model, or agent:task for the ordinary reviewer. Record requested role and actual resolved identity. Use `model` or `sourceSession` only when the exposed `seance` agent is explicitly requested for historical consultation, never to pin the reviewer's ordinary model. A valid schema alone does not approve a stale tree or nonexistent artifacts.
+Replace the example input artifact with the actual root-owned artifact, never a nonexistent prompt path. Pass context + tasks, with the specialist selector inside the task entry, never at the top level. Record requested role and actual resolved identity; do not invent category or model pins. The parent validates its normalized receipt against reviewReceiptSchema; confidence is null if the reviewer supplied none. Keep the raw response alongside the receipt and distinguish parent normalization from the reviewer's words. A valid schema alone does not approve a stale tree or nonexistent artifacts.
 
 ### Reviewer checklist (complete, not a subset)
 
@@ -84,13 +87,13 @@ Replace the example input artifact with the actual root-owned artifact, never a 
 7. QA evidence audit: every artifact exists, proves its row and matches final inputs; identify uncovered criteria. Implementer claims are unverified until artifacts support them.
 8. Scope: unrequested abstractions/speculation are notes unless they violate a stated constraint or behavior. Do not reject because another approach seems optimal.
 
-APPROVE only with complete evidence, no blockers and all applicable QA rows verified. REJECT cites a violated goal/constraint/QA row -> observed failure/missing required artifact -> file:line/artifact -> exact fix. An unresolved tool/output contract is INCONCLUSIVE, not inferred approval. Style preferences and hypothetical future scenarios are notes.
+The parent normalizes APPROVE only with complete evidence, no blockers and all applicable QA rows verified, supported by the native reviewer assessment. REJECT cites a violated goal/constraint/QA row -> observed failure/missing required artifact -> file:line/artifact -> exact fix. An unresolved tool/output contract is INCONCLUSIVE, not inferred approval. Style preferences and hypothetical future scenarios are notes.
 
 ## Phase 3 - Collect receipts and cleanup
 
-Record actual returned child id in a pending set. Native wait({}) wakes on first settled result/message/steering, not a wave barrier. Reconcile the actual id; remove only terminal children, keep running entries pending and continue independent root work. Confirm terminal status and validate the requested receipt fields in the actual task/wait response or agent:// payload; wrapper text, acknowledgements, silence, timeout and still-running snapshots are not verdicts. Missing/invalid required receipt is a contract failure. Never replace a live reviewer just because it is slow.
+Record actual returned child id in a pending set. Native wait({}) wakes on first settled result/message/steering, not a wave barrier. Reconcile the actual id; remove only terminal children, keep running entries pending and continue independent root work. Confirm terminal status, retain the actual task/wait response or agent:// payload and normalize its substantive assessment into the parent-owned receipt. Wrapper text, acknowledgements, silence, timeout and still-running snapshots are not verdicts. Validate the normalized fields without requiring the specialist to emit the workflow's JSON; unsupported coverage remains unresolved. Never replace a live reviewer just because it is slow.
 
-After terminal failure/missing payload, retain current QA and launch one fresh, smaller replacement with the exact failure; no concurrent review panel. One replacement is the retry bound for a review receipt. A valid re-review after authorized fixes is a fresh reviewer with delta + updated current evidence, never re-tasking a stale reviewer. Report unresolved failure as INCONCLUSIVE if the capability cannot supply a receipt; do not claim review passed. Recover a blocked review only after explicit user direction supplies the missing capability or accepts the unresolved gate.
+After terminal failure or missing substantive assessment, retain current QA and launch one fresh, smaller reviewer replacement with the exact failure; no concurrent review panel. One replacement is the retry bound for a review. Do not respawn merely because native output is not the workflow's JSON. A valid re-review after authorized fixes is a fresh reviewer with delta + updated current evidence, never re-tasking a stale reviewer. Report unresolved evidence or reviewer capability gaps as INCONCLUSIVE; do not claim review passed. Recover a blocked review only after explicit user direction supplies the missing capability or accepts the unresolved gate.
 
 For review-only requests, root fixes require separate authorization; for an explicit review-and-fix request, apply only the minimal confirmed blocker fixes described above. Changed content stales dependent QA and approval. Run affected QA/checks and collect a fresh review after fixes. Stop only root-owned service/browser handles, preserve requested artifacts and cleanup receipts; optional owned worktree cleanup waits for terminal reviewer collection and must preserve user work. No force removal.
 
@@ -100,7 +103,7 @@ For review-only requests, root fixes require separate authorization; for an expl
 - FAILED: any QA FAIL or valid REJECT; failing rows first, then deduplicated blockers in fix order.
 - INCONCLUSIVE: neither failed nor fully proven, including missing receipt/artifact, stale evidence or blocked required QA.
 
-Report overall verdict; both lanes' verdict/confidence with row/artifact counts; content identity and artifact pointers; blockers with exact fixes; nonblocking findings grouped by quality/security/context; missing capabilities and cleanup status. A passing report stays short; never turn notes into unrequested work.
+Report overall verdict; root QA outcome and reviewer assessment, confidence only when supplied, and the parent's normalized gate decision; content identity and evidence pointers; blockers with exact fixes; nonblocking findings grouped by quality/security/context; missing capabilities and cleanup status. A passing report stays short; never turn notes into unrequested work.
 
 ## Source
 

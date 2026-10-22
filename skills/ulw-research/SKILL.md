@@ -44,6 +44,8 @@ The research is done when all of these hold:
 - Every claim in the deliverable cites a source or a verification artifact.
 - Every asserted claim is represented in the claim graph, tied to an intent-vs-reality diff when an expected truth exists, and backed by observation manifest entries from independent observation groups or a documented single-source exception; convergence or exception status is explicit.
 - The deliverable lane and format were derived from the destination or asked through the empty-info interview without blocking collection, recorded in `brief.md` with `answered_by`, and the final materials match that record.
+- The requested report and every promised reproduction are delivered or explicitly accounted for; a demo alone does not replace a report. A selected HTML report is displayed through actual OMP browser tools and linked as an artifact, or its display limitation is disclosed; chat/text reports remain in their requested format.
+- When a requested deliverable reproduces a screenshot, video, 3D scene, or figure, actual source/render pairs were inspected side-by-side at matching states, viewpoints, viewports, and aspect ratios where applicable, with concrete gaps, relevant corrections, and residual limitations recorded under [Reference compare](references/report-visualization.md#reference-compare--requested-visual-reproductions-only).
 - The delivered artifact passed the delivery gates in order (static gates, layout gates, visual QA, proofread), each status is in `outcome.json`, and `outcome verify` passed.
 - Every excursion opened during the run was closed by an EXIT rule, folded back into the claim or axis that triggered it, and recorded in both `excursion-log.md` and the ulw-loop ledger.
 - The delivery message carries the closing briefing printed by `outcome briefing`: sources (total + unique domains), elapsed minutes, every promised deliverable with its status, and any residual defects.
@@ -290,6 +292,8 @@ Members + lanes: <total> · Waves: <count> · Excursions: <count> · Sources: <c
 
 ## Phase 6 — Final materials, then teardown
 
+Read [the visualization playbook](references/report-visualization.md) before applicable asset work. When reproduction is requested, use its Reference compare guidance for source/render evidence; when HTML is selected, use its actual browser-display handoff. These requirements apply within this explicitly activated research workflow, not to unrelated visual tasks.
+
 The promised formats recorded in `brief.md` and `outcome.json` are binding; `pdf` + `docx` is the default pair only when a document was asked for with no format word and no destination:
 
 | Target | How |
@@ -323,12 +327,14 @@ Nothing reaches the user until the gates pass. Record each result with `node "$S
 
 1. **Static gates (always, before anyone looks at pixels).** Run the check command: it enforces visual evidence only for quantitative/structural claims when the capability is available; claim-free text reports record `not_applicable`. It also checks keep-all, palette tokens, emoji, em dashes, heading length, unsourced numbers, figure containers, chart text, image alternatives, fonts, citations, closing/sources sections, and broken assets.
 2. **Layout gates.** Print the probe with `node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json`, evaluate its `source` in the rendered page through the actual native browser page JavaScript route using its exposed contract, save the result as `$SESSION_DIR/boxes.json`, and re-run `check` with `--layout "$SESSION_DIR/boxes.json"` (overflow, clipped text, distorted images, overlapping siblings).
-3. **Visual QA.** Render the produced artifact back to images — PDF pages to PNG, the HTML through the browser skill at desktop and phone widths — and look at them: missing or broken figures, images stretched or spilling their containers, diagram or chart text rendered off the spec's font or palette, clipped tables, overflowing CJK text, blank pages, unlabeled chart values, wrong page breaks. Reading the source markup is not visual QA; inspect the pixels.
+3. **Visual QA.** Render the produced artifact back to images — PDF pages to PNG, the HTML through the browser skill at desktop and phone widths — and look at them: missing or broken figures, images stretched or spilling their containers, diagram or chart text rendered off the spec's font or palette, clipped tables, overflowing CJK text, blank pages, unlabeled chart values, wrong page breaks. Reading the source markup is not visual QA; inspect the pixels. For requested visual reproductions, also inspect matching source/render pairs using the visualization playbook's Reference compare guidance and record concrete gaps and corrections.
 4. **Proofread gate — native OMP task with tasks entries.** Assign a default worker a writing-only charter: grammar, spelling, punctuation, terminology consistency, and native register. It proofreads only and never composes. It returns a defect list; fix every item and re-run the gate on the delta.
 
 **Repair is bounded.** After every gate run that found defects, ask `node "$SKILL_DIR/scripts/report-tools.mjs" repair decide --state "$SESSION_DIR/repair-state.json" --defects "$SESSION_DIR/defects.json" --artifact-bytes <bytes> --renders <pages> --session-dir "$SESSION_DIR"` and obey it: `repair` means fix and re-run; `deliver` means stop and ship with the residual defects the manifest now lists; `block` means a content-integrity defect remains (or there is no usable artifact), so do not deliver: tell the user what blocks it and record the row as `failed` with the reason. Never repair past a stop decision (3 attempts, a 2-attempt plateau, an oscillation, or 15 minutes; the reference's section 8).
 
 Then resolve every manifest row (`outcome set <format> delivered --path <file>` or `blocked_capability` / `skipped` / `failed` with `--reason`) and deliver: the artifact plus a compact chat-readable summary of what it says — the answer in a few sentences, the numbers that matter, and what to look at first. The document is the deliverable; the summary is what gets it read.
+
+Deliver the requested report alongside any promised reproduction, with comparison findings and residual gaps where applicable; showing only a demo is not report delivery. For a selected HTML report, open and inspect the report itself through actual OMP browser tools and provide its artifact link as described in the visualization playbook. Disclose unavailable display capability rather than inventing an inline preview. Do not force HTML on chat/text reports.
 
 ### The closing briefing — every run ends with it
 
