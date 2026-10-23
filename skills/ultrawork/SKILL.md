@@ -493,13 +493,16 @@ records a self-review in the notepad instead. Same for LIGHT tier.
 Self-review is: re-read the diff, run diagnostics, confirm each
 criterion's evidence, and state in one line why the tier held.
 Plan review and consultation are assignments for listed native workers,
-not plan-reviewer or plan-consultant agent names. Host-required reviews
+not invented plan-reviewer or plan-consultant agent names. Use an advertised
+specialist only when its role covers that deliverable; otherwise assign a
+default worker explicit read-only scope. The bundled reviewer assesses bugs
+introduced by code diffs, not plan feasibility or architecture advice. Host-required reviews
 still apply even when this skill's optional plan gate does not.
 
 Procedure (NON-NEGOTIABLE):
 1. Spawn a reviewer child through native OMP task dispatch with a self-contained reviewer
-   assignment payload — the available reviewer agent for read-only review, or a
-   review worker when the review must run code. Pass: goal, success-criteria, scenario evidence, full diff,
+   assignment payload — the reviewer agent for code-diff review, or a
+   default worker for plan analysis or required runtime QA, with exact permissions. Pass: goal, success-criteria, scenario evidence, full diff,
    notepad path.
 2. Verify each reviewer concern yourself. A concern blocks only when
    it names a success criterion the evidence fails; record concerns

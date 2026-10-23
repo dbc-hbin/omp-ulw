@@ -38,15 +38,16 @@ Reading this file is not planning. Before `start`, write the run plan in one bre
 
 ## Category routing
 
-`category` is a planning label, not an OMP task field or agent name. Map it through the role-selection contract in ../../ulw-loop/references/omp-contract.md: sonic only for prescribed mechanical work, scout for exploratory read-only discovery, default task with agent omitted for ordinary implementation, listed senior-task for difficult reasoning, and reviewer/security-reviewer for reviews. OMP owns model/fallback selection; record the actual resolved model after the result. **Start every node at `quick` and climb the ladder only as far as the work's difficulty demands. Specialty categories are never rungs - they are chosen only when the work itself is specialty.**
+`category` is a planning label, not an OMP task field or agent name. Map it through the role-selection contract in ../../ulw-loop/references/omp-contract.md: prefer sonic for prescribed mechanical work, scout for exploratory read-only discovery, default task with agent omitted for evidence-resolvable implementation, and an actually listed reasoning specialist or the parent for difficult decisions. Use reviewer for code-diff review and security-reviewer for repository vulnerability analysis, not generic planning or research critique. OMP owns model/fallback selection; record the actual resolved model after the result. **Choose the role by the deliverable and permissions, then assess the unresolved decisions. Specialty categories are not difficulty rungs.**
 
-The difficulty ladder, bottom rung first:
+For execution, distinguish these work shapes:
 
-1. **`quick`** - THE DEFAULT. Mechanical, single-file, or pattern-following work. Every node starts here in your head; you need a reason to leave it.
-2. **`unspecified-low`** - the piece is small but not mechanical: a few files, or a judgment call a template cannot make.
-3. **`unspecified-high`** - a standard multi-file feature or fix with real integration surface.
+1. **`quick`** - prescribed mechanical work with exact inputs, steps, forbidden deviations and acceptance checks. Prefer sonic when delegation saves work; neither a small diff nor a single file proves the task is mechanical.
+2. **`deep-low`** - one coherent implementation whose decisions can be settled from code, tests and history. Use the default worker; it owns investigation and dependent edits.
+3. **`unspecified-low/high`** - no specialist fits; distinguish contained work from broad integration surface without claiming breadth requires deeper reasoning.
+4. **`deep-high` / `ultrabrain`** - name the unresolved trade-off, boundary contract, novel mechanism or invariant argument. The former still delivers implementation; the latter makes reasoning the deliverable. These are brief metadata, not OMP agent selectors.
 
-Escalate a node only with a one-line reason you could say out loud ("touches six files across three packages") - and only AFTER the split-first doctrine has been applied: a chunk that decomposes into safe parallel `quick` pieces was never a ladder candidate. If you cannot name the reason, the node stays at `quick`.
+Escalate by naming the decision, not the file count. If a worker discovers a decision beyond its brief, it stops before the affected edit and returns inspected evidence, alternatives and what would distinguish them. The parent resolves it or routes the same brief plus findings to a suitable reasoning worker. Split off a sonic batch only when its transformation and boundary are already settled and coordination plus verification will not cost more than it saves; do not fragment one coherent investigation merely to use a cheaper role.
 
 Specialty categories - chosen by the KIND of work, never by difficulty:
 

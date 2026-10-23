@@ -117,11 +117,11 @@ A spawned worker is not fire-and-forget. For EACH subagent in the burst, name th
 
 ### Delegation router — recommended task executor category
 
-When the plan annotates a todo with `Recommended task executor category:`, treat it as difficulty/specialty metadata and map it to a listed OMP role under ../ulw-loop/references/omp-contract.md. Never send category in a task entry. Do not send model for ordinary workers; use model/sourceSession only with the exposed `seance` agent for read-only historical consultation. Omit agent for default task work; choose sonic only for mechanical assignments, scout for exploratory discovery, listed senior-task for difficult reasoning, and reviewer/security-reviewer for reviews. Record any deviation in the ledger and the actual resolved model only after the result. Otherwise classify by shape using the labels below:
+When the plan annotates a todo with `Recommended task executor category:`, treat it as difficulty/specialty metadata and map it to a listed OMP role under ../ulw-loop/references/omp-contract.md. Never send category in a task entry. Use model/effort controls only when the active schema and host policy allow them; sourceSession is for the exposed seance historical consult. Omit agent for evidence-resolvable implementation; prefer sonic for prescribed mechanical assignments, scout for discovery, and an actually advertised reasoning specialist or the parent for unresolved decisions. Use reviewer for code-diff bugs and security-reviewer for repository vulnerability analysis; plan/advisory evaluation needs a role-compatible specialist or an explicitly read-only default worker. Record any deviation in the ledger and the actual resolved model only after the result. Otherwise classify by shape using the labels below:
 
 | Category | Route here |
 | --- | --- |
-| `quick` (low) | mechanical, single-file, boilerplate, config/copy — the default for every splittable piece |
+| `quick` (low) | prescribed mechanical transformation or fixed data collection with explicit steps, forbidden scope and acceptance; small size alone is insufficient |
 | `unspecified-low` (low) | small tasks that fit no other category |
 | `unspecified-high` (medium) | standard features across a few files with known patterns |
 | `visual-engineering` (medium) | frontend, UI/UX, styling, animation |
@@ -133,7 +133,7 @@ When the plan annotates a todo with `Recommended task executor category:`, treat
 
 Sizing is a two-branch decision made per checkbox, before dispatch:
 
-- **Splittable work splits.** When the checkbox decomposes into independent pieces, dispatch them as a swarm of `quick`/`unspecified-low` workers in ONE parallel burst — many small cheap workers in parallel beat one large delegation.
+- **Independent work can split.** Dispatch independently meaningful pieces together when saved work exceeds briefing, coordination and verification costs. Prefer sonic for pieces with settled transformations, not merely pieces small enough to label `quick`.
 - **Cohesive hard work stays whole.** When splitting would sever shared reasoning (one algorithm, one migration, one subtle bug), send the WHOLE problem to `deep-low`, `deep-high` or `ultrabrain` as ONE delegation. Never force-split work whose parts share one insight.
 
 Each sub-task message must include:
