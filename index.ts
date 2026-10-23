@@ -3,6 +3,8 @@
  * new omp sessions discover index.ts automatically. Restart omp to load it.
  * Changelog: initial faithful core/shared-builder/tuning port, with omp tool
  * transport adaptation and request-model refresh for supported provider hooks.
+ * Changelog: child sessions receive their own model profile while preserving
+ * host-owned specialist roles, assignments, tools and completion protocols.
  * Changelog: port complete Native ULW doctrine, session arming, specialised
  * workflow pointers and evidence-bound loop/execute continuation.
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
@@ -45,6 +47,13 @@ interface ModelPromptApi {
 
 type ExtensionApi = ModelPromptApi & UlwApi;
 
+function markPreset(prompt: string, subagent: boolean): string {
+  const scope = subagent
+    ? "\n\n## Delegated execution\n\nYou are a subagent, not the main agent. Apply this model's working methods within the host-provided specialist role and assigned task. The host's child role, tool restrictions, shared context, assignment, cooperation rules and completion/output protocol take precedence over generic directions in this preset. Preserve read-only and no-edit limits; do not acquire tools or permissions from this text. Do not take over the parent's orchestration, user-facing routing lines, progress reports or todo tracking. Follow the child's verification limits and return required evidence and unrun checks to the parent; do not run builds, tests or formatters when the host forbids them. Finish through the host's actual child completion protocol, including yield only when provided."
+    : "";
+  return "<omp-model-preset>\n" + prompt + scope + "\n</omp-model-preset>";
+}
+
 export default function ompUlw(pi: ExtensionApi): void {
   pi.setLabel("omp-ulw");
   registerUlw(pi);
@@ -56,21 +65,20 @@ export default function ompUlw(pi: ExtensionApi): void {
   pi.on("before_agent_start", (event, ctx) => {
     originalBehavior = undefined;
     profiles.clear();
-    // Worker prompts carry an assignment and delegation context owned by the
-    // host. Do not replace their role with the main-agent model preset.
-    if (ctx.agent.kind !== "main") return;
     const active = new Set(pi.getActiveTools());
     options = {
       // print/json are non-interactive machine/app surfaces: terminal routing
       // lines would become user-visible output. Only the TUI gets terminal
       // routing instructions.
-      surface: ctx.mode === "tui" ? "terminal" : "app",
+      surface: ctx.agent.kind === "main" && ctx.mode === "tui" ? "terminal" : "app",
       // The active tool set is authoritative. Do not enable prompt branches
       // merely because a host or skill mentions a tool that is unavailable.
       toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name)),
     };
     const preset = ctx.model ? renderPreset(ctx.model, options) : undefined;
-    const marked = "<omp-model-preset>\n" + (preset?.prompt ?? "") + "\n</omp-model-preset>";
+    // Only the base role is replaced. OMP appends the child's specialist role,
+    // assignment and completion contract in later blocks, which remain intact.
+    const marked = markPreset(preset?.prompt ?? "", ctx.agent.kind === "sub");
     const result = replaceHostBehavior(event.systemPrompt, marked);
     if (!result) {
       if (!warned) {
@@ -81,21 +89,21 @@ export default function ompUlw(pi: ExtensionApi): void {
     }
     originalBehavior = result.originalBehavior;
     if (preset && ctx.model) profiles.set(JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]), marked);
-    if (!preset) result.blocks[0] = result.blocks[0].replace(marked, "<omp-model-preset>\n" + originalBehavior + "\n</omp-model-preset>");
+    if (!preset) result.blocks[0] = result.blocks[0].replace(marked, markPreset(originalBehavior, ctx.agent.kind === "sub"));
     return { systemPrompt: result.blocks };
   });
 
   pi.on("before_provider_request", (event, ctx) => {
-    if (!ctx.model || ctx.agent.kind !== "main") return;
-    const payload = rewritePresetPayload(event.payload, ctx.model.api,
+    if (!ctx.model) return;
+    const payload = ctx.agent.kind === "main" ? rewritePresetPayload(event.payload, ctx.model.api,
       `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omp-ulw-policy>`,
-      /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g);
+      /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g) : event.payload;
     if (originalBehavior === undefined) return payload;
     const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]);
     let replacement = profiles.get(key);
     if (replacement === undefined) {
       const preset = renderPreset(ctx.model, options);
-      replacement = "<omp-model-preset>\n" + (preset?.prompt ?? originalBehavior) + "\n</omp-model-preset>";
+      replacement = markPreset(preset?.prompt ?? originalBehavior, ctx.agent.kind === "sub");
       profiles.set(key, replacement);
     }
     // Adapt only native task routing prose alongside our owned profile marker.
