@@ -9,7 +9,7 @@ Resolve relative reference paths from this skill's directory, not the project wo
 
 This file is a router, not a rulebook. The rules live in four rulesets under `references/`, and reading them is the work, not the preamble to it. Before touching any file, name the references the request routes to and the one reason each is needed, then read exactly those. Declaring the set first is what makes the choice reviewable: a reference you never named is one you decided to skip, and a reference you named but never opened is a gap you still owe. Freestyling past the routed set produces the generic AI-slop output this skill exists to prevent.
 
-**The bar is not clean-and-correct — it is work a senior designer at Linear, Stripe, or Supabase would ship.** Correct-but-flat is a failure, not a finish. Protect the surface as hard as you protect the build: design is a first-class deliverable, not a one-shot decision you lock and walk away from.
+**Match the design ambition to the brief.** Ordinary dashboards, admin tools, and reports prioritize useful hierarchy, readable data, and a clear main action. Small edits follow styled sibling components and the minimum relevant references. Expressive material, atmosphere, and high-craft exploration belong to briefs that request them or references that require them; the design references' premium/flatness guidance does not impose that ambition on ordinary work. Protect the requested visual quality alongside behavior and accessibility.
 
 ## OMP runtime and platform boundary
 
@@ -36,6 +36,8 @@ Read `references/runtime.md` before browser, image generation or audit setup. Ge
 **For explicit high-craft implementation or audit work, design + perfection load together.** Ordinary UI work follows the existing project's tools and visual language without inventing an audit or research program.
 
 **Draft guard:** before adding a decorative or state accent stripe to a rounded surface, prefer a tonal surface, accent-ink heading/eyebrow, glyph, or spacing; selection can use ink-alpha washes. This includes one-sided borders, pseudo-element bars, inset-shadow stripes, gradient `border-image`, and thin hard-stop gradient bands. The user's explicit reference and established project design language take precedence over this default; preserve visible keyboard focus, validation cues, neutral hairlines, and table rules.
+
+Before adding decorative badges, stat tiles that do not help a decision, or subtitles that repeat a heading, check whether they serve the user's task; omit unnecessary additions rather than filling space. Never invent testimonials or customer counts. Subtraction must preserve required inputs, data, and copy. This is a guard on the draft, not permission to remove existing content or override an explicit reference or established design language.
 
 ## Design System and Component Workflow
 

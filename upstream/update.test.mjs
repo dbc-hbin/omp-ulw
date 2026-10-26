@@ -50,8 +50,30 @@ test("failed requests, invalid revisions and missing source contracts fail gener
   await expect(generate("main", sourceRequest(new Map([["gpt-6-astra.ts", "export const GPT6_ASTRA_RULES = [];\n"]])))).rejects.toThrow("Missing upstream rule");
 });
 
+test("approved shared model modules are bundled from the same pinned revision", async () => {
+  const calls = [];
+  const request = sourceRequest(new Map([["presets.ts", `
+import { isFable55ModelId } from "@earendil-works/pi-ai/utils/fable55-launch";
+export function buildPreset(name) { return { name, prompt: "x".repeat(1100) }; }
+export function resolvePresetName(model) { return isFable55ModelId(model.id) ? "fixture" : undefined; }
+`]]), calls);
+  const sharedUrl = `https://raw.githubusercontent.com/code-yeongyu/senpi/${revision}/packages/ai/src/utils/fable55-launch.ts`;
+  const generated = await generate("main", async url => {
+    if (url === sharedUrl) {
+      calls.push(url);
+      return new Response('export function isFable55ModelId(id) { return id === "claude-fable-5-5"; }');
+    }
+    return request(url);
+  });
+  expect(calls.filter(url => url === sharedUrl)).toHaveLength(1);
+  const module = await import(`data:text/javascript;base64,${Buffer.from(generated.content).toString("base64")}`);
+  expect(module.resolvePresetName({ id: "claude-fable-5-5" })).toBe("fixture");
+  expect(module.resolvePresetName({ id: "claude-fable-5" })).toBeUndefined();
+  expect(new Bun.Transpiler({ loader: "js" }).scanImports(generated.content)).toEqual([]);
+});
+
 test("new external or out-of-scope imports require an explicit adapter update", async () => {
-  for (const dependency of ["node:fs", "../../../../../../outside.ts"]) {
+  for (const dependency of ["node:fs", "@earendil-works/pi-ai/utils/other", "../../../../../../outside.ts"]) {
     const source = `import * as dependency from ${JSON.stringify(dependency)};
 export function buildPreset(name) { return { name, prompt: "x".repeat(1100) + typeof dependency.readFileSync }; }
 export function resolvePresetName() { return "fixture"; }`;

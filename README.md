@@ -33,7 +33,7 @@ equivalent OMP runtime API for them.
 
 ## 모델별 프롬프트 위치
 
-- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Haiku 5.5와 Gemini 4 Argon을 포함한 31개 프리셋과 원본 리비전·라이선스를 담습니다.
+- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 출시 준비용 Fable 5.5를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 프리셋 등록은 모델 출시나 기본 모델 추천을 의미하지 않습니다.
 - [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
 - [`index.ts`](index.ts): 메인과 일반 서브에이전트의 턴 시작 시 각 세션의 모델 프롬프트를 적용하고, 지원 provider 요청 훅에서 모델 변경을 반영합니다.
 - [`upstream/update.mjs`](upstream/update.mjs): upstream 프롬프트 소스를 고정 SHA로 받아 로컬 프리셋을 생성합니다. 바이너리 추출이나 별도 에이전트 패키지 설치는 필요 없습니다.
@@ -66,6 +66,17 @@ bun test
 명령은 먼저 ref를 커밋 SHA로 고정하고 그 SHA의 소스만 내려받습니다. 빌드·모든 프리셋 렌더링 검사가 성공한 뒤 `upstream/presets.js` 한 파일을 원자적으로 교체합니다. 다운로드·검증 실패 시 기존 파일은 유지합니다. `--ref`를 생략하면 `main`이며, GitHub API 제한이 있으면 `GITHUB_TOKEN`을 사용할 수 있습니다. 재현하려면 생성 파일 첫 줄의 SHA를 `--ref`로 전달합니다.
 
 자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
+
+### 2026-10-26 선별 이식
+
+- **프리셋 갱신:** Senpi `a854e7acffa90aba674b9454279035a2fb7140f4`로 고정했습니다. 갱신기는 새 `@earendil-works/pi-ai/utils/fable55-launch` 의존성만 명시적으로 허용하고, 다른 소스와 같은 SHA에서 내려받아 번들에 포함합니다. 임의 패키지 import와 허용 범위 밖 소스는 계속 거부합니다.
+- **모델 선택:** Kimi Code의 `k3.1-pro`와 K3.1 별칭은 전용 `kimi-k3-1`로, Fable/Mythos 5.5는 구형 Fable 5 대신 5.1 프롬프트를 재사용하는 `claude-fable-5-5`로 선택됩니다. 이 SHA에서 Fable 5.5는 아직 출시 준비 상태이며, 모델 기본값·제공자·권한을 변경하지 않습니다.
+- **Frontend:** 일반 UI는 주 행동과 정보 위계를 우선하며, 고급 연출을 무조건 요구하지 않습니다. 불필요한 장식·반복 정보·꾸며낸 사회적 증거는 줄이되 필수 입력·데이터·문구와 사용자 레퍼런스는 보존합니다.
+- **Visual QA:** 기존 UI 수정은 가능한 경우 수정 전 baseline을 확보해 같은 상태의 결과와 비교합니다. 실제 결함과 취향 차이를 구분하며, 취향만으로 수정 루프를 반복하지 않습니다. 명시적 레퍼런스 불일치와 필수 콘텐츠 손실은 결함입니다.
+- **리서치 교정:** 교정 후 영향을 받은 사실·숫자·한정어·출처 연결을 원본과 재대조하고 무효화된 검증만 다시 수행합니다. 별도 fact-ledger 실행 도구나 새 검증 명령은 도입하지 않습니다.
+- **OMP:** 설치본과 최신 정식 릴리스 `18.12.6`의 계약을 유지합니다. 미출시 main의 `/resume` background-job 취소 동작은 아직 현재 런타임의 보장으로 문서화하지 않습니다.
+
+출처: [Senpi 프리셋 변경 기록](https://github.com/code-yeongyu/senpi/blob/a854e7acffa90aba674b9454279035a2fb7140f4/packages/coding-agent/src/core/extensions/builtin/prompt-preset/changes.md), [OMO frontend·visual-qa 변경](https://github.com/code-yeongyu/oh-my-openagent/commit/9d731da51c1ee9bee8a337851263ce7d2d26a1d4), [OMO 리서치 교정 계약](https://github.com/code-yeongyu/oh-my-openagent/commit/637d524ba33c1631e5e7d2e245e64077dd733aa7).
 
 ### 2026-10-23 위임 역할 대조와 이식
 

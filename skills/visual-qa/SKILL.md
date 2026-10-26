@@ -11,7 +11,7 @@ Verify a rendered UI against the platform baseline, against its reference when o
 
 ## Purpose and when to use
 
-- Use after you build or change a rendered UI, before calling it done. Covers web/page UIs, TUI/terminal UIs, and paginated documents.
+- Use after building or changing a rendered UI, before calling it done; for existing UI, also capture its baseline before edits when available. Covers web/page UIs, TUI/terminal UIs, and paginated documents.
 - Use with or without a reference: a mock, a baseline, or a source site when one exists; otherwise the checklist is the reference. Also when you suspect a regression, when CJK (Korean/Japanese/Chinese) text may clip, misalign, or wrap awkwardly, when a claimed design system might actually be a flat image, or when a terminal layout may overflow or its borders may break.
 - Skip when there is no rendered surface (pure backend or library logic with no visual or terminal output). For broad post-implementation review use review-work; this skill is the visual specialist.
 
@@ -27,6 +27,12 @@ In the commands below, set `SKILL_DIR` to the observed absolute directory contai
 If the change touches both, run both capture tracks and feed both into the passes.
 
 ## Step 2 - Capture objective reference evidence
+
+### Pre-change baseline for existing UI
+
+Before edits, capture the affected existing surface when it is available. Compare the after captures at matching data, interaction state, viewport or window size, scroll position, and theme; for terminal UI also match columns/rows and input state. Use the actual surface's capture tools, including native app or terminal capture where applicable, not a browser reconstruction. Keep this within the scoped coverage below. A regression baseline does not itself turn ordinary work into reference-fidelity work or require an expanded capture matrix.
+
+If the original surface cannot be captured, or edits already happened without a baseline, explicitly report the unavailable baseline and the resulting comparison limit. Do not fabricate or reconstruct a before image as proof. Continue with current-surface evidence and any authentic user reference. Preserve the pre-change capture as historical comparison evidence; the freshness rule below applies to captures proving the current build.
 
 ### Reference packet hygiene
 
@@ -189,6 +195,10 @@ Use one native task dispatch with two independent entries selected under the rol
 
 Paste evidence directly into each prompt: source code, the plain-text TUI captures, the script JSON, and the screenshot paths plus your described observations for web. Never fork parent history into a reviewer - the message carries everything it needs. Require each blocking finding to be tagged `[product]` (the rendered UI is wrong) or `[evidence]` (the capture artifact is defective - wrong signature, partial compositing, stale file); the loop treats the two differently. The two passes differ in depth by charter, not by any model or effort setting, which cannot be pinned per call.
 
+For both passes, distinguish an actual defect from a taste preference, independently of the `[product]`/`[evidence]` classification. Tie defects to observable behavior, accessibility, content, platform requirements, or the user's design contract. Taste alone is advisory: it cannot make a checklist item FAIL, block completion, or trigger a repair loop. A mismatch with an explicit visual reference remains a defect, not a taste preference.
+
+Check content preservation against the brief and, when available, the baseline: required inputs, data, labels, copy, and actions must remain present and usable unless the user requested their change or removal. A cleaner composition obtained by hiding or dropping required content is a product defect.
+
 ### Pass A - Design-system and functional integrity (deeper, strict)
 
 The OUTPUT sections below describe information needed for parent normalization. Ask the specialist to cover it within its native response format, not to replace that format.
@@ -297,7 +307,7 @@ This is a hard stop rule, not a guideline. The UI is NOT done until ALL applicab
 
 - Both applicable independent reviewer assessments support the parent's normalized PASS with no blocking findings and complete coverage (both are required when the surface is rendered and the capability exists).
 - That reviewer judged a FRESH capture of every enumerated page from Step 2 - no stale artifacts, no skipped pages.
-- Every CJK and layout finding is resolved in the rendered output, not merely noted.
+- Every CJK and layout defect is resolved in the rendered output, not merely noted; taste-only suggestions do not trigger this gate.
 
 If any page fails, treat product and evidence findings differently and allow at most 3 repair/review rounds (or the shared repair tracker's earlier stop). `[product]` findings require source fixes and fresh reviewers; `[evidence]` findings require capture repair without touching product code. If the bound is exhausted, record the residual findings and capability gaps; never self-certify a silent PASS.
 

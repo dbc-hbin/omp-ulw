@@ -6,6 +6,9 @@ const repository = "code-yeongyu/senpi";
 const sourceRoot = "packages/coding-agent/src/";
 const presetRoot = `${sourceRoot}core/extensions/builtin/prompt-preset/`;
 const dynamicRoot = `${sourceRoot}core/dynamic-prompt/`;
+const sharedSources = new Map([
+  ["@earendil-works/pi-ai/utils/fable55-launch", "packages/ai/src/utils/fable55-launch.ts"],
+]);
 const destination = new URL("./presets.js", import.meta.url);
 
 export function parseRef(value) {
@@ -45,6 +48,8 @@ export async function generate(ref, request = fetch) {
       setup(build) {
         build.onResolve({ filter: /.*/ }, args => {
           const isEntry = args.path === entry;
+          const sharedSource = sharedSources.get(args.path);
+          if (sharedSource) return { path: sharedSource, namespace: "github" };
           const path = isEntry ? entry : posix.normalize(posix.join(posix.dirname(args.importer), args.path));
           if (!isEntry && !args.path.startsWith(".")) throw new Error(`Unexpected upstream dependency: ${args.path}`);
           if (!(path.startsWith(presetRoot) || path.startsWith(dynamicRoot) || path === `${sourceRoot}config.ts`) || !path.endsWith(".ts")) throw new Error(`Unexpected upstream source: ${path}`);
