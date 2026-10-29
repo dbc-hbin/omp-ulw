@@ -78,7 +78,7 @@ test("child profiles follow their model while preserving role, assignment, tools
     cwd: ".", mode: "rpc", agent: { kind: "sub" },
     sessionManager: { getSessionId: () => "child-assignment", getBranch: () => [] },
     ui: { notify: () => {} },
-    model: { id: "gpt-6-astra", name: "GPT 6 Astra", provider: "openai", api: "openai-completions" },
+    model: { id: "gpt-6.1-terra", name: "GPT 6.1 Terra", provider: "openai", api: "openai-completions" },
   };
   const base = "Host\n§ Role\nOriginal host role\n§ Runtime\nRuntime\n§ Tool Policy\nPolicy\n# Tool I/O\nTools\n# Delegation\nDelegation\n§ Workflow\nChild verification policy";
   const assignment = [base, "<project-context>Keep project rules</project-context>", "§ Role\nRead-only specialist\n§ Context\nChild assignment\n§ Completion\nReturn through host protocol"];
@@ -87,7 +87,7 @@ test("child profiles follow their model while preserving role, assignment, tools
     const result = handler({ prompt: "implement the assigned unit", systemPrompt: blocks } as never, ctx as never);
     if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt)) blocks = result.systemPrompt as string[];
   }
-  const profile = renderPreset(ctx.model, { surface: "app", toolNames: activeTools })!.prompt;
+  const profile = renderPreset({ id: "gpt-6.1-sol" }, { surface: "app", toolNames: activeTools, subagent: true })!.prompt;
   expect(blocks[0]).toContain(`<omp-model-preset>\n${profile}`);
   expect(blocks.slice(1)).toEqual(assignment.slice(1));
   expect(assignment[0]).toBe(base);
@@ -96,10 +96,10 @@ test("child profiles follow their model while preserving role, assignment, tools
   const user = { role: "user", content: blocks[0] };
   const tools = [{ type: "function", function: { name: "read", parameters: { type: "object" } } }];
   const hook = handlers.get("before_provider_request")![0];
-  for (const id of ["claude-haiku-5.5", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
+  for (const id of ["claude-haiku-5.5", "gpt-6.1-terra-fast", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
     ctx.model.id = id;
     ctx.model.name = id;
-    const expected = renderPreset(ctx.model, { surface: "app", toolNames: activeTools })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
+    const expected = renderPreset({ ...ctx.model, id: id.replace("terra", "sol") }, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
     const payload = { messages: [...blocks.map(content => ({ role: "system", content })), user], tools };
     const updated = hook({ payload } as never, ctx as never) as typeof payload;
     expect(updated.messages[0].content).toContain(`<omp-model-preset>\n${expected}${scope}\n</omp-model-preset>`);
@@ -113,7 +113,7 @@ test("child profiles follow their model while preserving role, assignment, tools
   // A new turn must use the child's current tool set, not a parent's or an earlier turn's.
   activeTools = ["read"];
   const result = handlers.get("before_agent_start")![1]({ prompt: "continue", systemPrompt: assignment } as never, ctx as never) as { systemPrompt: string[] };
-  expect(result.systemPrompt[0]).toContain(`<omp-model-preset>\n${renderPreset(ctx.model, { surface: "app", toolNames: activeTools })!.prompt}`);
+  expect(result.systemPrompt[0]).toContain(`<omp-model-preset>\n${renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })!.prompt}`);
   expect(result.systemPrompt.slice(1)).toEqual(assignment.slice(1));
 });
 

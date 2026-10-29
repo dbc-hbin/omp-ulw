@@ -1,7 +1,7 @@
 import installPreset from "../../index";
 
 export const provider = "omo-child-preset-probe";
-export const childModels = { task: "gpt-6-astra", sonic: "claude-haiku-5.5", scout: "deepseek-v4.1-flash" } as const;
+export const childModels = { task: "gpt-6.1-terra", sonic: "claude-haiku-5.5", scout: "deepseek-v4.1-flash" } as const;
 export const parentModel = "gpt-6.1-sol";
 export interface Observation {
   phase: "before" | "after";

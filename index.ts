@@ -71,6 +71,7 @@ export default function ompUlw(pi: ExtensionApi): void {
       // lines would become user-visible output. Only the TUI gets terminal
       // routing instructions.
       surface: ctx.agent.kind === "main" && ctx.mode === "tui" ? "terminal" : "app",
+      subagent: ctx.agent.kind === "sub",
       // The active tool set is authoritative. Do not enable prompt branches
       // merely because a host or skill mentions a tool that is unavailable.
       toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name)),

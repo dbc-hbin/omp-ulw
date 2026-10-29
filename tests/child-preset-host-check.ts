@@ -197,7 +197,7 @@ try {
     assert.deepEqual(injected.blocks.slice(1), original.blocks.slice(1), `${role}: every trailing system block must remain byte-identical`);
     assert(original.blocks.length > 1, `${role}: exercise the real multi-block host prompt`);
     assert(injected.prompt.includes(assignment(role)), `${role}: assignment must reach native child hook`);
-    const profile = renderPreset(injected.model, { surface: "app", toolNames: injected.tools });
+    const profile = renderPreset(role === "task" ? { id: "gpt-6.1-sol" } : injected.model, { surface: "app", toolNames: injected.tools, subagent: true });
     assert(profile, `${role}: shipped model profile must exist`);
     const childBodies = childRequests.get(role)!;
     for (const body of childBodies) {
