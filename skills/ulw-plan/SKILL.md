@@ -15,7 +15,7 @@ Reuse references already read in this session; load operation-specific guidance 
 
 ## OMP Review Policy (authoritative)
 
-High-accuracy review is default-on for CLEAR and UNCLEAR plans unless the user explicitly declines. One round is exactly one fresh read-only plan-review worker (the default worker with `agent` omitted, not the bundled native reviewer) assigned adversarial plan review, capped at five rounds (unlimited only on explicit user request). Notes-only approval counts as approval. Only an explicitly activated planning workflow invokes this gate; bare ULW self-reviews its notepad instead.
+High-accuracy review is default-on for CLEAR and UNCLEAR plans unless the user explicitly declines. One round is exactly one fresh read-only plan-review worker (the default worker with `agent` omitted, not the bundled native reviewer) assigned adversarial plan review. A further round runs only while the previous one made progress (a new blocker-eligible finding or a confirmed ledger-blocker closure); a non-approving round with neither stops the review and asks the user. Notes-only approval counts as approval. Only an explicitly activated planning workflow invokes this gate; bare ULW self-reviews its notepad instead.
 
 The no-plan execution bootstrap is the narrow exception: explicit ulw-execute authorizes generating the prerequisite plan, not another generic approval question. Preserve collect/verify/design/adversarial/synthesize; use ordinary available read-only advisory workers when needed, without assuming a curated gate service. A standalone planner never starts implementation.
 

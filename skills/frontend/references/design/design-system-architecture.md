@@ -16,7 +16,7 @@ Greenfield projects and explicit design-system/high-craft work MUST have a `DESI
 
 ## DESIGN.md Structure
 
-For explicit design-system work, the file has 8 sections plus a greenfield-only `## 0. Research Log`. Sections are required when they govern the requested surface; do not invent tokens or research lanes unrelated to the task.
+For explicit design-system work, the file has 8 sections plus a greenfield-only `## 0. Research Log`, and section 9 once `grounding.md` has run. Sections are required when they govern the requested surface; do not invent tokens or research lanes unrelated to the task.
 
 ```markdown
 # [Project Name] Design System
@@ -77,7 +77,7 @@ rather than borders, creating layers you feel more than see."
 | Body | 16px / 1rem | 400 | 1.6 | 0 | Default text |
 | Body/sm | 14px / 0.875rem | 400 | 1.5 | 0 | Secondary info |
 | Caption | 12px / 0.75rem | 500 | 1.4 | 0.02em | Labels, metadata |
-| Overline | 11px / 0.6875rem | 600 | 1.3 | 0.08em | Section labels, uppercase |
+| Overline | 11px / 0.6875rem | 600 | 1.3 | 0.08em | Field, table and metadata labels, uppercase; by default not a label above a heading (`references/perfection/craft-floor.md`) |
 
 ### Font Stack
 - Primary: [specify — e.g. "Inter, system-ui, -apple-system, sans-serif"]
@@ -201,8 +201,11 @@ Surfaces use progressively lighter/darker shades. No borders, no shadows.
 ## 8. Accessibility Constraints & Accepted Debt
 
 ### Constraints
-- WCAG target: [e.g. 2.2 AA] — contrast floor [4.5:1 body / 3:1 large text], visible focus on every
-  interactive element, full keyboard reachability, `prefers-reduced-motion` respected (Section 6).
+- WCAG 2.2 AA at minimum ([AAA items the brief raises]): contrast 4.5:1 body / 3:1 large text, icons and
+  control edges; visible focus on every interactive element, never entirely hidden by other content;
+  pointer targets at least 24x24 CSS px; full keyboard reachability; reflow at 320 CSS px;
+  `prefers-reduced-motion` respected (Section 6). The per-criterion result is stated in every
+  deliverable (`SKILL.md` "Ground, build floors, detect and WCAG").
 
 ### Accepted Debt
 | Item | Location | Why accepted | Owner / Exit |
@@ -210,6 +213,15 @@ Surfaces use progressively lighter/darker shades. No borders, no shadows.
 | [debt] | [file/screen] | [reason + user sign-off] | [when it gets fixed] |
 
 New debt is recorded here at the moment it is accepted — never silently.
+
+## 9. Ideal State & Gap Ledger (after grounding)
+
+- Sources read in full: [source → URL, reader count]
+- Personas and journey steps: [persona → steps]
+- Ideal state: [one checkable line per journey step]
+
+| ID | Screen / state | Gap | Principle or rule broken | Evidence | Fix | Proof | Status |
+|----|----------------|-----|--------------------------|----------|-----|-------|--------|
 ```
 
 ## Creation Workflow
@@ -239,7 +251,7 @@ After every component implementation, check:
 - [ ] All colors reference tokens from Section 2. No raw hex outside `DESIGN.md`.
 - [ ] All font sizes match Section 3 scale. No arbitrary sizes.
 - [ ] Spacing intent maps to a token (Section 4); browser mechanics (`clamp()`, intrinsic sizing, container units) stay raw. No arbitrary px.
-- [ ] Interactive elements have all required states from Section 5 and Section 6.
+- [ ] Interactive elements have all required states from Section 5 and Section 6, and keep one box across them: width and height match in every state, and no padding appears for a spinner or arrow.
 - [ ] Depth treatment matches the chosen strategy from Section 7.
 - [ ] Component reused 2+ times? Documented in Section 5.
 - [ ] Motion follows the timing and feedback-threshold tables, and every animation has its reduced-motion path.

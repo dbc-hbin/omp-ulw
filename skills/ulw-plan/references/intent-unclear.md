@@ -31,7 +31,7 @@ Fold a contrarian self-grill into the Plan Consultant spawn: challenge the singl
 </default_selection>
 
 <high_accuracy_auto>
-Because the human did not steer, adversarial review SUBSTITUTES for the interview you skipped - this is what catches a bad default. Plan Consultant runs during plan generation as always; after Plan Consultant findings are folded and the plan file is complete, run the adversarial reviewer high-accuracy review defined in `full-workflow.md` AUTOMATICALLY - no "do you want a review?" question - and drive it to convergence under the bounded convergence contract in `full-workflow.md`: fix every eligible blocker and resubmit fresh, record ineligible findings as non-blocking notes, and on cap exhaustion stop and ask the user.
+Because the human did not steer, adversarial review SUBSTITUTES for the interview you skipped - this is what catches a bad default. Plan Consultant runs during plan generation as always; after Plan Consultant findings are folded and the plan file is complete, run the adversarial reviewer high-accuracy review defined in `full-workflow.md` AUTOMATICALLY - no "do you want a review?" question - and drive it to convergence under the bounded convergence contract in `full-workflow.md`: fix every eligible blocker and resubmit fresh, record ineligible findings as non-blocking notes, and when a round makes no progress stop and ask the user.
 
 Trivial classification reduces interview and exploration depth, not an explicitly requested review. Apply the default-on review policy from SKILL.md unless the user declines it.
 </high_accuracy_auto>

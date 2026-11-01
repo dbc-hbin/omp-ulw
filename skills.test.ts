@@ -46,7 +46,7 @@ test("registered skill metadata and relative resource links resolve inside the s
     expect(/^description:\s*\S/m.test(source)).toBe(true);
   }
   for (const path of new Bun.Glob("**/*.md").scanSync({ cwd: root, absolute: true })) {
-    const source = readFileSync(path, "utf8");
+    const source = readFileSync(path, "utf8").replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, "").replace(/`[^`\n]*`/g, "");
     for (const match of source.matchAll(/\[[^\]\n]*\]\(([^\s)]+)(?:\s+"[^"]*")?\)/g)) {
       const target = match[1].split("#")[0];
       if (!target || /^[a-z][a-z\d+.-]*:/i.test(target) || target.startsWith("/")) continue;

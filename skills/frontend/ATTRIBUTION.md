@@ -234,6 +234,78 @@ cites; no source from that template is copied. It carries no third-party attribu
 that lineage note, and it grants no license to copy any target site's trademarks, brand
 assets, or proprietary copy.
 
+`frontend/references/design/grounding.md`, `frontend/scripts/perfection/check-draft-guard.ts`,
+`check-accent-stripes.ts`, `collect-files.ts`, and the `draft-guard/` and `accent-stripes/`
+modules are project-original upstream files and require no third-party attribution.
+
+## 6. Impeccable (Paul Bakaus): craft-floor rules
+
+`frontend/references/perfection/craft-floor.md`, the "Browser surfaces", "Type and spacing
+floor" and generated-scaffold rules in `frontend/SKILL.md`, and the matching
+`visual-qa/SKILL.md` checklist items (A3 measure, A13, B8, E7, F8, F9) are adapted from
+`skill/reference/craft-floor.md` of the Impeccable project, rewritten in the upstream
+project's words with a few short phrases kept close to the source.
+
+- Source: https://github.com/pbakaus/impeccable
+- Adapted from upstream commit: 5e745ace7e151feb2a93d360d0281fe39448b857
+- Copyright 2025 Paul Bakaus
+- Licensed under the Apache License, Version 2.0 (the "License"); you may not use these
+  files except in compliance with the License. You may obtain a copy of the License at:
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the specific language governing
+  permissions and limitations under the License. A full copy of the Apache-2.0 license
+  text is provided in `LICENSE-Apache-2.0.txt` alongside this notice.
+
+- **Changes (Apache-2.0 §4(b)):** the rules were selected and rewritten. Kept: the
+  browser-surface list, more space above a heading than below it, the 65-75ch body
+  measure, the 6rem display cap, the -0.04em tracking floor, and the scaffold and shadow
+  patterns. Added: a property per browser surface, the 1.25x type-scale step, the 1.5x
+  above-versus-below heading ratio, the 2x between-versus-within group gap, the phone
+  measure floor, the split into floors and route-overridable defaults, and the `/visual-qa`
+  item mapping. Dropped because they conflict with this skill: blur and `backdrop-filter`
+  as general motion materials, choosing one theme per product category, decorative custom
+  scrollbars, a blanket bounce-easing ban, and the common-typeface ban.
+
+## 7. frontend-detect SDK: Impeccable detector logic and a StyleGallery reflow check
+
+`frontend/scripts/detect/` (the SDK, its rules under `rules/`, and the CLI) and
+`frontend/references/perfection/detect.md` reimplement in TypeScript the rule logic of the
+Impeccable detector (`crates/core`, `crates/detect`, `crates/foundation/src/registry.rs`) at
+the upstream commit named in section 6. No Rust or JavaScript source is copied; the rule ids,
+thresholds, exemptions and the `data-impeccable-ignore` waiver attribute follow upstream so
+findings stay comparable. The license, copyright line and license text pointer in section 6
+apply to this derived work as well.
+
+- **Changes (Apache-2.0 §4(b)):** a new TypeScript implementation over a browser-captured
+  page snapshot instead of upstream's Rust engine and WASM bundle; every rule description
+  and fix hint is rewritten; `low-contrast` is an error rather than a warning; project
+  allowlists (`allowFonts`, `allowEasings`) and design tokens are configuration rather than
+  files; a `data-detect-ignore` waiver is added beside upstream's; telemetry, the hosted
+  design-direction service, the edit hook, the live mode and the browser extension are not
+  ported.
+
+The `viewport-reflow` rule and the reflow pass in `detect.ts` (render at 320, 375, 768, 1024
+and 1440 px, append an unbroken stress string at 320 px, report horizontal overflow) follow
+the layout verification matrix and `tests/pattern-runtime.spec.mjs` of StyleGallery.
+
+- Source: https://github.com/changeroa/StyleGallery
+- Adapted from upstream commit: 0bf928f6269b1cb6cf24f04e0bf28a8ce2bbc0ff
+- Code licensed under the MIT License (Copyright (c) 2026 IYEN); documentation under
+  CC BY 4.0.
+
+## OMP port modifications (2026-11-01)
+
+The craft-floor, grounding, detect SDK and draft-guard files are copied from OMO
+`code-yeongyu/oh-my-openagent` `dev` at `8bda141bcd911337623b357b863be0da13cf4d74`
+(`packages/shared-skills/skills/frontend`). Upstream unit tests, test-only fixtures, the
+development parity scripts and the Python Lighthouse wrapper are not shipped. OMP adaptations:
+`SKILL_DIR` resolution notes, native `task`/skill routing in place of OMO slash workflows,
+and browser-tool wording in place of OMO's browser driver.
+
 ## OMP port modifications (2026-10-08)
 
 This repository retains upstream project-original frontend references and restores omitted materialized third-party taste, brand and designpowers files from the pinned commits named above. Files with runtime routing are modified for OMP: no disabled design-family dependency, no fictional browser/provider API or agent type; local native handoff and database research replace unavailable skill routing. Native workflow/platform references and UI/UX search scripts/CSV data are copied from the installed `.agents/skills/native-ui-design` and `.agents/skills/ui-ux-pro-max` source (Next Level Builder MIT notice above), with local path/routing adaptations. The native reference provenance is preserved as historical source labels, not a dependency on those skills. Third-party role/source references are adapted to the lead-owned state and actual OMP role contracts. Their bodies are no longer claimed byte-for-byte unchanged.
