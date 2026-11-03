@@ -36,6 +36,13 @@ const cycle = structuredClone(state); cycle.goals[0].depends_on = ["G1"];
 assert.throws(() => verify(cycle, { goalId: "G1" }), /cycle/);
 const gate = { ...capture, manualQa: { by: "main-session", status: "passed", evidence: "CLI source observed", artifactRefs: [{ id: "proof", kind: "cli-transcript", path: artifact }], surfaceEvidence: [{ criterionRef: "C1", surface: "cli", invocation: "read validator", verdict: "passed", artifactRefs: ["proof"] }] }, gateReview: { by: "independent-reviewer", recommendation: "APPROVE", reportPath: artifact, evidence: "fixture review", blockers: [] }, iteration: { status: "passed", fullRerun: true, rerunCommands: ["validator-self-check"], evidence: "fixture rerun" }, criteriaCoverage: { totalCriteria: 1, passCount: 1, originalIntent: "validate", desiredOutcome: "reject stale proof", userOutcomeReview: "fixture passed" } };
 assert.equal(verify(state, { gate }).ok, true);
+const hostVerifiedGate = structuredClone(gate);
+delete hostVerifiedGate.gateReview;
+hostVerifiedGate.iteration.fullRerun = false;
+assert.equal(verify(state, { gate: hostVerifiedGate }).ok, true);
+for (const iteration of [{ ...hostVerifiedGate.iteration, status: "failed" }, { ...hostVerifiedGate.iteration, evidence: "" }, { ...hostVerifiedGate.iteration, rerunCommands: [] }, { ...hostVerifiedGate.iteration, rerunCommands: [""] }]) {
+ assert.throws(() => verify(state, { gate: { ...hostVerifiedGate, iteration } }), /final verification missing/);
+}
 const uncovered = structuredClone(state);
 uncovered.goals[0].criteria.push({ ...criterion, id: "C2" });
 const coverageGate = { ...gate, criteriaCoverage: { ...gate.criteriaCoverage, totalCriteria: 2, passCount: 2 } };

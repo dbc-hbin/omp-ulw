@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import ompUlw from "./index";
 import { renderPreset } from "./presets";
 import type { UlwContext } from "./ulw";
-import { selectUlwDirective } from "./ulw";
+import { ulwDirective } from "./ulw";
 
 type Handler = (event: never, ctx: never) => unknown;
 
@@ -36,7 +36,7 @@ test("provider fallback refreshes the profile even with identical model id and n
   }
 });
 
-test("ULW policy follows request-model fallback without touching user or tool text", () => {
+test("ULW policy refreshes stale system blocks across model fallback without touching user or tool text", () => {
   const handlers = new Map<string, Handler[]>();
   ompUlw({
     setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
@@ -55,13 +55,12 @@ test("ULW policy follows request-model fallback without touching user or tool te
     if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt) && result.systemPrompt.every((block: unknown) => typeof block === "string")) blocks = result.systemPrompt;
   }
   const original = blocks.join("\n");
-  const payload = { messages: [{ role: "system", content: original }, { role: "user", content: original }, { role: "tool", content: original }], tools: [{ type: "function", function: { name: "task", description: "Read-only research MUST use `scout` only when files unknown." } }] };
+  const stale = original.replace(ulwDirective, "previously shipped policy");
+  const payload = { messages: [{ role: "system", content: stale }, { role: "user", content: stale }, { role: "tool", content: stale }], tools: [{ type: "function", function: { name: "task", description: "Read-only research MUST use `scout` only when files unknown." } }] };
   const hook = handlers.get("before_provider_request")![0];
   for (const id of ["gpt-6-astra", "gpt-6.1-sol", "gpt-6-astra-fast", "unknown-model"]) {
     ctx.model.id = id;
-    const policy = `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(id)}</ultrawork-mode>\n</omp-ulw-policy>`;
-    const expected = original.replace(/<omp-ulw-policy>[\s\S]*?<\/omp-ulw-policy>/g, () => policy);
-    expect(hook({ payload } as never, ctx as never)).toEqual({ ...payload, messages: [{ role: "system", content: expected }, payload.messages[1], payload.messages[2]] });
+    expect(hook({ payload } as never, ctx as never)).toEqual({ ...payload, messages: [{ role: "system", content: original }, payload.messages[1], payload.messages[2]] });
   }
 });
 

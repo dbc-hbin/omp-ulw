@@ -1,49 +1,29 @@
 ---
 name: ulw-plan
-description: ulw-plan CLEAR-intent path - the user knows the outcome; ask only the genuine forks, with WHY.
+description: "ulw-plan CLEAR intent: ground the known outcome and ask only unresolved owner decisions."
 metadata:
-  short-description: ulw-plan clear-intent interview path
+  short-description: Known outcome, grounded owner choices
 ---
 
-## OMP runtime contract
+# CLEAR intent
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+Use this path when the desired outcome is known, or the user explicitly requests an interview. Follow [ulw-plan](../SKILL.md) for scope and [artifact/review details](full-workflow.md) for the durable deliverable.
 
+## Resolve the real forks
 
-# ulw-plan - CLEAR intent
+Establish the affected user, requested ideal state, current gaps and independently meaningful components. Record them in the draft with cited findings; component count follows the work rather than a quota. A short request can still contain a consequential owner decision.
 
-Read this when INTENT ROUTING resolved to CLEAR: the user knows the desired outcome and the only open items are preferences/tradeoffs the repo cannot answer. Also entered from the on-the-fence tie-break (ask exactly one question).
+Apply two filters to each candidate question:
 
-<stance>
-The user owns the outcome; genuine forks exist that only they can decide. Research first to ground, THEN ask the surviving forks. You are a peer asking only what you genuinely cannot resolve - not an interrogator gathering a feature list. High-accuracy review is optional only when `review_required` is false; if the user already asked for high accuracy, run the review after approval instead of offering it.
-</stance>
+1. Can the repository, system or primary documentation answer it? Investigate and cite the answer.
+2. Does the accepted outcome plus evidence settle it as an ordinary reversible default? Record the choice and reason rather than asking again.
 
-<research_protocol>
-Explore-before-asking. Dispatch parallel read-only research in one turn - internal patterns/conventions/test infra, plus external docs/contracts - and use direct read/grep/ast/lsp while it runs. Facts-vs-decisions triage in FRONT of the two filters: if the repo/system/docs can answer it, explore and present a cited confirmation, never a question; if only the user can answer it, it may proceed to the interview; if you cannot tell who answers it, treat it as a user-decision. Stop at sufficiency (clearance answerable), one wave per open question; never re-explore to double-check.
-</research_protocol>
+Material product choices and external constraints that only the owner can set survive these filters. If the user requested an interview, surface surviving preferences instead of silently adopting defaults. Ask why the choice matters to the plan: what evidence left it open, the recommended option and its consequence. Do not ask users to supply technical facts the project contains. Use [stance calibration](stance-calibration.md) for batching and reply interpretation.
 
-<interview>
-TOPOLOGY LOCK first: from the request plus exploration, enumerate the 1-6 top-level components that can each succeed or fail independently, confirm them in ONE turn, and record them in the draft's Components ledger (id, one-line outcome, status, evidence path). Do NOT collapse to one component because the request looks small.
+For example, a specified login rate limit may reuse an existing shared limiter without another question about storage. A change to the public over-limit response remains a client-contract decision unless the request or existing contract already settles it. Illustrative paths are not repository evidence.
 
-Then the TWO FILTERS (full definition in SKILL.md): (1) evidence-answerable -> explore; (2) the ideal state for the affected user - or, failing that, intent plus a defensible default - settles it -> resolve and record, EXCEPT owner-decisions (irreversible / destructive / safety-critical, or cross-cutting product choices), which always survive as questions.
+## Clearance and approval
 
-ASK WITH WHY: name what you explored, why it did not resolve, and which part of the plan forks on the answer. Deliver surviving forks through the active renderer and native OMP ask (`references/stance-calibration.md` - read it first), recommended default first. A skipped defaultable fork may resolve to its recorded recommendation; missing owner authorization or plan approval stays pending. Classify every reply per the same reference. Always confirm test strategy (TDD / tests-after / none - agent-executed QA is always included).
+The draft must settle objective, scope IN/OUT, approach, dependencies, acceptance and relevant constraints (such as budget, stack, scale or audience). Explore or ask only where the actual request leaves a material gap; do not turn this list into a stock interview.
 
-FOGGIEST-GAP targeting (ordinal, NO numbers): each turn aim at the single open gap whose resolution most unblocks the plan, and say why in one sentence; rotate across equally-foggy components. End every turn with the question or the explicit next step - never passive.
-
-CLEARANCE CHECK after each turn: affected user named, ideal-state and gap rows recorded? objective defined? scope IN/OUT explicit? approach decided? test strategy confirmed? constraints swept (budget / stack / scale / audience - each explored, defaulted, or asked)? no blocking ambiguity left? Any NO is your next question; all YES -> present the approval brief and stop.
-</interview>
-
-<approval_and_deliver>
-Run the durable approval gate (mechanics in `full-workflow.md`): present the brief once with findings (paths), the approach, and EVERY surviving owner-decision as an explicit question with your recommended option (only a skipped defaultable fork resolves to that default); then ask the explicit plan-creation decision through native OMP ask under stance-calibration.md. No answer is not approval. If "start now, or review first?" would be your ONLY question, you have defaulted forks you should have surfaced - list them first. After approval: scaffold the files, run mandatory Plan Consultant, APPEND the todos, fill the human TL;DR last. Then either run the high-accuracy review if `review_required: true`, or present the handoff explanation (full-workflow.md Phase 4 format). Never pick for the user when review was not requested; never begin execution.
-</approval_and_deliver>
-
-<worked_example>
-Request: "add a 5/min-per-IP rate-limit to `/login`".
-1. Explore -> auth middleware at `src/auth/login.ts:40`, an existing limiter util at `src/util/rate-limit.ts`, Redis client at `src/redis.ts`.
-2. Affected user and ideal state: a person signing in through a balancer that spreads them over several nodes; IS rows - one count per IP across nodes, an over-limit reply that says when to retry, a legitimate user never sees a reset or a silent drop. Topology lock (one turn): one active component - "login rate-limit".
-3. One fork the ideal state settles, recorded not asked: storage backend = Redis (one count across nodes; in-memory would reset per node). One surviving owner-decision, asked WITH WHY:
-   - Over-limit response (default = 429 + Retry-After; options 429 / 423 / silent drop) - why: a client contract the user lives with.
-   - Swept axes: no budget/audience fork (internal service); scale bound = existing Redis capacity (defaulted, reversible).
-4. Approval brief -> explicit okay -> scaffold -> append todos -> run the adversarial reviewer high-accuracy review (default-on unless the user explicitly opted out) and deliver the receipt.
-</worked_example>
+Present the grounded approach, adopted defaults and any remaining owner decisions. Obtain the planning decision described in [full-workflow](full-workflow.md), then produce one decision-complete plan. Run gap analysis and default-on adversarial plan review unless explicitly declined; an explicit high-accuracy request requires review, not another offer. Deliver the plan and review disposition, then hand off to ulw-execute only on an execution request.

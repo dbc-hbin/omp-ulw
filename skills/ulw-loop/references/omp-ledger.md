@@ -1,15 +1,59 @@
-## OMP durable run protocol (authoritative)
+# Durable loop ledger
 
-For non-git research/data proof, declare the complete relevant source-input list in an inputs.json array and invoke the read-only validator’s snapshot-files <inputs.json> command. It hashes actual nonempty file bytes, returning tree: explicit-files, worktree_diff, capture_cwd and capture_inputs; preserve those fields on each criterion and the final gate. This is explicit input binding, not a fallback that silently ignores product changes: git-tracked code delivery uses the full Git snapshot, and any changed source requires recapture. Expected evidence and report artifacts are checked separately.
+## Files and ownership
 
-Use the actual session id supplied by the host skill pointer as run_id and directory doc/ulw-loop/<session-id>/. If absent, record a unique explicit run id once in the brief and reuse it; never infer an env path. The root is the single state writer. Create brief.md (original request, constraints, assumptions, run id), goals.json and ledger.jsonl through write, then use read/edit for transitions. Existing completed state is not overwritten for unrelated work. Native todos mirror all atomic actions and cleanup resources.
+Use the actual host-supplied session id as `run_id` and `doc/ulw-loop/<session-id>/`. If none is exposed, choose one explicit unique run id, record it in the brief and reuse it. Do not infer an environment path or claim hook ownership for an invented session.
 
-Schema: goals.json is {schema_version:1,run_id,objective,status,when_to_stop,current_goal_id,goals:[{id,title,objective,status,depends_on,attempt,cycles,criteria:[{id,scenario,pass_condition,expected_evidence,essential,status,evidence,artifacts,tree,worktree_diff,adversarial_classes,cleanup}]}]}. Root status: active, paused, blocked, failed, complete, cancelled. Goal: pending, in_progress, complete, failed, blocked, cancelled. Criterion: pending, in_progress, pass, fail, blocked, cancelled. Each artifact is a literal path (relative to workspace root or absolute), exists and is nonempty. cleanup is an array of task-owned teardown receipts (or an explicit no-resources receipt), never an empty claim. worktree_diff is the SHA-256 fingerprint produced by scripts/verify-state.mjs snapshot, which includes tracked working changes and untracked product inputs but excludes doc bookkeeping. tree is its HEAD tree. Record capture cwd so evidence from a worktree can be checked there.
+The lead alone writes `brief.md` (request, constraints, assumptions, run id), `goals.json` and append-only `ledger.jsonl`. Preserve other and completed runs. `quality-gate.json` belongs to the final checkpoint.
 
-Before work, define observable scenarios and binary pass conditions; no placeholder criterion can pass. Acquire the existing in_progress goal, otherwise a pending goal whose dependencies are complete. Mark live transitions immediately. After each finding, evidence result, failure and checkpoint append a ledger JSON object with event, goal_id, criterion_id if applicable, invocation, verdict, evidence, artifacts, capture_cwd, tree, worktree_diff, adversarial_classes, cleanup and rationale. Do not let workers append concurrently. On compaction read brief, goals, ledger first and reconnect actual pending handles. Recovery is explicit; a host continuation hook may resume active unfinished state, but is never completion proof.
+## goals.json
 
-A non-final goal completes only after every essential criterion passes on fresh evidence. Final aggregate completion requires every criterion in every goal to pass, including nonessential ones, and the final quality gate. Freeze content; run main-session real-surface QA and a fresh independent reviewer; record manualQa, gateReview, iteration, criteriaCoverage in quality-gate.json with literal reports/artifacts. An inconclusive reviewer blocks. Bind the gate to the current snapshot. Re-run invalidated proofs after fixes; re-review the delta at most twice, then append a blocker goal and report. Use the standalone read-only validator before checkpoints: node <this-skill>/scripts/verify-state.mjs <goals.json> --goal <id>; for final: node <this-skill>/scripts/verify-state.mjs <goals.json> --final <quality-gate.json>. Exit 0 is supporting machine validation; actual observed user outcome is still the decisive gate.
+```text
+{
+  schema_version: 1, run_id, objective, status, when_to_stop,
+  current_goal_id,
+  goals: [{
+    id, title, objective, status, depends_on, attempt, cycles,
+    criteria: [{
+      id, scenario, pass_condition, expected_evidence, essential, status,
+      evidence, artifacts, tree, worktree_diff, capture_cwd, capture_inputs?,
+      adversarial_classes, cleanup
+    }]
+  }]
+}
+```
 
-Structured steering is a ledger transition, not an API: validate evidence and rationale, ids, dependency acyclicity, original scope and unchanged passed criteria; append exactly one proposal then edit goals. Preserve the add/split/reorder/reword/revise-criterion/annotate/supersede semantics in the doctrine. Add goals with real scenarios, never seeded placeholders. Validation batches are explicit group ids: their final member waits for all members, passing criteria and a group-spanning quality gate. No change to criteria may retroactively turn failing evidence into a pass. Goal failure caps remain three identical criterion failures or five cycles without required passes; diagnose and checkpoint failed. User cancel pauses workers safely, captures cleanup and marks cancelled without auto-resume.
+- Root status: `active`, `paused`, `blocked`, `failed`, `complete`, `cancelled`.
+- Goal status: `pending`, `in_progress`, `complete`, `failed`, `blocked`, `cancelled`.
+- Criterion status: `pending`, `in_progress`, `pass`, `fail`, `blocked`, `cancelled`.
+- Goal ids are unique; dependencies exist and are acyclic. Criterion ids are unique within each goal.
+- Every criterion has an observable scenario, binary pass condition and expected evidence path. `artifacts` contains nonempty files, relative to the workspace root or absolute. `expected_evidence` must itself resolve to a nonempty file.
+- `cleanup` is a nonempty array of actual task-owned teardown receipts, or an explicit no-resources receipt.
+- `adversarial_classes` is a nonempty array of `{name,status:"pass"|"not_applicable",evidence?,reason?}`. Applicable classes need captured evidence; non-applicable entries need a reason. If no class applies, record that explicitly with a reasoned non-applicable entry.
 
-Adversarial entries have {name,status:"pass"|"not_applicable",evidence? ,reason?}: each applicable class needs a captured result, each not-applicable class a reason. Final gate carries tree and worktree_diff; manualQa.artifactRefs entries are {id,kind,path}, surfaceEvidence entries are {id,criterionRef,surface,invocation,verdict:"passed",artifactRefs:[artifact-id]}. Every criterion needs a passing surfaceEvidence or adversarialOutcomes entry with real artifact references. criterionRef is the unique criterion id, or <goal-id>:<criterion-id> when ids repeat across goals. Preserve manualQa, gateReview, iteration, criteriaCoverage concrete delivery gates from full-workflow.md.
+## Snapshot binding
+
+Use the read-only [verifier](../scripts/verify-state.mjs) for fingerprints and checkpoint validation. Resolve the installed filesystem directory first; shells do not resolve skill URLs.
+
+```text
+node <ulw-loop-directory>/scripts/verify-state.mjs snapshot [cwd]
+node <ulw-loop-directory>/scripts/verify-state.mjs snapshot-files <inputs.json>
+node <ulw-loop-directory>/scripts/verify-state.mjs <goals.json> --goal <id>
+node <ulw-loop-directory>/scripts/verify-state.mjs <goals.json> --final <quality-gate.json>
+```
+
+Git snapshot mode returns `tree` (HEAD tree), `worktree_diff` (SHA-256 of working changes and untracked product inputs), and `capture_cwd`. The verifier excludes workflow bookkeeping paths from the diff fingerprint; ordinary product documentation remains included.
+
+For non-git research/data proof, `inputs.json` is the complete nonempty array of relevant source-file paths. `snapshot-files` returns `tree: "explicit-files"`, a byte fingerprint, `capture_cwd` and `capture_inputs`. Inputs must be nonempty files, not symlinks. This mode is explicit input binding, not a way to omit changed product inputs. Evidence/report artifacts are checked separately.
+
+Preserve returned fields on each criterion and the final gate; record `capture_cwd` for worktree evidence and `capture_inputs` for explicit-file mode. Changed captured content invalidates proof. Re-run the affected scenario and record fresh evidence rather than attaching old output to a new fingerprint. Identical content remains valid despite a changed commit identity.
+
+## Events and checkpoints
+
+Append a JSON object after findings, evidence results, failures, steering and checkpoints. Evidence events include `event`, `goal_id`, applicable `criterion_id`, `invocation`, `verdict`, `evidence`, `artifacts`, `capture_cwd`, `tree`, `worktree_diff`, `adversarial_classes`, `cleanup` and `rationale`; preserve `capture_inputs` when used.
+
+Resume the existing `in_progress` goal or acquire a dependency-ready pending goal. Record attempts and cycles before replacement work. On compaction read brief, goals and ledger first and reconcile actual retained work. Recovery is explicit; no host journal replay is assumed.
+
+A non-final checkpoint requires fresh passing essential criteria and complete dependencies. Final validation includes every criterion, even `essential: false`, and the [final gate](full-workflow.md#final-quality-gate). Exit 0 supports a checkpoint but does not establish the user outcome or mutate state: append the checkpoint and update statuses explicitly.
+
+The [workflow reference](full-workflow.md) owns steering, validation batches, failure bounds and final gate fields; do not maintain another copy of those transitions here.

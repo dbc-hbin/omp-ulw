@@ -5,15 +5,15 @@
  * transport adaptation and request-model refresh for supported provider hooks.
  * Changelog: child sessions receive their own model profile while preserving
  * host-owned specialist roles, assignments, tools and completion protocols.
- * Changelog: port complete Native ULW doctrine, session arming, specialised
- * workflow pointers and evidence-bound loop/execute continuation.
+ * Changelog: retain ULW activation, specialised workflow state and continuation;
+ * common execution policy belongs to OMP.
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
  * Additional commands: /debugging, /review-work, /visual-qa, /visualize,
  * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
  * /reflection, /init-deep, /ast-grep, /lsp-setup and /refactor. These do not
  * implicitly arm ULW.
- * GPT-6 family model IDs select the shorter ULW doctrine; provider hooks
- * refresh it when the request model changes. Other models keep baseline.
+ * All models share one compact ULW policy; provider hooks refresh stale
+ * policy blocks without changing model-specific working profiles.
  * The existing prompts/ulw.md template remains a native-discovery fallback.
  * ULW keywords arm the session; flags can disable arming/pointers/continuation.
  * Native OMP transports and approval rules replace legacy transport APIs.
@@ -29,7 +29,7 @@ import { replaceHostBehavior } from "./host";
 import { rewritePresetPayload, rewriteTaskGuidancePayload } from "./payload";
 import { renderPreset } from "./presets";
 import type { PresetModel, PresetOptions } from "./presets";
-import { registerUlw, selectUlwDirective } from "./ulw";
+import { registerUlw, ulwDirective } from "./ulw";
 import type { UlwApi, UlwContext } from "./ulw";
 
 interface PromptContext extends UlwContext {
@@ -97,7 +97,7 @@ export default function ompUlw(pi: ExtensionApi): void {
   pi.on("before_provider_request", (event, ctx) => {
     if (!ctx.model) return;
     const payload = ctx.agent.kind === "main" ? rewritePresetPayload(event.payload, ctx.model.api,
-      `<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model.id)}</ultrawork-mode>\n</omp-ulw-policy>`,
+      `<omp-ulw-policy>\n<ultrawork-mode>${ulwDirective}</ultrawork-mode>\n</omp-ulw-policy>`,
       /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g) : event.payload;
     if (originalBehavior === undefined) return payload;
     const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]);

@@ -28,27 +28,18 @@ export interface UlwApi {
 // Keep persisted session keys and shipped CLI flags stable; emitted prompts use OMP names.
 const stateType = "omo-ultrawork:state";
 const skillRoot = fileURLToPath(new URL("./skills/", import.meta.url));
-const directive = readFileSync(join(skillRoot, "ultrawork/SKILL.md"), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
-const astraDirective = readFileSync(join(skillRoot, "ultrawork/references/astra-directive.md"), "utf8");
-const gpt6FamilyModel = /^gpt[._-]?6(?:[._-]\d+|\d)?[._-](?:astra|sol|luna)(?:[-_.][a-z0-9]+)*$/i;
-
-export function selectUlwDirective(modelId: string | undefined): string {
-  if (modelId === undefined) return directive;
-  const name = modelId.split("/").at(-1);
-  if (name !== undefined && gpt6FamilyModel.test(name)) return astraDirective;
-  return directive;
-}
+export const ulwDirective = readFileSync(join(skillRoot, "ultrawork/SKILL.md"), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
 const notAfterIdentifier = String.raw`(?<![A-Za-z0-9][-_.]|[/\\])`;
 const segmentEnd = String.raw`(?![-_.]?[A-Za-z0-9])`;
 const notIntoIdentifier = String.raw`(?![-_](?!(?:loop|plan|research|execute|mass)${segmentEnd})[A-Za-z0-9]|\.[A-Za-z0-9])(?![-_.]?[A-Za-z0-9]*[/\\])`;
 const ulwKeyword = new RegExp(String.raw`${notAfterIdentifier}\b(?:ultrawork|ulw)\b${notIntoIdentifier}`, "i");
 const nativeGoalKeyword = new RegExp(String.raw`${notAfterIdentifier}\b(?:ultrawork|ulw)\b${segmentEnd}`, "i");
-const workflows = [
-  { name: "mass-ulw", pattern: /\b(?:mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)\b/i },
-  { name: "ulw-plan", pattern: /\bulw[\s-]*plan\b/i },
-  { name: "ulw-loop", pattern: /\bulw[\s-]*loop\b/i },
-  { name: "ulw-execute", pattern: /\bulw[\s-]*execute\b/i },
-  { name: "ulw-research", pattern: /\b(?:ulw|mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)[\s-]*research\b/i },
+const workflows: Array<{ name: string; pattern: RegExp; nativeKeyword?: string }> = [
+  { name: "mass-ulw", pattern: /\b(?:mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)\b/i, nativeKeyword: "workflowz" },
+  { name: "ulw-plan", pattern: /\bulw[\s-]*plan\b/i, nativeKeyword: "ultrathink" },
+  { name: "ulw-loop", pattern: /\bulw[\s-]*loop\b/i, nativeKeyword: "orchestrate" },
+  { name: "ulw-execute", pattern: /\bulw[\s-]*execute\b/i, nativeKeyword: "orchestrate" },
+  { name: "ulw-research", pattern: /\b(?:ulw|mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)[\s-]*research\b/i, nativeKeyword: "workflowz" },
   ...["debugging", "review-work", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"].map(name => ({
     name, pattern: new RegExp(String.raw`(?:^\s*/?|\s/)${name}(?=\s|$)`, "i"),
   })),
@@ -91,6 +82,26 @@ export function registerUlw(pi: UlwApi): void {
   let continuationFingerprint: string | undefined;
   let consecutiveContinuations = 0;
 
+  const withNativeKeyword = (text: string, ctx: UlwContext): InputEventResult | undefined => {
+    if (ctx.agent.kind !== "main" || pi.getFlag("omo-ulw-workflows-disabled")) return;
+    const start = text.match(/^\s*\/?/)?.[0].length ?? 0;
+    const visible = visibleUlwText(text.slice(start));
+    // Prefer the longest alias so "mass ulw research" stays one invocation.
+    const invocation = workflows.flatMap(workflow => {
+      const match = workflow.pattern.exec(visible);
+      return workflow.nativeKeyword && match?.index === 0 && /^(?:\s|$)/.test(visible.slice(match[0].length))
+        ? [{ keyword: workflow.nativeKeyword, length: match[0].length }] : [];
+    }).sort((a, b) => b.length - a.length)[0];
+    if (!invocation) return;
+    const end = start + invocation.length;
+    // A user-supplied native word, including a quoted or negated mention, owns
+    // selection. Let OMP's matcher decide whether it actually activates.
+    if (/(?<![\p{L}\p{N}_./\\-])(?<!::)(?:ultrathink|orchestrate|workflowz|jevify)(?![\p{L}\p{N}_/\\-])(?!\.[\p{L}\p{N}_-])(?!\()/u.test(text.slice(end))) return { text };
+    // Put the trigger before arguments so an unclosed code fence cannot hide it.
+    // OMP owns notices, tool/settings gates, deduplication and thinking effort.
+    return { text: `${text.slice(0, end)} ${invocation.keyword}${text.slice(end)}` };
+  };
+
   const restore = (_event: unknown, ctx: UlwContext) => {
     armed = false;
     rearmed = false;
@@ -111,6 +122,8 @@ export function registerUlw(pi: UlwApi): void {
   pi.on("input", (event, ctx) => {
     inputSource = event.source;
     if (event.source !== "extension") { continuationFingerprint = undefined; consecutiveContinuations = 0; }
+    const connected = event.source === "extension" ? undefined : withNativeKeyword(event.text, ctx);
+    if (connected) return connected;
     // Native /goal is a TUI command; RPC text would only persist a fake command.
     if (ctx.agent.kind !== "main" || event.source !== "interactive" || nativeGoalActive) return;
     // Route the slash alias before its handler calls sendUserMessage(), which
@@ -124,14 +137,15 @@ export function registerUlw(pi: UlwApi): void {
   for (const name of ["ulw", ...workflows.map(workflow => workflow.name)]) {
     pi.registerCommand(name, {
       description: `Run the OMP-adapted ${name} workflow`,
-      handler: async args => {
+      handler: async (args, ctx) => {
         commandPending = true;
         continuationFingerprint = undefined;
         consecutiveContinuations = 0;
         // OMP's sendUserMessage() disables slash-command expansion. A
         // `/goal ...` payload would therefore be persisted as ordinary user
         // text instead of creating a native goal.
-        pi.sendUserMessage(name === "ulw" ? `ulw${args ? ` ${args}` : ""}` : `${name}\n\n${args}`);
+        const text = name === "ulw" ? `ulw${args ? ` ${args}` : ""}` : `${name}\n\n${args}`;
+        pi.sendUserMessage(withNativeKeyword(text, ctx)?.text ?? text);
       },
     });
   }
@@ -165,12 +179,12 @@ export function registerUlw(pi: UlwApi): void {
     if ((!armed || pi.getFlag("omo-ultrawork-disabled")) && selected.length === 0) return;
     const blocks = event.systemPrompt.filter(block => !/^<om[op]-ulw-policy>/.test(block));
     if (armed && !pi.getFlag("omo-ultrawork-disabled")) {
-      // A current system block survives compaction and provider fallback without replaying a 31KB user message.
-      blocks.push(`<omp-ulw-policy>\n<ultrawork-mode>${selectUlwDirective(ctx.model?.id)}</ultrawork-mode>\n</omp-ulw-policy>`);
+      // Keep one current policy across compaction and provider fallback.
+      blocks.push(`<omp-ulw-policy>\n<ultrawork-mode>${ulwDirective}</ultrawork-mode>\n</omp-ulw-policy>`);
     }
     const pointers = selected.map(workflow => `<omp-${workflow.name}-pointer>This message mentions ${workflow.name}. If the user is asking to run it, read ${join(skillRoot, workflow.name, "SKILL.md")} and follow its complete workflow. If it is only discussed, quoted or relayed, ignore this pointer. This session's run id is ${ctx.sessionManager.getSessionId()}.</omp-${workflow.name}-pointer>`);
     if (rearmed) {
-      pointers.unshift("<omp-ultrawork-reminder>ultrawork mode is already armed for this session - the complete directive in the current system prompt remains binding; re-read the durable notepad and resume without repeating completed bootstrap or checks.</omp-ultrawork-reminder>");
+      pointers.unshift("<omp-ultrawork-reminder>ULW is already active. Resume the existing OMP goal or selected workflow state; do not create a duplicate goal or repeat completed work.</omp-ultrawork-reminder>");
       rearmed = false;
     }
     return { systemPrompt: blocks, ...(pointers.length ? { message: { customType: "omo-ultrawork:directive", content: pointers.join("\n"), display: false as const } } : {}) };

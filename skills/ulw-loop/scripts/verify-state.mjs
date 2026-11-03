@@ -122,9 +122,11 @@ export function verify(state, { goalId, gate, cwd = process.cwd() } = {}) {
     artifact(record.path, cwd);
    }
   }
-  if (gate.gateReview?.recommendation !== "APPROVE" || !text(gate.gateReview.by) || !text(gate.gateReview.evidence) || !Array.isArray(gate.gateReview.blockers) || gate.gateReview.blockers.length) fail("independent gate review not approved");
-  artifact(gate.gateReview.reportPath, cwd);
-  if (gate.iteration?.status !== "passed" || gate.iteration.fullRerun !== true || !text(gate.iteration.evidence) || !Array.isArray(gate.iteration.rerunCommands) || !gate.iteration.rerunCommands.length) fail("final rerun missing");
+  if (gate.gateReview !== undefined) {
+   if (gate.gateReview?.recommendation !== "APPROVE" || !text(gate.gateReview.by) || !text(gate.gateReview.evidence) || !Array.isArray(gate.gateReview.blockers) || gate.gateReview.blockers.length) fail("independent gate review not approved");
+   artifact(gate.gateReview.reportPath, cwd);
+  }
+  if (gate.iteration?.status !== "passed" || !text(gate.iteration.evidence) || !Array.isArray(gate.iteration.rerunCommands) || !gate.iteration.rerunCommands.length || !gate.iteration.rerunCommands.every(text)) fail("final verification missing");
   if (gate.criteriaCoverage?.totalCriteria !== checked || gate.criteriaCoverage.passCount !== checked || !text(gate.criteriaCoverage.originalIntent) || !text(gate.criteriaCoverage.desiredOutcome) || !text(gate.criteriaCoverage.userOutcomeReview)) fail("final criteria coverage incomplete");
  }
  return { ok: true, criteria_checked: checked };

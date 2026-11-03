@@ -2,6 +2,6 @@
 description: Invoke the explicit mass-ulw workflow
 ---
 
-Read and follow `../skills/mass-ulw/SKILL.md` (relative to this prompt template, not the working project) in full, then its required references. Use the installed path supplied by the OMP prompt extension's workflow pointer when available. Activate mass-ulw explicitly for this request; preserve the workflow's planning/execution permission boundaries and OMP compatibility contract.
+Use `../skills/mass-ulw/SKILL.md` (relative to this template), or the extension's installed skill path. Activate mass-ulw for the dependency graph and recovery records. Load references only as needed; OMP owns dispatch and execution mechanics.
 
 mass-ulw $ARGUMENTS

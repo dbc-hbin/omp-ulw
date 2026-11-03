@@ -17,6 +17,27 @@ omp -e ./omp-ulw/index.ts
 
 일반 `/ulw`는 전문 워크플로를 자동으로 켜지 않습니다. 대화형 TUI의 입력 단계에서 `/ulw`와 `ulw`/`ultrawork`를 `/goal`로 변환하므로, 작업 실행 중 입력해도 native goal objective가 생성됩니다. 이미 활성 goal이 있으면 새 goal로 교체하지 않습니다. OMP 18.12.5에서 `/goal`은 TUI 전용 명령이므로 RPC·프로그램 호출은 ULW 지침만 활성화하며, RPC 클라이언트는 native `goal` 요청을 별도로 사용해야 합니다. `ulw-loop`와 `ulw-execute`는 다중 목표·증거 ledger를 사용하므로 native goal을 중복 생성하지 않습니다. 참조 문서는 필요한 시점에만 읽으며, 기존 프로젝트 지침과 권한 규칙을 보존합니다.
 
+## OMP와 ULW의 책임
+
+공통 실행 방식은 OMP가 소유합니다. 작업 분해, 위임과 모델 선택, 도구 사용, 비동기 대기, 테스트·실사용 검증, 권한·git 작업, 진행 보고를 ULW에서 다시 정의하지 않습니다. 전문 명령은 아래 native 키워드로 연결하며, 알림 내용·도구 조건·활성화 설정·thinking effort는 OMP가 처리합니다.
+
+| 진입점 | 기본 native 연결 | ULW가 추가하는 기능 |
+|---|---|---|
+| `/ulw`, `ulw`, `ultrawork` | 기존 goal 연결만 유지 | 세션 활성화. 별도 notepad·ledger·검증 절차 없음 |
+| `/ulw-plan` | `ultrathink` | 구현하지 않는 계획 작성, 결정·계획 검토 기록, 실행 가능한 계획 산출물 |
+| `/ulw-execute` | `orchestrate` | 계획 선택, Boulder 소유권, 체크박스별 완료·차단·재개 기록 |
+| `/ulw-loop` | `orchestrate` | 다중 목표·의존성·증거 체크포인트 |
+| `/mass-ulw` | `workflowz` | 지속 가능한 의존성 그래프, 노드별 인계·무효화·복구 기록 |
+| `/ulw-research` | `workflowz` | 조사 범위, 주장·출처·관찰 기록, 반론 검증과 인용된 산출물 |
+
+TUI/RPC `prompt` 입력의 맨 앞에 놓인 전문 명령·별칭과 등록된 슬래시 명령 처리기에 적용됩니다. 예를 들어 `/ulw-execute 작업`은 `orchestrate`를 덧붙여 OMP에 전달합니다. `/ulw-execute workflowz 작업`처럼 사용자가 native 키워드를 지정하면 자동 선택을 생략합니다. 인수의 인용·부정 문장에 native 키워드가 있어도 보수적으로 자동 선택을 생략하고 실제 활성화 여부는 OMP matcher에 맡깁니다. 일반 언급·자식 입력·후속 `continue`에는 기본 키워드를 추가하지 않습니다. 초기 CLI의 일반 텍스트나 `/skill:` 직접 호출처럼 입력 훅·명령 처리기를 거치지 않는 경로에서는 native 키워드를 명시해야 합니다.
+
+OMP 18.16의 별도 RPC `steer`·`follow_up` 요청은 native 키워드 처리를 건너뛰므로 자동 연결 대상이 아닙니다. RPC 클라이언트는 `{"type":"prompt","message":"ulw-loop 작업","streamingBehavior":"steer"}` 또는 `"followUp"`을 사용해야 native 키워드 처리와 큐 전달을 함께 거칩니다. 확장은 입력 이벤트에서 RPC 요청 종류를 알 수 없으므로, 이를 임의의 새 메시지로 재전송해 큐 순서·첨부를 바꾸지 않습니다.
+
+`--omo-ulw-workflows-disabled`는 자동 연결도 끕니다. OMP의 `magicKeywords.enabled`와 개별 키워드 설정, 필요한 `task`/`eval` 도구 조건을 그대로 존중하며, 사용할 수 없는 모드를 복사한 지침으로 대체하지 않습니다. `jevify`는 대량 분류 전용이므로 자동 선택하지 않습니다.
+
+단순 병렬 실행에는 OMP의 실행 기능을 사용하고, 저장된 그래프가 필요한 경우에만 `mass-ulw`를 추가합니다. 전문 워크플로의 산출물·상태 계약은 유지하지만, 기본 ULW와 각 참조 문서가 별도 실행 정책을 겹쳐 주입하지 않습니다. 모델 프리셋은 기존대로 유지하고, ULW 정책은 모든 모델에서 `skills/ultrawork/SKILL.md` 한 곳을 사용합니다.
+
 ## OMP skill set
 
 - **Orchestration:** `ultrawork`, `ulw-plan`, `ulw-execute`, `ulw-loop`, `ulw-research`, `mass-ulw`, `hyperplan`
@@ -29,9 +50,9 @@ The three newly ported code skills use the native `xd://ast_grep` and
 authoring gate and junk-test classes, and the Bun scripts that `remove-ai-slops`
 calls (`check-test-junk.ts`, `mutation-proof.ts`). Browser automation, session
 archaeology and git history operations remain host-level concerns or project
-rules rather than copied skill bundles. DAG persistence, tip catalogues
-and first-run onboarding were not ported because this repository has no
-equivalent OMP runtime API for them.
+rules rather than copied skill bundles. Persistent DAG records are lead-owned
+files, not a separate orchestration runtime. Tip catalogues and first-run
+onboarding were not ported.
 
 ## 모델별 프롬프트 위치
 
@@ -70,6 +91,14 @@ bun test
 명령은 먼저 ref를 커밋 SHA로 고정하고 그 SHA의 소스만 내려받습니다. 빌드·모든 프리셋 렌더링 검사가 성공한 뒤 `upstream/presets.js` 한 파일을 원자적으로 교체합니다. 다운로드·검증 실패 시 기존 파일은 유지합니다. `--ref`를 생략하면 `main`이며, GitHub API 제한이 있으면 `GITHUB_TOKEN`을 사용할 수 있습니다. 재현하려면 생성 파일 첫 줄의 SHA를 `--ref`로 전달합니다.
 
 자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
+
+### 2026-11-03 ULW 책임 축소
+
+- 명령 이름·별칭·템플릿·비활성화 플래그와 goal 연결·상태 복원·계속 실행 훅은 보존했습니다.
+- 모델별 장문 ULW 정책을 단일 정책으로 통합하고, 공통 실행·위임·검증 규칙은 OMP에 맡겼습니다.
+- 계획·실행·루프·DAG·리서치 문서와 관련 참조는 각 기능의 산출물·상태 계약 중심으로 축소했습니다.
+- 실제 호스트 검증은 명령별 포인터, 세션 지속·goal 보존, 상태 기반 계속 실행과 명시적 native 키워드의 독립 동작을 확인합니다.
+- 전문 명령·별칭은 적합한 native 키워드에 자동 연결합니다. 명시적 선택, OMP 비활성화 설정과 도구 조건을 보존하고, native 알림을 중복 구현하지 않습니다.
 
 ### 2026-11-01 OMO 워크플로 스킬 후속 반영
 

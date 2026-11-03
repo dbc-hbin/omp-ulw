@@ -42,39 +42,60 @@ class Host {
 }
 
 describe("Native ULW session behavior", () => {
-  test("GPT-6 family selects its shipped variant while other model identities keep the baseline", () => {
-    const baseline = readFileSync(new URL("./skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
-    const astra = readFileSync(new URL("./skills/ultrawork/references/astra-directive.md", import.meta.url), "utf8");
-    expect(astra).not.toMatch(/senpi/i);
-    for (const id of [
-      "gpt-6-astra",
-      "OpenAI/GPT-6-ASTRA-FAST",
-      "gpt-6.1-sol",
-      "gpt-6.1-sol-fast",
-      "gpt-6-sol",
-      "gpt-6-luna",
-      "gpt-6-luna-fast",
-      "gpt-6-astra-extra",
-      "gpt-6-astral",
-      "claude-opus-5",
-      undefined,
-    ]) {
+  test("activation and model changes retain the single shipped ULW policy", () => {
+    const body = readFileSync(new URL("./skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
+    for (const id of ["gpt-6-astra", "claude-opus-5", undefined]) {
       const host = new Host();
       host.context.model = id === undefined ? undefined : { id };
-      const body = id !== undefined && /gpt[._-]?6(?:[._-]\d+|\d)?[._-](?:astra|sol|luna)(?:[-_.][a-z0-9]+)*$/i.test(id.split("/").at(-1)!) ? astra : baseline;
       expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omp-ulw-policy>`);
-      expect(host.prepare("ulw perform the assigned task")!.systemPrompt[2]).not.toMatch(/senpi/i);
       host.context.model = { id: "gpt-6-astra" };
-      expect(host.prepare("continue")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${astra}</ultrawork-mode>\n</omp-ulw-policy>`);
+      expect(host.prepare("continue")!.systemPrompt[2]).toBe(`<omp-ulw-policy>\n<ultrawork-mode>${body}</ultrawork-mode>\n</omp-ulw-policy>`);
     }
   });
   test("slash commands activate all modes without allowing unrelated extension messages to arm them", async () => {
-    for (const name of ["ulw", "ulw-plan", "ulw-loop", "ulw-execute", "ulw-research", "mass-ulw"]) {
+    for (const [name, keyword] of [["ulw", ""], ["ulw-plan", "ultrathink"], ["ulw-loop", "orchestrate"], ["ulw-execute", "orchestrate"], ["ulw-research", "workflowz"], ["mass-ulw", "workflowz"]]) {
       const host = new Host();
       await host.commands.get(name)!("the requested task", host.context);
-      expect(host.submitted).toBe(name === "ulw" ? "ulw the requested task" : `${name}\n\nthe requested task`);
+      expect(host.submitted).toBe(name === "ulw" ? "ulw the requested task" : `${name} ${keyword}\n\nthe requested task`);
       expect(host.prepare(host.submitted!, "extension")).toBeDefined();
     }
+  });
+
+  test("native workflow defaults are idempotent and preserve explicit native choices", () => {
+    for (const [text, connected] of [
+      ["/ulw-plan", "/ulw-plan ultrathink"],
+      ["ulw plan task", "ulw plan ultrathink task"],
+      ["ulwloop task", "ulwloop orchestrate task"],
+      ["ulw-execute task", "ulw-execute orchestrate task"],
+      ["mass ulw research task", "mass ulw research workflowz task"],
+      ["mulw task", "mulw workflowz task"],
+      ["/ulw-research ```\nsource", "/ulw-research workflowz ```\nsource"],
+      ["/ulw-execute workflowz task", "/ulw-execute workflowz task"],
+      ["/ulw-execute use workflowz.", "/ulw-execute use workflowz."],
+      ["/ulw-execute use workflowz.ts", "/ulw-execute orchestrate use workflowz.ts"],
+      ["/ulw-plan jevify task", "/ulw-plan jevify task"],
+      ["/ulw-loop don't use orchestrate", "/ulw-loop don't use orchestrate"],
+    ]) {
+      const host = new Host();
+      for (const source of ["interactive", "rpc"]) {
+        expect(host.emit("input", { text, source })).toEqual({ text: connected });
+        expect(host.emit("input", { text: connected, source })).toEqual({ text: connected });
+      }
+    }
+  });
+
+  test("native workflow defaults do not activate from references, child briefs or disabled workflows", () => {
+    for (const text of ["Explain ulw-plan", "`ulw-plan`", "> ulw-plan task", "ulw-plan.md", "[REPORT] ulw-plan", "ulw-plan계열 설명", "/skill:ulw-plan"]) {
+      const host = new Host();
+      expect(host.emit("input", { text, source: "rpc" })).toBeUndefined();
+    }
+    const host = new Host();
+    expect(host.emit("input", { text: "ulw-plan task", source: "extension" })).toBeUndefined();
+    host.context.agent.kind = "sub";
+    expect(host.emit("input", { text: "ulw-plan task", source: "rpc" })).toBeUndefined();
+    host.context.agent.kind = "main";
+    host.flags.set("omo-ulw-workflows-disabled", true);
+    expect(host.emit("input", { text: "/ulw-plan task", source: "rpc" })).toBeUndefined();
   });
 
   test("direct ULW input enters native goal mode while workflow-specific commands keep their durable loop", () => {
@@ -85,7 +106,7 @@ describe("Native ULW session behavior", () => {
     }
     expect(host.prepare("ulw ship the fix")?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
 
-    for (const text of ["/ulw-loop continue the ledger", "/ulw-plan plan the fix", "Explain `/ulw`", "Read /ulw/notes.md"]) {
+    for (const text of ["Explain `/ulw`", "Read /ulw/notes.md"]) {
       expect(host.emit("input", { text, source: "interactive" })).toBeUndefined();
     }
     for (const source of ["rpc", "extension"]) {
@@ -96,7 +117,7 @@ describe("Native ULW session behavior", () => {
     host.emit("goal_updated", { goal: { status: "active" }, state: { enabled: true } });
     expect(host.emit("input", { text: "ulw continue the active goal", source: "interactive" })).toBeUndefined();
     expect(host.emit("input", { text: "/ulw continue the active goal", source: "interactive" })).toBeUndefined();
-    expect(host.emit("input", { text: "ulw-loop continue the ledger", source: "interactive" })).toBeUndefined();
+    expect(host.emit("input", { text: "ulw-loop continue the ledger", source: "interactive" })).toEqual({ text: "ulw-loop orchestrate continue the ledger" });
   });
   test("legacy prompt blocks remain inert and are replaced on session resume", () => {
     for (const prefix of ["omo", "omp"]) {

@@ -1,8 +1,8 @@
 ---
-description: "Full Native ULW: session-armed, outcome-first, evidence-driven execution"
+description: "ULW activation with OMP-native execution and goal ownership"
 ---
 ulw
 
 $ARGUMENTS
 
-Apply the complete Native ULW directive installed by the OMP prompt extension. This arms ULW for the session; resume the existing goal/notepad on follow-ups. Bare ULW does not activate planning, loop, execution, research or DAG workflows unless explicitly requested. Preserve all explicit user restrictions and the host's approval rules.
+Use the ULW policy installed by the OMP extension. OMP owns execution; resume its existing goal on follow-ups. Bare ULW does not activate a specialised workflow or create a separate notepad or ledger.

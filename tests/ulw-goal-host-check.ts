@@ -171,9 +171,18 @@ try {
   await admitted;
   drainingFollowup = true;
   streams.get(next.number)?.();
-  await followed;
+  const followupRequest = await followed;
   events.emit("journal", { rows: journal() });
   await savedFollowup;
+  phase = "connecting planning to the native thinking keyword";
+  const thinkingNotice = expectEvent("message_end", event => event.message?.customType === "ultrathink-notice");
+  const planningRequest = expectEvent("provider", event => JSON.stringify(event.body).includes("TUI-NATIVE-PLAN"));
+  const planningInput = expectEvent("input", event => event.text === "/ulw-plan ultrathink TUI-NATIVE-PLAN");
+  terminal.write("/ulw-plan TUI-NATIVE-PLAN\r");
+  await planningInput;
+  streams.get(followupRequest.number)?.();
+  await thinkingNotice;
+  await planningRequest;
   const records = goalRecords(journal());
   assert(records.length > 0, "success requires a persisted native mode_change, not an ULW policy marker");
   for (const row of records) {
@@ -185,7 +194,7 @@ try {
     assert.equal(event.goal?.objective, objective);
     assert.equal(event.goal?.status, "active");
   }
-  console.log(JSON.stringify({ status: "PASS", requests: requestCount, goalId: creation.goal.id, objective, nativeGoalEvents: goals.length, persistedGoalRecords: records.length, scenarios: ["PTY /ulw during active stream", "persisted mode_change goal", "later /ulw preserves goal"] }));
+  console.log(JSON.stringify({ status: "PASS", requests: requestCount, goalId: creation.goal.id, objective, nativeGoalEvents: goals.length, persistedGoalRecords: records.length, scenarios: ["PTY /ulw during active stream", "persisted mode_change goal", "later /ulw preserves goal", "PTY /ulw-plan activates native ultrathink"] }));
 } catch (error) {
   console.error(`TUI goal probe failed at ${phase}\n${terminalOutput}`);
   throw error;

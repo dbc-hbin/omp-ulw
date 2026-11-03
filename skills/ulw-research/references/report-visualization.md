@@ -1,157 +1,61 @@
-# ulw-research - report visualization playbook
+# ulw-research - report visualization
 
-Read this before the asset lanes start in the final-materials phase. Visuals clarify quantitative and structural claims; this file says which visual fits which finding, how to make each one, and how the gates check them. A claim-free text report is valid when it records `not_applicable`.
+Use visuals when they clarify material evidence or the user requests them. A text report is valid; numbers or a list alone do not require a chart, and a report needs neither a generated cover nor a separate visual workflow. Keep format promises and report gate records under [deliverable-phase.md](deliverable-phase.md).
 
-## 1. The binding minimum
+## Evidence visuals
 
-- At least one data visualization of the report's own findings when it makes quantitative claims and a suitable data table and plotting tool are available.
-- A diagram wherever structure matters: a process, an architecture, a timeline, a dependency or influence graph, a comparison of options, the evidence flow behind a contested claim.
-- When the topic has visual or video source material (product screenshots, demo videos, talks, viral posts with media), the report embeds or links it with attribution. In a paginated format, use a captioned still frame plus the link and timestamp.
-- Every visual sits in a `<figure>` with a caption that says what it shows and where the data came from (`[S<n>]` or a lineage tag), and every `<img>` has alt text.
-- A light-tier answer carries one visual when it reports numbers or structure and a suitable renderer is available; otherwise record `not_applicable` or `blocked_capability`.
+| Evidence | Suitable presentation |
+| --- | --- |
+| Trends, comparisons, distributions, shares | Chart computed from a cited CSV/JSON table; retain the table and computation. |
+| Process, architecture, dependency, argument | Rendered diagram with labeled relations and cited scope. |
+| Product/page behavior | Actual screenshot with source, access date and relevant state/version. |
+| Video evidence | Link with timestamp; a captioned still for paginated reports. |
+| Neural model layer shapes | TikZ/PlotNeuralNet only when the cited layer dimensions matter and that toolchain is available. |
+| Concept illustration | Optional, labeled illustration; never fabricated data, labels or evidence. |
 
-A report that makes quantitative or structural claims but omits an available suitable visual is incomplete. A claim-free text report records `not_applicable`; `image_missing_alt` still applies to every non-decorative image (section 6).
+Save material assets under `$SESSION_DIR/assets/`, retain their source/data, and confirm referenced files exist and are non-empty. Caption every evidence figure with the conclusion and source/lineage. Preserve aspect ratio with contain-fit in its container; do not stretch or crop away evidence. Charts need readable title, axes, units, values and color-independent series labels. Match the report's design-spec fonts and palette. Alt text describes the information, not the filename; decorative images use `alt=""` with `role="presentation"` (or `none`/`aria-hidden="true"`) and do not count as evidence visuals.
 
-## 2. Which tool for which finding
+## Render details that affect evidence
 
-| Finding | Tool | Output |
-| --- | --- | --- |
-| Numbers: trends, comparisons, distributions, shares, rankings | A chart computed from a real data table | SVG with live text (PNG only for DOCX or slides) |
-| Process, pipeline, decision flow, sequence of calls | Mermaid `flowchart` or `sequenceDiagram` | SVG |
-| Timeline or history | Mermaid `timeline` or `gantt` | SVG |
-| Relationships: who builds on whom, ownership, influence, dependency | Mermaid `flowchart` or `graph`; `mindmap` for a topic tree | SVG |
-| System or product architecture | Mermaid `flowchart` with subgraphs, or `architecture-beta` where the renderer supports it | SVG |
-| Neural-network architecture in a paper-format (LaTeX) report | PlotNeuralNet | PDF for LaTeX, SVG or PNG for HTML |
-| A product, interface, or page the report discusses | A screenshot captured while reading the source, through the browser skill | PNG |
-| A concept that has no data and no structure, a cover | The image-generation skill, only when it helps the reader understand | PNG |
-| A source video or talk | An embed (web) or a still frame plus link and timestamp (paginated) | iframe or PNG |
+- Keep SVG chart labels as real text. For matplotlib, `matplotlib.rcParams["svg.fonttype"] = "none"` avoids converting labels to paths that the report gates cannot inspect.
+- For Mermaid, disable `htmlLabels` so SVG labels do not depend on `foreignObject`; split dense diagrams instead of shrinking unreadable text. Preserve the `.mmd` source.
+- Vector PDF is suitable for LaTeX; SVG is suitable for HTML. Use raster exports when a destination cannot preserve vectors. A source diagram is not a rendered figure.
+- Cite the exact screenshot or video state relevant to the claim. Source media and generated illustrations have different evidentiary status.
 
-Image generation never draws data, numbers, diagrams with labels, or anything the reader could mistake for evidence. Its caption says it is an illustration.
-
-## 3. How to make each one
-
-Save every asset under `$SESSION_DIR/assets/` and confirm the file exists and is non-empty before the document references it.
-
-### OMP execution note
-
-The commands below are conditional examples, not unconditional install steps. Probe the
-host for the requested binary, package, or exposed browser skill first. Use the
-available local toolchain when present; if a capability is unavailable, keep the source
-asset, record `blocked_capability`, and do not install dependencies, clone repositories,
-or substitute a browser fetch without an exposed browser tool.
-
-### Charts from data
-
-Put the numbers in a table first (`$SESSION_DIR/data/<name>.csv`), then plot from the table, never from prose. Follow the data-scientist doctrine in SKILL.md (numpy, Polars, DuckDB, no pandas).
+For an existing Mermaid toolchain and configuration derived from `design-spec.md`:
 
 ```bash
-# After confirming the data-science toolchain is already available:
-python plot_<name>.py
+mmdc -i "$SESSION_DIR/assets/flow.mmd" -o "$SESSION_DIR/assets/flow.svg" -c "$SESSION_DIR/assets/mermaid-config.json" -b transparent
 ```
 
-- Keep chart text as real text: set `matplotlib.rcParams["svg.fonttype"] = "none"` before saving an SVG. The default converts text to paths, and the static gate then sees a chart with no title, ticks, or labels.
-- Use the design spec's font family and palette tokens (`rcParams["font.family"]`, explicit colors from the spec). One accent color for the series that carries the finding; neutral tones for the rest.
-- Title, axis labels with units, value labels on bars or end points, ticks at round values computed from the data range.
-- One message per chart. A chart that needs a paragraph to explain is two charts.
-- For a web deliverable, HTML/CSS bars or an inline SVG built from the same table are preferred over an image.
-
-### Mermaid diagrams
-
-Write the source to `assets/<name>.mmd` and render it to SVG with the design spec's font and palette:
-
-```bash
-# Write mermaid-config.json with the host file-writing tool, then use an already
-# available Mermaid CLI:
-mmdc -i "$SESSION_DIR/assets/<name>.mmd" -o "$SESSION_DIR/assets/<name>.svg" -c "$SESSION_DIR/assets/mermaid-config.json" -b transparent
-```
-
-- Keep `htmlLabels` off. With HTML labels the node text lands in `foreignObject` HTML instead of SVG `<text>`, so the static gate sees a diagram with no labels, and PDF and DOCX converters often drop it.
-- The CLI drives its own headless renderer. When it cannot start in this session, keep the `.mmd` source, deliver the diagram as a Mermaid code block only where the destination renders Mermaid (GitHub, Notion, many Markdown viewers), and record the render as not run in the closing section. The static gate counts only rendered figures, so an HTML report still needs another rendered visual.
-- Keep a diagram to about 15 nodes. Split a bigger one by subgraph or by step.
-- Lay a chain of more than about five nodes out top to bottom (`flowchart TB`). A wide left-to-right diagram scaled down to the page width shrinks its labels below legible size, worst on a phone.
-- Label every edge whose meaning is not obvious. Node text is short nouns; the caption carries the explanation.
-- Inline the rendered SVG in HTML reports (the gates read its text) or reference the file inside a `<figure>`.
-
-### PlotNeuralNet (paper-format reports)
-
-Use it when the deliverable is LaTeX or a paper-style PDF and the report describes a convolutional or encoder-decoder model whose layer shapes matter. It draws 3D layer blocks with TikZ from a short Python description. It needs a LaTeX toolchain (`pdflatex` with TikZ; on Debian or Ubuntu `texlive-latex-base`, `texlive-latex-extra`, `texlive-fonts-recommended`, `texlive-fonts-extra`; on macOS a TeX distribution) and Python 3. Source: https://github.com/HarisIqbal88/PlotNeuralNet
-
-```bash
-# After confirming that the repository and LaTeX toolchain are available:
-# git clone --depth 1 https://github.com/HarisIqbal88/PlotNeuralNet "$SESSION_DIR/tools/PlotNeuralNet"
-mkdir -p "$SESSION_DIR/tools/PlotNeuralNet/report" && cd "$SESSION_DIR/tools/PlotNeuralNet/report"
-# write arch.py from the README's Python example: to_head(".."), to_cor(), to_begin(), layers, to_connection(...), to_end()
-python3 arch.py                  # writes arch.tex
-pdflatex -interaction=nonstopmode arch.tex
-pdftocairo -svg arch.pdf "$SESSION_DIR/assets/arch.svg"   # for an HTML report; LaTeX reports \input the .tex or include the PDF
-```
-
-- Run `pdflatex` directly instead of the repository's `tikzmake.sh`: that script deletes the generated `.tex` (which a LaTeX report needs to `\input`) and opens a PDF viewer. The repository has had no commits since 2020; pin the cloned commit in the closing section.
-- Layer captions carry the real shapes and channel counts from the cited paper or code, with the citation in the figure caption.
-- It does not fit transformers, graph models, or training pipelines well. Draw those with Mermaid or a hand-built TikZ figure instead.
-
-### Screenshots and video
-
-- Capture product and page screenshots through the browser skill while the source is open, at a readable width, and crop to the part the claim is about. Caption with the source and the access date.
-- Embed a video in a web report with the platform's embed and a timestamp; in a paginated report, use a still frame from the moment the claim refers to, with the link and timestamp in the caption.
+If rendering is unavailable, retain the source, use a code block only where the destination actually renders it, and disclose the unavailable render. Do not claim that fetched text establishes a rendered-page observation.
 
 ### Reference compare — requested visual reproductions only
 
-Apply this comparison only when the requested deliverable reproduces a screenshot, video, 3D scene, or figure. Merely citing or discussing visual source material does not require a reproduction. The user's instructions and actual reference remain the visual contract, ahead of report-style defaults.
+Apply this only when the requested deliverable reproduces a screenshot, video, 3D scene or figure, not merely when it cites one. The actual source and user's fidelity requirements govern the comparison.
 
-- Inspect the real reference, then select representative states from it: the composition, motion transitions, camera views, or figure details needed to judge the requested fidelity. Do not invent source states or impose a fixed frame count.
-- Capture the actual running or rendered reproduction, not just its source code. Pair source and render at the same source moment or corresponding animation state, viewpoint/camera, viewport, and aspect ratio where applicable. Record timestamps or state/view identifiers and any alignment limits; a different moment or camera angle cannot prove a match.
-- Look at each pair side-by-side. Record concrete gaps in geometry, framing, scale, layout, typography, color, lighting/materials, labels/data, or motion as relevant, and the corrections they motivate. Correct the reproduction against the reference and inspect fresh matching pairs under the existing repair policy; no separate fixed-round loop or comparison manifest is required.
-- Preserve the source/render pairs and first/final captures when useful to show what changed. Put comparison findings and evidence links in the existing report or research journal, and disclose residual gaps or unavailable source/render access rather than claiming unobserved fidelity.
+1. Inspect the real reference and choose representative states/views needed to judge fidelity, without a fixed frame quota.
+2. Capture the actual reproduction and pair source/render at the matching timestamp or state, camera/viewpoint, viewport and aspect ratio where applicable. Record identifiers and alignment limits.
+3. Inspect pairs side-by-side for relevant geometry, framing, scale, layout, typography, color, lighting/materials, labels/data or motion. Record concrete gaps, corrections and fresh comparison evidence after relevant corrections.
+4. Retain useful first/final pairs in the journal/report; disclose residual gaps or inaccessible source/render evidence. Unobserved fidelity remains unverified.
 
-Use existing authorized source access; a reproduction request does not authorize bypassing access restrictions or downloading otherwise unauthorized media. If a video segment is needed and both `yt-dlp` and `ffmpeg` are already available, this conditional example preserves the selected cut:
+Comparison evidence belongs in the existing research report, not a new mandatory manifest. The report remains due alongside the reproduction.
 
-```bash
-yt-dlp --download-sections "*00:00:12-00:00:18" --force-keyframes-at-cuts --remux-video mp4 -o "$SESSION_DIR/assets/reference.%(ext)s" "<authorized-source-url>"
-```
+## HTML handoff
 
-Choose the interval from the actual reference, not the example. Run long downloads/extractions through native async bash and retain the returned handle; do not use an installer or `uvx` to obtain missing tools. If the capability is missing, retain accessible source links and record the comparison limitation under the existing `blocked_capability` policy.
+When HTML is selected, open and inspect the actual report, not only its embedded demo, and provide a clickable artifact link to that same file. Leave it available in the browser or a retained report tab when supported. If display is unavailable, link the file and disclose the limitation without claiming a preview. This does not convert requested chat/Markdown reports to HTML.
 
-### Generated illustrations
+## Gate compatibility
 
-Use the image-generation skill only for a cover or a concept illustration that helps the reader, prompted from the design spec's palette and register. Never let generated images carry text, numbers, or logos the reader could read as fact.
+The existing checker accepts `--visual-requirement auto|required|not_applicable|blocked_capability`. Use `required` for a material promised visual, `not_applicable` for an intentionally text-only report, and `blocked_capability` for an unavailable required render; record the basis. Its automatic detector is heuristic, not a research conclusion.
 
-## 4. Choosing the output format
-
-A post by Andrej Karpathy on 2026-10-02 ranks the formats that make model output easier to understand, each better than the last: controlled clean writing, diagrams and images, interactive web pages, and custom explainer videos (https://x.com/karpathy/status/2105819303471976479). Apply it as follows:
-
-- Prose: write in the direction of ASD-STE100 (simplified technical English): short sentences, one idea per sentence, active voice, the same word for the same thing. The post suggests asking for about "80% of the way" when the full spec is too strict.
-- Before writing a long explanation of structure, draw it. A diagram usually replaces several paragraphs.
-- When the destination allows it and no requested format takes precedence, prefer a self-contained HTML report with interactive elements (hover values, toggles between series, expandable evidence) over a static document. Do not convert a requested chat or text report to HTML.
-- When the requester asks for it, or the topic is a process best seen in motion, an explainer video (for example a 3Blue1Brown-style animation, narrated with a speech API or a local text-to-speech model) is a valid extra deliverable. Record it in `outcome.json` like any other promised format.
-
-Within an explicitly requested ulw-research workflow, deliver the requested report as well as any promised reproduction. A working demo, scene, or video alone does not satisfy a promised report. Include the comparison findings, relevant corrections, evidence links, and residual gaps in that report when reproduction was requested.
-
-When HTML is the selected report format, display the actual report through the exposed OMP browser tools and provide a clickable Markdown artifact link to that same file. Use the existing browser-display approach in `skill://visualize` (open the resolved `file://` URL, or an already available local static server through native async bash if file navigation is refused); this does not import its compact-page or asset-inlining constraints into a report. Inspect the report itself, not only its embedded demo, and leave it open in the browser or a retained task-owned tab. If browser display is unavailable, report that limitation and link the artifact without claiming it was shown. OMP has no inline HTML display API; never call absent `show_html_page` or `html_render` tools.
-
-## 5. Quality bar
-
-- Every figure follows the figure standard in SKILL.md: fixed container, contain-fit, aspect ratio preserved, spec fonts and palette.
-- The caption alone tells the reader what the visual shows and what to conclude: "Median build time fell from 9.4 to 3.1 minutes after the cache change [S4]" beats "Build times".
-- Alt text states the content, not the file: the key values or the shape of the trend for a chart, the main nodes and flow for a diagram. A purely decorative image takes `alt=""` plus `role="presentation"` and does not count as a visual; an empty alt without that marker is reported as missing.
-- Every number in a visual comes from the data table and carries its source or lineage tag in the caption.
-- Colors are never the only signal: label series directly or use distinct markers, so the figure reads in grayscale.
-
-## 6. QA checklist
-
-The static gate (`report-tools check`) enforces the machine-checkable rows; visual QA checks the rest on the rendered pages.
-
-| Check | Enforced by |
+| Evidence property | Gate code/check |
 | --- | --- |
-| The report has at least one chart, diagram, or figure image | `report_without_visual` |
-| Every visual sits in a figure with a non-empty caption | `chart_without_figure` |
-| Every chart SVG has a title, ticks, and a text label | `chart_svg_no_text`, `chart_svg_missing_labels` |
-| Every `<img>` has alt text | `image_missing_alt` |
-| Every referenced asset exists and is non-empty | `broken_asset_reference` |
-| Chart and diagram colors are spec tokens | `palette_off_token` |
-| No image is stretched, cropped, or spilling its container | `layout_image_distorted`, `layout_overflow` |
-| Each major quantitative finding has a chart and each structural finding has a diagram | visual QA |
-| Diagram and chart text renders in the spec font and is legible at phone width | visual QA |
-| Source videos and screenshots are embedded or linked with attribution where the topic has them | visual QA |
-| A requested visual reproduction is compared side-by-side with the real source at matching states/views; concrete corrections and residual gaps are reported | visual QA, only for requested reproductions |
-| Generated illustrations carry no fake data or text and are captioned as illustrations | visual QA |
+| Required evidence visual absent | `report_without_visual` |
+| Figure/caption missing | `chart_without_figure` |
+| SVG text/title/labels missing | `chart_svg_no_text`, `chart_svg_missing_labels` (diagrams do not require chart ticks) |
+| Image alternative missing | `image_missing_alt` |
+| Referenced asset unavailable | `broken_asset_reference` |
+| Off-spec color | `palette_off_token` |
+| Distorted or overflowing figure | `layout_image_distorted`, `layout_overflow` |
+| Correct evidence, legibility, source/render match | Inspection of the actual output; cannot be established by source markup alone |

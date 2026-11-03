@@ -26,14 +26,14 @@ export const FINAL_VERIFICATION_ITEMS = [
 export function buildDraft(slug, intent, { reviewRequired = false } = {}) {
 	const assumptionsNote =
 		intent === "unclear"
-			? "Intent is UNCLEAR: research resolves ambiguity, defaults are adopted (not asked), and each is surfaced in the plan's human TL;DR for veto."
+			? "Intent is UNCLEAR: research grounds reversible defaults; surface each in the human TL;DR for veto and leave owner decisions explicit."
 			: "Record any default you adopt instead of asking, so the user can veto it at the gate.";
 	const reviewState = reviewRequired
 		? `review_required: true
 plan_path: doc/plans/${slug}.md
 plan_sha256: null
 review_round_id: null
-review_round_limit: 5
+review_round_limit: null
 pending-action: write and review doc/plans/${slug}.md
 review:
   plan_reviewer:
@@ -64,7 +64,7 @@ approach: <fill: the approach you intend to plan>
 <!-- GAP-n | difference between IS-n and today | reason | closed by todo(s) -->
 
 ## Components (topology ledger)
-<!-- Lock the SHAPE before depth. One row per top-level component that can succeed or fail independently. -->
+<!-- One row per independently meaningful component of the requested outcome. -->
 <!-- id | outcome (one line) | status: active|deferred | evidence path -->
 
 ## Open assumptions (announced defaults)
@@ -112,7 +112,7 @@ export function buildPlanSkeleton(slug, intent) {
 **Risk:** <Low | Medium | High> - <one-line driver>
 ${decisionsLine}
 
-Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execution detail follows below.
+Your next move: <remaining planning decision, or explicit ulw-execute handoff>. Full plan detail follows below.
 
 ---
 
@@ -132,39 +132,39 @@ Your next move: <fill - e.g. approve, or run a high-accuracy review>. Full execu
 ### Must NOT have (guardrails, anti-slop, scope boundaries)
 
 ## Verification strategy
-> Zero human intervention - all verification is agent-executed.
 - Test decision: <TDD | tests-after | none> + framework
-- Evidence: <attemptDir>/task-<N>-${slug}.<ext> (attemptDir is a literal path recorded in the durable OMP ledger; under ulw-loop use doc/ulw-loop/<session-id>/evidence/<goalId>/a<attempt>; otherwise doc/evidence/)
+- Acceptance and real-surface checks: <project-specific commands and observable outcomes>
+- Evidence: <attemptDir>/task-<N>-${slug}.<ext> (record the literal evidence directory; under ulw-loop use its attempt directory, otherwise doc/evidence/)
 
 ## Execution strategy
 ### Parallel execution waves
-> Group todos by actual dependency waves; do not impose artificial minimum or maximum counts.
+<!-- Group by actual dependencies; execution follows current native OMP instructions. -->
 
 ### Dependency matrix
 | Todo | Depends on | Blocks | Can parallelize with |
 | --- | --- | --- | --- |
 
 ## Todos
-> Implementation + Test = ONE todo. Never separate.
-<!-- APPEND TASK BATCHES BELOW THIS LINE WITH native edit/write tools - never rewrite the headers above. -->
+<!-- Keep implementation and its tests together where they form one deliverable. Append task batches below without replacing headers. -->
 - [ ] 1. <title>
   What to do / Must NOT do: <...>
   Closes: GAP-<n>
   Parallelization: Wave <N> | Blocked by: <...> | Blocks: <...>
   References (executor has NO interview context - be exhaustive): <src/path:lines>
   Acceptance criteria (agent-executable): <exact command or assertion>
-  QA scenarios (name the exact tool + invocation): happy + failure, Evidence <attemptDir>/task-1-${slug}.<ext>
-  Recommended task executor category: <difficulty/specialty metadata> | native role: <listed specialist or default task with agent omitted> | reason: <one line; resolved model recorded only from actual result>
-  Commit: <Y only if explicitly authorised; otherwise N> | <type>(<scope>): <summary>
+  QA scenarios: <relevant success/failure cases, exact invocation and expected result>, Evidence <attemptDir>/task-1-${slug}.<ext>
+  Recommended task executor category: <task difficulty/specialty metadata; no native role or model selection>
+  Commit: <actual delivery authorization or not requested>
 
 ## Final verification wave
-> Runs in parallel after ALL todos. ALL must APPROVE. Surface results and stop when the approved acceptance criteria pass; only a remaining user-owned decision requires approval.
+<!-- Future execution checks, distinct from adversarial review of this plan. Follow current OMP verification policy. -->
 ${FINAL_VERIFICATION_ITEMS.map((item) => `- [ ] ${item}`).join("\n")}
 
 ## Commit strategy
+<!-- Record the user's delivery authorization and constraints, if any. -->
 
 ## Success criteria
-> One row per IS row. The plan is complete only when every IS row has a delivering todo and a proving QA scenario; F4 checks the delivered behavior against these rows 1:1, and a shortfall becomes new \`- [ ] N.\` rows, never a note.
+<!-- One row per IS property, linked to delivering tasks and observable proof. F4 checks this mapping against delivered behavior. -->
 | IS | Delivering todo(s) | Proving QA scenario | Evidence |
 | --- | --- | --- | --- |
 | IS-1 | <N> | <scenario name from todo N> | <attemptDir>/task-<N>-${slug}.<ext> |

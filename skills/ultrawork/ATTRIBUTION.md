@@ -1,4 +1,4 @@
-Source basis: upstream Astra-family directive variant at revision `d06f901785cc`.
+Historical source basis: upstream Astra-family directive variant at revision `d06f901785cc`.
 
-The Astra directive retains the current port's OMP contract and applies to the
-GPT-6 family. Other models retain the complete baseline directive.
+The current OMP adaptation retains activation and workflow ownership only.
+All models use the policy in SKILL.md; execution mechanics belong to OMP.

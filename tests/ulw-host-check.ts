@@ -6,6 +6,7 @@ import { join, resolve } from "node:path";
 import { renderPreset } from "../presets";
 
 const requests: unknown[] = [];
+const messageTypes: string[] = [];
 let continuationState: { kind: string; path: string } | undefined;
 let scenarioRequests = 0;
 const server = Bun.serve({
@@ -36,7 +37,7 @@ const server = Bun.serve({
     ].join("\n\n"), { headers: { "content-type": "text/event-stream" } });
   },
 });
-async function run(prompts: string[], flags: string[] = [], continuation?: "loop" | "execute" | "execute-blocked" | "execute-mixed", provider?: string, model = "gpt-6.1-sol", loadSkills = false, tools?: string[]): Promise<string[]> {
+async function run(prompts: string[], flags: string[] = [], continuation?: "loop" | "execute" | "execute-blocked" | "execute-mixed", provider?: string, model = "gpt-6.1-sol", loadSkills = false, tools?: string[], streamingBehavior?: "steer" | "followUp"): Promise<string[]> {
   const offset = requests.length;
   continuationState = undefined;
   scenarioRequests = 0;
@@ -68,6 +69,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
         if (!line.startsWith("{")) continue;
         const event: unknown = JSON.parse(line);
         if (typeof event !== "object" || event === null || !("type" in event)) continue;
+        if (event.type === "message_end" && "message" in event && typeof event.message === "object" && event.message !== null && "customType" in event.message && typeof event.message.customType === "string") messageTypes.push(event.message.customType);
         if (event.type === "extension_error") {
           failure = event;
           signal.reject(new Error(JSON.stringify(event)));
@@ -108,7 +110,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
       signal = Promise.withResolvers<void>();
       expected = "agent_end";
       expectedRequests = continuation === "execute" || continuation === "execute-mixed" ? 3 : continuation === "loop" ? 2 : index + 1;
-      child.stdin.write(JSON.stringify({ type: "prompt", id: `prompt-${index}`, message: prompt }) + "\n");
+      child.stdin.write(JSON.stringify({ type: "prompt", id: `prompt-${index}`, message: prompt, ...(streamingBehavior ? { streamingBehavior } : {}) }) + "\n");
       await signal.promise;
       if (failure) throw new Error(JSON.stringify(failure));
     }
@@ -139,11 +141,10 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
 }
 
 try {
-  const astra = readFileSync(new URL("../skills/ultrawork/references/astra-directive.md", import.meta.url), "utf8");
-  for (const model of ["gpt-6-astra", "gpt-6-astra-fast", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna-fast"]) {
-    const [prompt] = await run(["/ulw validate the GPT-6 family directive"], [], undefined, undefined, model);
-    assert(prompt.includes(`<ultrawork-mode>${astra}</ultrawork-mode>`));
-    assert(!prompt.match(/senpi/i));
+  const directive = readFileSync(new URL("../skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
+  for (const model of ["gpt-6-astra", "gpt-6-astra-fast", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna-fast", "claude-haiku-5.5"]) {
+    const [prompt] = await run(["/ulw validate the shared directive"], [], undefined, undefined, model);
+    assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`));
   }
   for (const model of ["claude-haiku-5.5", "gemini-4-argon"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
@@ -177,9 +178,7 @@ try {
   const armed = await run(["/ulw verify this local probe", "continue"]);
   assert.equal(armed.length, 2);
   for (const prompt of armed) {
-    assert(prompt.includes(`<ultrawork-mode>${astra}</ultrawork-mode>`), "actual provider request must contain the shipped GPT-6 family directive");
-    assert(prompt.includes("# Completion contract"), "implementation requests must use the outcome completion gate");
-    assert(/useful evidence about the cause or a\s+plausible patch is not completion/.test(prompt), "implementation work must not stop at diagnosis");
+    assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`), "actual provider request must contain the shared shipped directive");
     assert.equal(prompt.split("<omp-ulw-policy>").length - 1, 1, "policy must not duplicate on follow-up");
     assert.equal(prompt.split("<omp-model-preset>").length - 1, 1, "model preset must coexist with ULW");
   }
@@ -199,14 +198,63 @@ try {
   const disabled = await run(["ulw verify this probe"], ["--omo-ultrawork-disabled"]);
   assert.equal(disabled.length, 1);
   assert(!disabled[0].includes("<omp-ulw-policy>"));
-  const specialised = await run(["/ulw-plan plan this local probe"]);
-  assert.equal(specialised.length, 1);
-  assert(specialised[0].includes("<omp-ulw-policy>"));
-  assert(JSON.stringify(requests.at(-1)).includes("<omp-ulw-plan-pointer>"));
+  const nativeNotices = ["ultrathink-notice", "orchestrate-notice", "workflow-notice", "jevify-notice"];
+  for (const [name, notice] of [["ulw-plan", "ultrathink-notice"], ["ulw-loop", "orchestrate-notice"], ["ulw-execute", "orchestrate-notice"], ["ulw-research", "workflow-notice"], ["mass-ulw", "workflow-notice"]]) {
+    const noticeOffset = messageTypes.length;
+    const specialised = await run([`/${name} exercise this local probe`], [], undefined, undefined, "gpt-6-astra", false, ["task", "eval"]);
+    assert.equal(specialised.length, 1);
+    assert.equal(specialised[0].includes("<omp-ulw-policy>"), name !== "mass-ulw");
+    assert(JSON.stringify(requests.at(-1)).includes(`<omp-${name}-pointer>`));
+    assert.deepEqual(messageTypes.slice(noticeOffset).filter(type => nativeNotices.includes(type)), [notice], `${name} must activate its native execution mode exactly once`);
+  }
+  for (const [input, expected] of [
+    ["ulw plan exercise alias", ["ultrathink-notice"]],
+    ["mass ulw research exercise combined alias", ["workflow-notice"]],
+    ["/ulw-execute workflowz exercise override", ["workflow-notice"]],
+    ["/ulw-execute use workflowz.", ["workflow-notice"]],
+    ["/ulw-execute read workflowz.ts", ["orchestrate-notice"]],
+    ["/ulw-plan jevify exercise override", ["jevify-notice"]],
+    ["/ulw-research workflowz exercise explicit default", ["workflow-notice"]],
+    ["/ulw-plan", ["ultrathink-notice"]],
+    ["Explain `ulw-plan`", []],
+  ] as const) {
+    const noticeOffset = messageTypes.length;
+    await run([input], [], undefined, undefined, "gpt-6-astra", false, ["task", "eval"]);
+    assert.deepEqual(messageTypes.slice(noticeOffset).filter(type => nativeNotices.includes(type)), [...expected], input);
+  }
+  for (const streamingBehavior of ["steer", "followUp"] as const) {
+    const noticeOffset = messageTypes.length;
+    await run(["ulw-loop exercise RPC prompt delivery"], [], undefined, undefined, "gpt-6-astra", false, ["task", "eval"], streamingBehavior);
+    assert.deepEqual(messageTypes.slice(noticeOffset).filter(type => nativeNotices.includes(type)), ["orchestrate-notice"]);
+  }
+  const disabledConfigRoot = mkdtempSync(join(tmpdir(), "omo-native-keywords-"));
+  try {
+    const configPath = join(disabledConfigRoot, "config.yml");
+    for (const config of ["magicKeywords:\n  enabled: false\n", "magicKeywords:\n  workflow: false\n"]) {
+      writeFileSync(configPath, config);
+      const noticeOffset = messageTypes.length;
+      await run(["/ulw-research exercise disabled native setting"], ["--config", configPath], undefined, undefined, "gpt-6-astra", false, ["task", "eval"]);
+      assert.deepEqual(messageTypes.slice(noticeOffset).filter(type => nativeNotices.includes(type)), []);
+    }
+  } finally { rmSync(disabledConfigRoot, { recursive: true, force: true }); }
+  for (const [flags, tools] of [[["--omo-ulw-workflows-disabled"], ["task", "eval"]], [[], ["read"]]]) {
+    const noticeOffset = messageTypes.length;
+    await run(["/ulw-research exercise unavailable native workflow"], flags, undefined, undefined, "gpt-6-astra", false, tools);
+    assert.deepEqual(messageTypes.slice(noticeOffset).filter(type => nativeNotices.includes(type)), []);
+  }
+  const plainOffset = messageTypes.length;
+  await run(["/ulw exercise native ownership"], [], undefined, undefined, "gpt-6-astra", false, ["task", "eval"]);
+  assert.deepEqual(messageTypes.slice(plainOffset).filter(type => nativeNotices.includes(type)), [], "plain ULW must not implicitly select a specialised native mode");
+  const explicitOffset = messageTypes.length;
+  const [combined] = await run(["/ulw ultrathink orchestrate workflowz jevify exercise native ownership"], [], undefined, undefined, "gpt-6-astra", false, ["task", "eval"]);
+  assert.deepEqual(messageTypes.slice(explicitOffset).filter(type => nativeNotices.includes(type)).sort(), nativeNotices.toSorted(), "explicit native modes must retain their own notices exactly once");
+  assert.equal(combined.split("<omp-ulw-policy>").length - 1, 1);
   for (const mode of ["loop", "execute"] as const) {
     const continued = await run([`/ulw-${mode} exercise owned local state`], [], mode);
     assert.equal(continued.length, mode === "execute" ? 3 : 2, `${mode} must continue through its final gate and stop at completed state`);
   }
+  const research = await run(["/ulw-research exercise session-owned research goals"], [], "loop");
+  assert.equal(research.length, 2, "standalone research must resume through its shared goal ledger and stop at completed state");
   const blocked = await run(["/ulw-execute exercise blocked-only state"], [], "execute-blocked");
   assert.equal(blocked.length, 1, "blocked-only plans must not automatically reopen");
   const mixed = await run(["/ulw-execute exercise independent work and final verification"], [], "execute-mixed");
@@ -235,5 +283,5 @@ try {
   for (const forbidden of ["category", "subagent_type", "prompt", "load_skills", "run_in_background"]) {
     assert(!(forbidden in taskParameters.properties), `native task schema must not expose legacy field: ${forbidden}`);
   }
-  console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: ["Astra directive", "Astra-fast directive", "eight design skills excluded", "fourteen installed skill commands", "native skill body suppression", "native skill explicit ULW arguments", "native skill explicit planning arguments", "slash activation", "session follow-up", "quoted keyword suppression", "path reference suppression", "negated invocation suppression", "blockquote suppression", "relay suppression", "URL suppression", "mass pointer without base arming", "contrast clause activation", "disable flag", "specialised command pointer", "loop continuation", "execute final-gate continuation", "official DeepSeek profile", "third-party DeepSeek profile", "native task schema"], cleanup: "all owned OMP processes exited; QA directories removed; local provider stopped" }));
+  console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: ["shared ULW policy across model families", "eight design skills excluded", "fourteen installed skill commands", "native skill body suppression", "native skill explicit ULW arguments", "native skill explicit planning arguments", "slash activation", "session follow-up", "quoted keyword suppression", "path reference suppression", "negated invocation suppression", "blockquote suppression", "relay suppression", "URL suppression", "mass pointer without base arming", "contrast clause activation", "disable flag", "all specialised command pointers", "no implicit native keyword activation", "explicit native keyword coexistence", "loop continuation", "execute final-gate continuation", "official DeepSeek profile", "third-party DeepSeek profile", "native task schema"], cleanup: "all owned OMP processes exited; QA directories removed; local provider stopped" }));
 } finally { await server.stop(true); }

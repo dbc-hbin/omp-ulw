@@ -1,196 +1,127 @@
+# ulw-research - deliverable contract
 
-## OMP runtime contract
+This reference owns report state, format promises, evidence-preserving validation and the existing report-tools interface. Native OMP owns execution policy. Keep the requested destination/format; a demo or reproduction does not replace a promised report.
 
-Read [the native OMP contract](../../ulw-loop/references/omp-contract.md) when current schemas and host instructions do not resolve a runtime question; reuse it if already read. Host instructions, current user instructions and exposed tool schemas take precedence over this guidance, including its workflow, reporting and verification rules. This workflow requires explicit activation; bare ULW never selects it. Legacy difficulty labels are plan metadata, not callable categories.
+## 1. Lanes and destination
 
-# ulw-research - deliverable phase contract
+Record one lane and exactly the promised formats in `brief.md`:
 
-Read this before the brief is written and again before Phase 6. It replaces the old blocking format question with a contract that never stalls collection: the deliverable is derived from the request and its destination, the requester is asked only what is genuinely missing, and every promise made about the output is tracked in a manifest until it is delivered, skipped, or blocked with a reason.
+| Lane | Meaning |
+| --- | --- |
+| `template-strict` | Match a pointed-at document's structure, tokens, citations and figure style. |
+| `template-vibe` | Apply a requested register without an exact template. |
+| `no-format` | Use the destination's natural shape, including a chat/text answer. |
+| `edit-existing` | Update an existing complete deliverable rather than regenerating it. |
 
-Within this explicitly activated research workflow, the requested report remains a deliverable alongside any promised screenshot/video/3D/figure reproduction. A demo alone does not fulfill a report promise. Preserve the requested destination and format, including chat or text; HTML is not mandatory.
-
-Every helper named here is one command of the dispatcher:
-
-```bash
-node "$SKILL_DIR/scripts/report-tools.mjs" <command> ...
-```
-
-Set `SKILL_DIR` to the absolute directory containing the installed `SKILL.md` you actually read, and pass it to child lanes. It is not a preconfigured environment variable or a path relative to the workspace. The helpers are plain `.mjs` files with no dependencies and run under `node` or `bun` on macOS, Linux, and Windows. They never launch a browser. Exit codes: `0` pass, `1` semantic failure (blockers found, a failed verify, a blocked repair), `2` usage or IO error. JSON goes to stdout and a one-line summary to stderr. Always pass `--session-dir "$SESSION_DIR"` explicitly; `SESSION_DIR` in the environment is only a fallback.
-
-## 1. Lanes
-
-The brief names exactly one lane. The lane decides how much the requester is asked, what the design spec starts from, and how strict the gates are.
-
-| Lane | Definition | How to say it to the requester |
-| --- | --- | --- |
-| `template-strict` | The requester pointed at a document (a prior report, a page, a house template). Its structure, tokens, citation style, and figure standard are copied mechanically and not reinterpreted. | "I will match the document you pointed at: same structure, colors, fonts, and citation style." |
-| `template-vibe` | The requester named a register or feeling ("like a consulting deck", "a clean blog post") without a document to copy. The design spec is written from the defaults in section 6 and the register. | "I will write it in that style using the default report design; point me at an example if you want an exact match." |
-| `no-format` | Nothing about the shape was said and the destination implies it (a chat answer, a thread post, a quick note). No interview about format. | "I will answer in the shape this destination expects." |
-| `edit-existing` | A complete deliverable for this question already exists (section 2). The run edits it in place. It never regenerates it. | "I will update the existing report rather than write a new one." |
-
-## 2. Deliverable state
-
-Before the brief is written, decide the state of any deliverable the request refers to:
-
-```bash
-node "$SKILL_DIR/scripts/report-tools.mjs" outcome state --deliverable <path> --session-dir "$SESSION_DIR"
-```
-
-| State | Meaning | What it opens |
-| --- | --- | --- |
-| `none` | No file, or an empty one. | A fresh run in the lane the request implies. |
-| `partial` | The file carries a `STATUS: draft` line in its first 5 lines, or its manifest still has a `pending` row. | Resume the on-disk skeleton: keep the sections that exist, fill the missing ones, and never start over. |
-| `complete` | The manifest says every promised row is resolved and the file is present and non-empty. | `edit-existing` only. A complete report is never regenerated from scratch. |
-
-## 3. Destination-derived defaults
-
-The request and its destination usually answer the format question already. Derive the defaults first; the interview (section 4) only covers what this table leaves open.
-
-| Request or destination signal | Default format set | Lane | QA tier |
-| --- | --- | --- | --- |
-| A question answered in chat, with no document asked for | `post` (the answer itself, Markdown) | `no-format` | light |
-| A thread, channel, or messenger post | `post` | `no-format` | light |
-| A web page URL as the destination, or "blog", "page" | `html` | `template-vibe` | full |
-| The words "PDF", "DOCX", "slides", or "LaTeX" in the request | exactly the named formats (`pdf`, `docx`, `slides`, `latex`) | `template-vibe` | full |
-| "Report", "document", "write-up" with no format word and no destination | `pdf` + `docx` | `template-vibe` | full |
-| A pointed-at document (a file, a URL, a prior report) | the reference's own format | `template-strict` | full |
-| A prior report of the same kind in this workspace, not pointed at | that report's format, offered as the Q1 default | `template-vibe` | full |
-| A complete existing deliverable for this question (section 2) | its existing format | `edit-existing` | the original's tier |
-
-QA tiers: **light** runs the static gates and one render check of the answer. **Full** runs the static gates, the layout gates, visual QA of every page, and the proofread gate (section 7).
-
-## 4. The empty-info interview
-
-The interview has at most these three questions. OMP ask is blocking: derive defaults with a visible veto, start independent collection, then ask only unresolved outcome-changing forks after independent work is done. A field already answered by request, destination, reference or qualified memory is skipped.
-
-- **Q1 - destination and format.** Options in this order: the memory hit (the choice recorded for the most similar prior context, section 5) when there is one; the derived default from section 3; "describe the format in your own words" (free text, which becomes the brief for the design spec); "don't care, you decide" (resolves to the derived default).
-- **Q2 - audience and length.** Who reads it, and a length band: `short` (a page or a post), `standard` (a report of about 5 to 12 pages), or `deep` (a full dossier). The derived default is first.
-- **Q3 - template lineage.** The pointed-at document, the last report of the same kind, or the clean analyst register (section 6). The derived default is first.
-
-Non-blocking collection rule: state defaults and start collection before any genuinely necessary blocking ask. Write `brief.md` at once with every field and who answered it; the unanswered fields carry their defaults. A late answer is folded in until the assembly lane starts; after that it becomes a re-render request, handled like any other repair.
-
-Recorded fields, under `## Deliverable` in `brief.md`:
+Explicit formats win. Chat/thread answers default to `post`; Markdown files use `md`; a web/blog destination uses `html`; an unspecified document with no destination defaults to `pdf,docx`. A pointed-at template defaults to its format. Use existing preferences when known; resolve only missing destination/format, audience/length or template choices that change the output. Record `answered_by: user|default|request` for each choice, without interrupting independent evidence collection for cosmetic choices.
 
 ```text
+## Deliverable
 lane: template-vibe
 state: none
 formats: pdf, docx (answered_by: request)
-destination: internal review document (answered_by: default)
-audience: engineering leads, standard (answered_by: user)
-template: clean analyst register (answered_by: default)
-format description: none
+destination: internal review (answered_by: default)
+audience: engineering leads, standard length (answered_by: user)
+template: clean analyst report (answered_by: default)
+format description: none (answered_by: default)
 ```
 
-`answered_by` is one of `user`, `default`, `request`. Run `outcome init` (section 9) in the same step, with the formats as the promised list.
+## 2. Resumable state
 
-## 5. Report-format memory episodes
-
-When the memory tool is present, the requester's report-format choices are kept as an append-only episode log, so a repeat requester is not asked the same question twice. When no memory tool is present, skip this section silently.
-
-- Pointer: the report-format episode memory topic (recall/retain), projected every session. One line naming the log, plus the generalizations currently in force.
-- Episode log: the report-format episode memory topic (recall/retain), one line per episode, newest last:
-
-```text
-- [YYYY-MM-DD] <destination kind> · <audience> - <format and template chosen, one line> <!-- src: <session-id>; pattern: observed|declared; confidence: low|medium|high -->
-```
-
-Qualification (write after delivery, only when one of these holds): `declared` - the requester stated the preference outright ("always PDF only"); `observed` - the requester made the same unsolicited choice on 2 or more runs (read the log first). Record format and template choices only, never report content, subjects, names, or findings. Append; never rewrite an existing line.
-
-Read-time generalization (before the interview): a similar context is one with the same destination kind and audience. Consistent similar episodes supply Q1's first option; a `declared` similar episode skips the question it answers. One session never flips a default: a single `observed` episode that disagrees with the rest changes nothing.
-
-Pruning: keep the log near 15 lines. When it grows past that, prune the oldest episodes that agree with the majority for their context first. Never prune a `declared` episode or a minority episode (the only one recording a different choice for its context). Update the pointer in the same memory commit when a generalization changes.
-
-## 6. design-spec.md
-
-Write `$SESSION_DIR/design-spec.md` the moment the deliverable fields are known, before any asset lane starts. Every asset and assembly lane receives it.
-
-1. When a document was pointed at, extract it first. Do not retype its stylesheet:
-   ```bash
-   node "$SKILL_DIR/scripts/report-tools.mjs" format-extract <reference.html|reference.md> --out "$SESSION_DIR/design-spec.md"
-   node "$SKILL_DIR/scripts/report-tools.mjs" format-extract <https://...> --from-url --out "$SESSION_DIR/design-spec.md"
-   ```
-   The extractor copies the CSS custom properties (light and dark), font stacks by role, the most-used colors, px breakpoints, the section skeleton, the heading numbering, the citation marker style, the lineage mode, and the figure containers, under the fixed sections `Extracted from`, `Tokens`, `Typography`, `Layout`, `Structure`, `Figures`, `Citations`, `Open questions`. A field it cannot determine reads `TODO: ask`. A PDF reference is unsupported: ask for its HTML or Markdown source.
-2. Fill every `TODO: ask` from the interview answers, then from the clean analyst register below. Never guess a value.
-3. Apply the binding figure standard and the defaults:
-   - Every figure sits in a fixed-size container with a caption; the image scales inside it with contain-fit, its aspect ratio preserved, never stretched, cropped, or spilling out. Every chart carries a title, axis labels, units, and value labels as real text, with deterministic ticks (round values computed from the data range, never left to a renderer's auto-scaling).
-   - One accent color over neutral background, text, and rule tones. Every color in prose, charts, and diagrams is a spec token.
-   - For web deliverables, HTML/CSS bars and inline SVG are preferred over image charts, and the page has responsive breakpoints so it reads on a phone, a tablet, and a desktop.
-   - Gothic (sans) type only, as a real embedded webfont for the report language; Korean text uses `word-break: keep-all; overflow-wrap: anywhere`.
-   - A closing section on how the report was made (method, sources, members and waves, the gates it passed, what verification overturned) and a numbered sources section with access dates.
-4. Declare the lineage mode on its own line in the spec:
-   - `Lineage: inline` (the analyst default): every unit-bearing number carries `MEASURED`, `ASSUMED`, or `DERIVED` inline or in a `data-lineage` attribute, or a `[S<n>]` citation in the same element. The gate reports an untagged number as a major defect.
-   - `Lineage: section` (web and blog register): sources are bracketed source-label links at sentence end (the report language's word for "source"), lineage distinctions live in the figure captions, and every section is cited. The gate reports an untagged number as an advisory minor defect; the section-citation gate carries the weight.
-
-## 7. Delivery gates, in order
-
-Nothing reaches the requester until the gates for its QA tier pass, in this order. Each gate writes its status into the manifest with `outcome gate <gate> <pass|fail|not_run> --session-dir "$SESSION_DIR"`.
-
-1. **Static gates.** `check` on the rendered HTML:
-   ```bash
-   node "$SKILL_DIR/scripts/report-tools.mjs" check "$SESSION_DIR/report.html" --design-spec "$SESSION_DIR/design-spec.md" > "$SESSION_DIR/defects.json"
-   ```
-   It checks keep-all, palette tokens, emoji, em dashes in prose (en dashes outside numeric ranges are advisory), heading length and generic headings, unsourced numbers (section 6), figure containers and captions, chart SVG text, Korean serif fonts, sections without citations, the closing section, the sources section, broken local assets, and any `--require-section <regex>` the brief requires. Every code, severity, and fix is in [report-gates.md](report-gates.md).
-2. **Layout gates.** Print the probe, evaluate it in the rendered page through the actual native browser page JavaScript route using its exposed contract, save the returned object as `$SESSION_DIR/boxes.json`, and re-run `check` with `--layout "$SESSION_DIR/boxes.json"`. It adds overflow past the container, clipped text, scroll containers, distorted images, and overlapping siblings.
-   ```bash
-   node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json   # .source is one async expression
-   ```
-3. **Visual QA.** Render the artifact to images (PDF pages to PNG, the HTML in the browser skill's engine at desktop and phone widths) and look at the pixels for what a machine cannot see: composition, hierarchy, page breaks, figure legibility. Only when the requested deliverable reproduces a screenshot, video, 3D scene, or figure, also follow [Reference compare](report-visualization.md#reference-compare--requested-visual-reproductions-only): inspect real source and actual render side-by-side at matching states/views and dimensions, record concrete gaps and relevant corrections, and report residual limitations. Select representative states from the actual reference, without adding a fixed frame count, separate repair-round quota, or comparison manifest.
-4. **Proofread.** Assign a default worker a writing-only charter to proofread the final text (grammar, spelling, punctuation, terminology, native register); it never composes or rewrites content. Wording corrections must preserve numeric facts and units, qualifiers and uncertainty, attribution, citations and links, and claim IDs with their claim associations. Flag a suspected factual problem for source checking rather than silently changing it or strengthening the claim. After applying wording edits, recheck affected claims against their sources and rerun the relevant gates whose results those edits invalidated, including rendering/layout checks when text flow changes. This is a check of affected claims, not a new exhaustive research pass. Do not request an unsupported `writing` role.
-
-The light tier runs gate 1 and one render (recorded as `visual`) and records `layout` and `proofread` as `not_run`. The full tier runs all four.
-
-## 8. Bounded repair loop
-
-After every gate run that produced defects, ask the tracker what to do next:
+`$SKILL_DIR` is the absolute installed directory containing the `SKILL.md` actually read. `$SESSION_DIR` is the research directory with local timestamp basename `YYYYMMDD-HHMMSS`. Always pass it explicitly. Helpers use only Node built-ins, run under Node or Bun, and never launch a browser.
 
 ```bash
-node "$SKILL_DIR/scripts/report-tools.mjs" repair decide --state "$SESSION_DIR/repair-state.json" --defects "$SESSION_DIR/defects.json" --artifact-bytes <report bytes> --renders <rendered page count> --session-dir "$SESSION_DIR"
-```
-
-- `action: repair`: fix the listed defects, re-render, re-run the gate, and ask again.
-- `action: deliver`: stop repairing and deliver. `reason` is `clean` or the stop condition that fired; the residual defects are written into the manifest and listed in the closing briefing.
-- `action: block` (exit `1`): do not deliver. Either a content-integrity defect remains (`missing_closing_section`, `missing_citation_section`, `broken_asset_reference`, `missing_required_section`, `missing_promised_deliverable`), or a stop fired without proof of a usable artifact (`--artifact-bytes` and `--renders`). Tell the requester what blocks delivery and record the affected rows as `failed` with the reason.
-
-Defaults: 3 repair attempts, a plateau of 2 consecutive attempts that do not improve the (blocker, major, minor) counts compared in that order, and 15 minutes of wall clock from the first decision. A defect set that repeats an earlier attempt exactly stops the loop as an oscillation. When several conditions hold at once the reported reason follows `clean`, `blocking`, `oscillation`, `plateau`, `max_attempts`, `wall_clock`.
-
-## 9. Outcome manifest and closing briefing
-
-`$SESSION_DIR/outcome.json` tracks every promise made about the output, so a promised format is never silently dropped.
-
-Deliver the report and any promised reproduction, including applicable comparison evidence and residual gaps. When HTML is the selected report format, follow [the visualization playbook's output handoff](report-visualization.md#4-choosing-the-output-format): open and inspect the actual report through exposed OMP browser tools, leave it available in the browser or a retained task-owned tab, and include a clickable artifact link to that file. A displayed demo is not a displayed report. If browser display is unavailable, disclose that limitation and link the file; do not claim an inline preview or call absent HTML-render APIs. This adds no HTML requirement to chat/text delivery.
-
-```bash
+node "$SKILL_DIR/scripts/report-tools.mjs" outcome state --deliverable "$SESSION_DIR/report.md" --session-dir "$SESSION_DIR"
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome init --promised pdf,docx --lane template-vibe --session-dir "$SESSION_DIR"
-node "$SKILL_DIR/scripts/report-tools.mjs" outcome set pdf delivered --path "$SESSION_DIR/report.pdf" --pages 12 --session-dir "$SESSION_DIR"
-node "$SKILL_DIR/scripts/report-tools.mjs" outcome set docx blocked_capability --reason "no document converter in this session" --session-dir "$SESSION_DIR"
+```
+
+`state` returns `none` for a missing/empty file, `partial` for `STATUS: draft` in its first five lines or any pending manifest row, otherwise `complete`. Resume a partial skeleton; edit a complete report in place. Create headings early with `STATUS: draft - <n> sections open` near the top (HTML/TeX comment where appropriate), and remove that marker only when content is complete. `init` creates a new manifest: use it once, not to erase resumed state.
+
+## 3. Design spec when presentation matters
+
+A text/chat report does not need a style extraction or elaborate design document. For a formatted artifact, record its actual template, palette, typography, layout, structure, figures and citations in `design-spec.md`. With an HTML/Markdown reference, extraction preserves its format rather than inventing one:
+
+```bash
+node "$SKILL_DIR/scripts/report-tools.mjs" format-extract "$SESSION_DIR/reference.html" --out "$SESSION_DIR/design-spec.md"
+node "$SKILL_DIR/scripts/report-tools.mjs" format-extract "https://example.com/report" --from-url --out "$SESSION_DIR/design-spec.md"
+```
+
+The extractor also writes `<out>.extract.json`. PDF extraction is unsupported; use the source HTML/Markdown or record the limitation. Its fixed sections are `Extracted from`, `Tokens`, `Typography`, `Layout`, `Structure`, `Figures`, `Citations`, `Open questions`. Resolve `TODO: ask` using the request/reference or explicitly recorded defaults. A clean analyst default uses one accent over neutrals, legible sans fonts including the report's language, readable margins and numbered sources with access dates. Korean HTML text uses `word-break: keep-all; overflow-wrap: anywhere`.
+
+Machine readers recognize CSS custom-property colors under `Tokens`/`Palette`/`Colors` (including fenced declarations) and `Lineage: inline|section` under `Citations`:
+
+- `inline` (default): unit-bearing numbers carry `MEASURED`, `ASSUMED`, `DERIVED`, `data-lineage`, or a source citation in the same element.
+- `section`: sections remain cited; captions explain numeric lineage. Untagged numbers are advisory minor defects rather than major defects.
+
+For included figures, use captioned containers, contain-fit and preserved aspect ratio; charts retain real text for title, labels, units and values. See [report-visualization.md](report-visualization.md) for applicable evidence visuals and [latex-report.md](latex-report.md) for `.tex` plus compiled PDF delivery.
+
+## 4. Report gates
+
+Validate the actual promised report, not only its embedded demo. Keep facts, units, uncertainty, attribution, citations, links and claim associations intact during proofreading; suspected factual changes return to the source/claim graph. Recheck affected evidence and rendering when an edit invalidates them.
+
+For plain text/Markdown/chat, validate citations, numeric lineage, requested sections and promised files directly; record the checks performed. Do not create an HTML/PDF solely to satisfy an unrelated visual gate. Use `not_run` for inapplicable layout/visual gates, with the reason in the journal. For a formatted or paginated artifact, apply relevant static, layout, rendered-page inspection and proofreading checks in that order; record inaccessible checks and their capability limitation, never a fabricated pass.
+
+The CLI static/layout checker consumes HTML, not Markdown, PDF, DOCX or PNG. For an HTML report or a formatted report's actual HTML source:
+
+```bash
+node "$SKILL_DIR/scripts/report-tools.mjs" check "$SESSION_DIR/report.html" --design-spec "$SESSION_DIR/design-spec.md" --visual-requirement not_applicable
+node "$SKILL_DIR/scripts/report-tools.mjs" layout-probe --json
+node "$SKILL_DIR/scripts/report-tools.mjs" check "$SESSION_DIR/report.html" --design-spec "$SESSION_DIR/design-spec.md" --layout "$SESSION_DIR/boxes.json" --visual-requirement required
+node "$SKILL_DIR/scripts/report-tools.mjs" outcome gate static pass --session-dir "$SESSION_DIR"
+node "$SKILL_DIR/scripts/report-tools.mjs" outcome gate layout not_run --session-dir "$SESSION_DIR"
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome render "$SESSION_DIR/renders/page-01.png" --page 1 --session-dir "$SESSION_DIR"
+```
+
+Choose `--visual-requirement auto|required|not_applicable|blocked_capability` from the report's material claims and actual capability, not to hide missing evidence. `auto` uses markup/prose heuristics and can over-classify lists or numbers; an explicit justified value is supported. Text-only delivery is valid. Gates inspect keep-all, palette, punctuation, headings, number lineage, citations, closing/sources sections, assets and figure semantics; [report-gates.md](report-gates.md) defines their codes.
+
+`layout-probe --json` prints a `.source` expression. Evaluate that expression in the actual rendered page and save its returned object as `boxes.json`; a screenshot, PDF or HTML snapshot is not probe JSON. Without that object the CLI reports layout `not_run`. Inspect actual pages for facts a box probe cannot establish: missing/illegible figures, broken pagination, clipped text and wrong source/render correspondence. [Reference compare](report-visualization.md#reference-compare--requested-visual-reproductions-only) applies only to requested reproductions.
+
+Gate names are exactly `static`, `layout`, `visual`, `proofread`; stored statuses are `pass`, `fail`, `not_run`. The `check` command exits `1` and reports top-level `fail` only for blockers; major/minor defects still require inspection and an explicit repair/residual decision. `outcome gate` records a status; it does not run the check. `outcome verify` verifies deliverable rows, not claim validity or gate success.
+
+## 5. Report repair tracker
+
+When a report-tools gate returns defects, retain its JSON as `defects.json` through the host's file-writing/output facilities. The tracker accepts either the check result or its defect array:
+
+```bash
+node "$SKILL_DIR/scripts/report-tools.mjs" repair decide --state "$SESSION_DIR/repair-state.json" --defects "$SESSION_DIR/defects.json" --artifact-bytes 24000 --renders 3 --session-dir "$SESSION_DIR"
+```
+
+The byte/render counts above are examples: supply measured counts. `repair` requests another correction and gate result; `deliver` ends report polishing and records residual defects; `block` prevents delivery of the affected artifact. Content-integrity defects cannot be waived by exhaustion. Defaults are three repairs, two non-improving attempts, repeated defect-code signature detection and fifteen minutes from the first decision. Delivery with residual defects needs proof of a usable rendered artifact (at least 512 bytes and one render). These are report tracker semantics, not a general execution/retry policy. A clean text report need not manufacture a render to use `outcome verify`.
+
+## 6. Outcome schema and closing briefing
+
+Do not hand-invent a replacement schema. `outcome.json` has `schemaVersion: 1`, `sessionDir`, ISO `startedAt`, nullable `finishedAt` and `elapsedMinutes`, `lane`, nullable `interview`, `deliverables`, `renders`, `gates`, `residualDefects`, nullable `repair` and `sources`.
+
+- Formats: `pdf`, `docx`, `html`, `md`, `latex`, `slides`, `post`. Each row has `format`, `status`, `promised`, ISO `updatedAt`; optional `path`, `reason`, non-negative integer `bytes` and `pages`.
+- Statuses: `pending`, `delivered`, `blocked_capability`, `skipped`, `failed`. Resolve every promise. `delivered` requires a real non-empty file; all other terminal statuses require a reason. Save a chat/post answer to a file for its manifest path. An extra format added by `set` has `promised: false`.
+- `renders` entries are `{path, page}` with integer page >= 1. The render command records the path; it does not capture or inspect pixels.
+- `gates` has all four gate keys and their actual status. `residualDefects` entries have a known `code` and `message` (additional location/detail fields can remain). `repair` and `sources` are populated by their commands.
+
+```bash
+node "$SKILL_DIR/scripts/report-tools.mjs" outcome set pdf delivered --path "$SESSION_DIR/report.pdf" --pages 12 --session-dir "$SESSION_DIR"
+node "$SKILL_DIR/scripts/report-tools.mjs" outcome set docx blocked_capability --reason "no document converter available" --session-dir "$SESSION_DIR"
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome verify --session-dir "$SESSION_DIR"
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome finish --session-dir "$SESSION_DIR"
 node "$SKILL_DIR/scripts/report-tools.mjs" outcome briefing --session-dir "$SESSION_DIR"
 ```
 
-- `init` runs when the brief is written (section 4): one `pending` row per promised format (`pdf`, `docx`, `html`, `md`, `latex`, `slides`, `post`).
-- `set` resolves a row: `delivered` (absolute path; bytes are read from disk; pages when paginated), `blocked_capability` (this session cannot produce it), `skipped` (the requester or the lane dropped it), or `failed`. Every status except `delivered` needs `--reason`.
-- `verify` runs before delivery and exits `1` while a row is `pending`, a status lacks its reason, or a delivered file is missing or empty.
-- `finish` stamps the finish time, the elapsed minutes from the session directory's start stamp, and the source and domain counts from `sources-ledger.md`.
-- `briefing` prints the closing block from the manifest and the ledger: sources and distinct domains, elapsed minutes, every deliverable with its status, the gate results, the residual defects, and the repair summary. That text is the closing briefing, pasted as printed, never filled in from memory.
+Run the last three in order, continuing only when verification succeeds. `verify` fails on pending/unreasoned rows or missing/empty delivered files. `finish` records time and counts from `sources-ledger.md`; `briefing` prints sources, unique domains, elapsed minutes, deliverables, gate results, residual defects and repair summary. Include that printed block with the cited answer and artifact links, plus the synthesis's coverage/convergence and unresolved-claim summary. A resolved failure is accounted for, not a successful artifact.
 
-## 10. Command reference
+## 7. Command reference
 
-Invoke every command as `node "$SKILL_DIR/scripts/report-tools.mjs" <command>`. Exit codes for all of them: `0` pass, `1` semantic failure, `2` usage or IO error.
+All commands are prefixed with `node "$SKILL_DIR/scripts/report-tools.mjs"`. Exit codes: `0` success, `1` semantic failure, `2` usage/IO error. JSON is stdout (briefing/probe can be text); summaries are stderr.
 
-| Command | Flags | Exit `1` when |
-| --- | --- | --- |
-| `check <report.html>` | `--design-spec <spec>` (required), `--layout <boxes.json>`, `--require-section <regex>` (repeatable), `--max-defects N` | any blocker defect |
-| `layout-probe` | `--cap N` (default 400), `--root <selector>` (default `main, article`), `--json` | never |
-| `repair decide` | `--state <file>` and `--defects <json>` (required), `--artifact-bytes N`, `--renders N`, `--session-dir <dir>`, `--max-attempts N`, `--plateau-limit N`, `--wall-clock-ms N`, `--now <ISO>` | the decision is `block` |
-| `outcome init` | `--promised <list>` (required), `--lane <lane>`, `--session-dir <dir>`, `--now <ISO>` | never |
-| `outcome set <format> <status>` | `--path <file>`, `--pages N`, `--reason <text>`, `--session-dir <dir>`, `--now <ISO>` | never |
-| `outcome gate <gate> <status>` | `--session-dir <dir>` | never |
-| `outcome render <png>` | `--page N` (required), `--session-dir <dir>` | never |
-| `outcome state` | `--deliverable <path>` (required), `--session-dir <dir>` | never |
-| `outcome verify` | `--session-dir <dir>` | a promise is unresolved or a delivered file is missing or empty |
-| `outcome finish` | `--ledger <file>`, `--session-dir <dir>`, `--now <ISO>` | never |
-| `outcome briefing` | `--json`, `--ledger <file>`, `--session-dir <dir>`, `--now <ISO>` | never |
-| `format-extract <reference>` | `--out <design-spec.md>` (required), `--from-url` | never (an unsupported reference exits `2`) |
-| `--help` | `--json` | never |
+| Command | Flags |
+| --- | --- |
+| `check <report.html>` | Required `--design-spec <spec>`; optional `--layout <boxes.json>`, `--visual-requirement <value>` (values above), repeatable `--require-section <regex>`, `--max-defects N` (default 200). Exit 1 for blockers. |
+| `layout-probe` | `--cap N` (400), `--root <selector>` (`main, article`), `--json`. |
+| `repair decide` | Required `--state <file>`, `--defects <json>`; `--artifact-bytes N`, `--renders N`, `--session-dir <dir>`, `--max-attempts N`, `--plateau-limit N`, `--wall-clock-ms N`, `--now <ISO>`. Exit 1 for `block`. |
+| `outcome init` | Required `--promised <comma-separated formats>`; `--lane <lane>`, `--session-dir <dir>`, `--now <ISO>`. |
+| `outcome set <format> <status>` | `--path <file>`, `--pages N`, `--reason <text>`, `--session-dir <dir>`, `--now <ISO>`. |
+| `outcome gate <gate> <status>` | `--session-dir <dir>`. |
+| `outcome render <png>` | Required `--page N`; `--session-dir <dir>`. |
+| `outcome state` | Required `--deliverable <path>`; `--session-dir <dir>`. |
+| `outcome verify` | `--session-dir <dir>`; exit 1 for unresolved/invalid delivery. |
+| `outcome finish` / `outcome briefing` | `--ledger <file>`, `--session-dir <dir>`, `--now <ISO>`; briefing also `--json`. |
+| `format-extract <reference>` | Required `--out <design-spec.md>`; `--from-url`. Unsupported references exit 2. |
+| `--help` | `--json`. |
