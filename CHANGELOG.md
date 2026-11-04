@@ -1,100 +1,100 @@
 # Change history
 
-[English README](README.md) | [한국어 README](README.ko.md) | [简体中文 README](README.zh-CN.md)
+[English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
-### 2026-11-04 모델 프리셋과 OMP 보정 갱신
+### 2026-11-04 Model preset and OMP adaptation updates
 
-- **프리셋:** Senpi `9815495b8ee5e936e48d1ba5e293eea7642a0529`로 갱신했습니다. 등록 수는 33개이며 새 모델 추가는 없습니다. GPT-6 Astra는 근본 원인 진단, 간결한 코어, 완료 조건에 통합한 검증, 새 문체 지침을 사용합니다.
-- **모델별 공통 지침:** 업스트림의 `sharedSections: "full" | "diet"` 선택을 모델 코어와 기본 조립 경로에 전달합니다. Opus·Fable 9개 프리셋은 축약 전 원문을 유지하고, 나머지 24개는 새 공통 지침 또는 Astra 코어 개정을 적용합니다. 도구·프로젝트·스킬·워크스테이션 영역은 계속 OMP가 소유합니다.
-- **OMP 보정:** 전체형·축약형 양쪽의 보고 형식과 요청 의도 분류를 보정합니다. 활성 `ask`는 업스트림 질문 규칙의 조건을 충족한 뒤 OMP의 blocking 계약으로 변환됩니다. Astra는 `eval` 유무 모두에서 Senpi `monitor` 대신 async bash와 native `wait`를 사용합니다. 승인 없는 외부·유료 작업과 사용자 변경 복원을 허용하지 않으며, DeepSeek V4.1의 축약된 지침 우선순위·백그라운드 대기도 OMP 계약에 맞췄습니다.
-- **OMO:** `dev` `8c087588677b63ccb80affb46f2c485625f929b1`의 모델 프롬프트·에이전트 트리는 이전 `8bda141b` 기준과 동일합니다. 기존 거부 확정 규칙을 유지하며 추가 이식은 없습니다.
-- **OMP:** 설치본과 최신 정식 릴리스 `18.16.0` (`650f3a108229ee11bf68ba3377f4e8c3391cd424`)을 기준으로 시스템 프롬프트 경계, task 지침, 부모·자식 세션 및 provider 훅 계약을 확인했습니다. 호스트 보정 코드는 그대로 호환됩니다. 미출시 main `ff0a986b`의 user-chosen effort와 per-call model 충돌 규칙은 정식 버전의 계약으로 이식하지 않습니다.
+- **Presets:** Updated to Senpi `9815495b8ee5e936e48d1ba5e293eea7642a0529`. There are 33 registered presets, with no new models added. GPT-6 Astra uses root-cause diagnosis, a concise core, verification integrated into completion conditions, and new writing guidance.
+- **Shared model instructions:** Pass upstream's `sharedSections: "full" | "diet"` selection to the model core and default assembly path. The nine Opus and Fable presets retain the original text from before the reduction; the other 24 apply the new shared instructions or Astra core revision. OMP continues to own the tool, project, skill, and workstation sections.
+- **OMP adaptations:** Adapt the reporting format and request intent classification in both the full and reduced versions. An active `ask` is converted to OMP's blocking contract after the conditions in upstream's question rules are met. Astra uses async bash and native `wait` instead of Senpi `monitor`, both with and without `eval`. External or paid actions without approval and reversion of user changes are not permitted; DeepSeek V4.1's reduced instruction hierarchy and background waiting guidance are also aligned with the OMP contract.
+- **OMO:** The model prompts and agent tree in `dev` `8c087588677b63ccb80affb46f2c485625f929b1` are unchanged from the previous `8bda141b` baseline. The existing rule that refusals are final remains in place, with no additional ports.
+- **OMP:** Checked the system prompt boundaries, task instructions, parent and child sessions, and provider hook contracts against the installed version and latest stable release, `18.16.0` (`650f3a108229ee11bf68ba3377f4e8c3391cd424`). The host adaptation code remains compatible without changes. The user-chosen effort and per-call model conflict rules in unreleased main `ff0a986b` are not ported as part of the stable version's contract.
 
-출처: [Senpi 고정 리비전](https://github.com/code-yeongyu/senpi/tree/9815495b8ee5e936e48d1ba5e293eea7642a0529), [Astra 코어 개정](https://github.com/code-yeongyu/senpi/commit/d92272573fc01f38d8798d20391d77dc3853778a), [Opus·Fable 원문 복원](https://github.com/code-yeongyu/senpi/commit/71845495e8bb0362cac2f44a6a11a961be9af659), [OMO 비교 기준](https://github.com/code-yeongyu/oh-my-openagent/commit/8c087588677b63ccb80affb46f2c485625f929b1), [OMP 18.16.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.16.0).
+Sources: [Pinned Senpi revision](https://github.com/code-yeongyu/senpi/tree/9815495b8ee5e936e48d1ba5e293eea7642a0529), [Astra core revision](https://github.com/code-yeongyu/senpi/commit/d92272573fc01f38d8798d20391d77dc3853778a), [Restoration of the original Opus and Fable text](https://github.com/code-yeongyu/senpi/commit/71845495e8bb0362cac2f44a6a11a961be9af659), [OMO comparison baseline](https://github.com/code-yeongyu/oh-my-openagent/commit/8c087588677b63ccb80affb46f2c485625f929b1), [OMP 18.16.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.16.0).
 
-### 2026-11-03 ULW 책임 축소
+### 2026-11-03 Reduced ULW responsibilities
 
-- 명령 이름·별칭·템플릿·비활성화 플래그와 goal 연결·상태 복원·계속 실행 훅은 보존했습니다.
-- 모델별 장문 ULW 정책을 단일 정책으로 통합하고, 공통 실행·위임·검증 규칙은 OMP에 맡겼습니다.
-- 계획·실행·루프·DAG·리서치 문서와 관련 참조는 각 기능의 산출물·상태 계약 중심으로 축소했습니다.
-- 실제 호스트 검증은 명령별 포인터, 세션 지속·goal 보존, 상태 기반 계속 실행과 명시적 native 키워드의 독립 동작을 확인합니다.
-- 전문 명령·별칭은 적합한 native 키워드에 자동 연결합니다. 명시적 선택, OMP 비활성화 설정과 도구 조건을 보존하고, native 알림을 중복 구현하지 않습니다.
+- Preserved command names, aliases, templates, disable flags, goal connections, state restoration, and continuation hooks.
+- Consolidated lengthy model-specific ULW policies into a single policy, leaving shared execution, delegation, and verification rules to OMP.
+- Reduced planning, execution, loop, DAG, and research documents and related references to focus on each feature's deliverable and state contracts.
+- Real-host verification checks command-specific pointers, session persistence and goal preservation, state-based continuation, and the independent operation of explicit native keywords.
+- Specialized commands and aliases automatically connect to suitable native keywords. Explicit selections, OMP disable settings, and tool conditions are preserved, without duplicating native notifications.
 
-### 2026-11-01 OMO 워크플로 스킬 후속 반영
+### 2026-11-01 Follow-up OMO workflow skill updates
 
-- **`ulw-plan`:** 리뷰 라운드 5회 상한을 없애고 진행 기반 종료로 바꿨습니다. 직전 라운드가 새 blocker를 찾거나 기존 blocker를 닫았을 때만 다음 라운드를 열고, 둘 다 없으면 미해결 blocker를 보고하고 사용자에게 묻습니다. 수렴 계약 JSON(`max_rounds: null`, `continue_while`, `stop_on`)도 같이 바꿨습니다.
-- **`visualize`:** 미리보기 전에 `frontend`의 `check-draft-guard.ts` lint를 통과해야 합니다.
-- **`mass-ulw`:** 앞 wave 전체에 의존하는 다음 wave는 리뷰 노드 하나로 연결합니다(n×m 대신 n+m 의존성).
-- 출처: [OMO `9ddcfaac`](https://github.com/code-yeongyu/oh-my-openagent/commit/9ddcfaac8), [`bbd125e3`](https://github.com/code-yeongyu/oh-my-openagent/commit/bbd125e3c), [`634b4ed9`](https://github.com/code-yeongyu/oh-my-openagent/commit/634b4ed9c), OMO `8bda141b`의 `mass-ulw/references/planning.md`.
+- **`ulw-plan`:** Removed the five-round review limit and switched to progress-based termination. A new round opens only when the previous round found a new blocker or closed an existing blocker; if neither occurred, report unresolved blockers and ask the user. Updated the convergence contract JSON (`max_rounds: null`, `continue_while`, `stop_on`) as well.
+- **`visualize`:** Must pass the `frontend` `check-draft-guard.ts` lint before previewing.
+- **`mass-ulw`:** Connect a subsequent wave that depends on the entire preceding wave through one review node (n+m dependencies instead of n×m).
+- Sources: [OMO `9ddcfaac`](https://github.com/code-yeongyu/oh-my-openagent/commit/9ddcfaac8), [`bbd125e3`](https://github.com/code-yeongyu/oh-my-openagent/commit/bbd125e3c), [`634b4ed9`](https://github.com/code-yeongyu/oh-my-openagent/commit/634b4ed9c), and `mass-ulw/references/planning.md` in OMO `8bda141b`.
 
-### 2026-11-01 OMO 테스트 정리·프론트엔드 검사 이식
+### 2026-11-01 OMO test cleanup and frontend check ports
 
-- **`programming` 스킬 신규:** OMO `8bda141b`의 언어별 규칙, 테스트 작성 게이트(`references/testing/`), Bun 스크립트를 가져왔습니다. 스크립트 경로는 `$SKILL_DIR` 기준이며, 업스트림 단위 테스트는 포함하지 않습니다.
-- **`remove-ai-slops`:** 9번 범주를 "누락 또는 junk 테스트"로 바꿨습니다. 테스트 선언은 R/F/C/D로 표시하고, 기준 상태에서 이미 실패하던 테스트는 버그로 기록합니다. `check-test-junk.ts`로 정적 검사를 하고, 삭제 전에는 루트가 `mutation-proof.ts`로 한 건씩 증명합니다.
-- **`frontend`:** grounding(이상 상태·gap ledger), craft-floor 수치 기준, 상태별 크기 고정, 결과물별 WCAG 2.2 AA 결과표를 추가했습니다. 렌더 후 lint로 detect SDK(`scripts/detect/`)와 소스 lint `check-draft-guard.ts`를 함께 제공합니다. detect는 `Bun.WebView`를 쓰며, Bun 1.4.2에서 `--reflow` 스크립트가 평가되지 않던 문제(끝의 `;`)를 고쳤습니다. 라이선스 고지는 `ATTRIBUTION.md` 6·7절에 있습니다.
-- **`visual-qa`:** 리뷰어 전에 detect 사전 검사를 돌리고, 체크리스트 A13·B8·E7·F8·F9를 추가했습니다(A3 측정 기준 갱신). `verdict-schema.json` id 목록도 함께 늘렸습니다.
+- **New `programming` skill:** Imported language-specific rules, test-writing gates (`references/testing/`), and Bun scripts from OMO `8bda141b`. Script paths are relative to `$SKILL_DIR`; upstream unit tests are not included.
+- **`remove-ai-slops`:** Changed category 9 to "missing or junk tests." Test declarations are marked R/F/C/D, and tests that already failed at baseline are recorded as bugs. Static checks use `check-test-junk.ts`; before deletion, the root agent proves each case individually with `mutation-proof.ts`.
+- **`frontend`:** Added grounding (ideal state and gap ledger), numerical craft-floor criteria, fixed dimensions across states, and a WCAG 2.2 AA results table for each deliverable. Provides both the detect SDK (`scripts/detect/`) and source lint `check-draft-guard.ts` as post-render lint tools. detect uses `Bun.WebView`; fixed an issue in Bun 1.4.2 that prevented `--reflow` scripts from being evaluated (the trailing `;`). License notices are in sections 6 and 7 of `ATTRIBUTION.md`.
+- **`visual-qa`:** Runs detect preflight checks before the reviewers and adds checklist items A13, B8, E7, F8, and F9 (with updated A3 measurement criteria). Expanded the id list in `verdict-schema.json` as well.
 
-### 2026-11-01 OMP 18.14.2 계약 반영
+### 2026-11-01 OMP 18.14.2 contract updates
 
-- **프리셋 갱신:** Senpi `b6f8bd72ffe6c9f8e754e466fa54970c6002fbc8`로 고정했습니다. 33개 프리셋의 terminal/app 렌더 중 바뀐 것은 DeepSeek V4.1 Flash 전체 코어 재작성뿐이며, 모델 선택 규칙은 동일합니다.
-- **per-call `model`:** OMP 18.13+의 `task`는 운영자가 승인한 정확한 모델 ID를 spawn·`tasks[]` 항목 단위로 받습니다. 스킬은 live 스키마가 승인 목록을 광고할 때만 그 정확한 ID를 쓰고, category와 OMO 추론 등급 이름은 계속 보내지 않습니다. `sourceSession`은 seance 전용입니다.
-- **Visual QA:** 두 리뷰어 프롬프트에 화면 brief와 필수 콘텐츠 목록을 이름 단위로 전달하고, TUI 증거의 `expectedColumns`를 주요 필드로 명시합니다.
-- **OMP:** 설치본과 최신 정식 릴리스 `18.14.2`를 기준으로 합니다. `host.ts`·`payload.ts`의 치환 대상 문구는 이 릴리스에서도 일치합니다. opt-in `taskFile`은 기본 비활성이라 문서화하지 않습니다.
-- 출처: [Senpi DeepSeek V4.1 Flash 변경](https://github.com/code-yeongyu/senpi/blob/b6f8bd72ffe6c9f8e754e466fa54970c6002fbc8/packages/coding-agent/src/core/extensions/builtin/prompt-preset/changes.md), [OMP task 도구 설명](https://github.com/can1357/oh-my-pi/blob/v18.14.2/packages/coding-agent/src/prompts/tools/task.md), [OMO visual-qa](https://github.com/code-yeongyu/oh-my-openagent/blob/dev/packages/shared-skills/skills/visual-qa/SKILL.md).
+- **Preset update:** Pinned to Senpi `b6f8bd72ffe6c9f8e754e466fa54970c6002fbc8`. Among the terminal/app renders of the 33 presets, the only change is a full rewrite of the DeepSeek V4.1 Flash core; model selection rules remain the same.
+- **Per-call `model`:** OMP 18.13+ `task` accepts exact model IDs approved by the operator for each spawn or `tasks[]` entry. Skills use those exact IDs only when the live schema advertises an approved list, and continue to omit category and OMO reasoning-tier names. `sourceSession` is exclusive to seance.
+- **Visual QA:** Passes the screen brief and required content list by name to both reviewer prompts, and explicitly identifies `expectedColumns` as a primary field in TUI evidence.
+- **OMP:** Based on the installed version and latest stable release, `18.14.2`. The text targeted for replacement in `host.ts` and `payload.ts` still matches in this release. The opt-in `taskFile` is disabled by default and is not documented.
+- Sources: [Senpi DeepSeek V4.1 Flash changes](https://github.com/code-yeongyu/senpi/blob/b6f8bd72ffe6c9f8e754e466fa54970c6002fbc8/packages/coding-agent/src/core/extensions/builtin/prompt-preset/changes.md), [OMP task tool description](https://github.com/can1357/oh-my-pi/blob/v18.14.2/packages/coding-agent/src/prompts/tools/task.md), [OMO visual-qa](https://github.com/code-yeongyu/oh-my-openagent/blob/dev/packages/shared-skills/skills/visual-qa/SKILL.md).
 
-### 2026-10-29 거부는 최종
+### 2026-10-29 Refusals are final
 
-- 모든 모델 프리셋 끝에 OMO의 거부 규칙을 붙입니다. 권한·승인 거부나 사용자 거절은 그 호출이 하려던 일에 대해 최종이며, 다른 도구·명령·경로·호스트로 같은 결과를 내지 않습니다. 독립적인 작업은 계속하고, 메인 세션은 거부된 단계를 사용자에게 묻고 서브에이전트는 부모에게 막힌 항목으로 보고합니다.
-- 출처: [OMO `192c1138` 거부 규칙](https://github.com/code-yeongyu/oh-my-openagent/commit/192c1138).
+- Appends OMO's refusal rule to the end of every model preset. A permission or approval denial, or a user refusal, is final for what that call was meant to do; the same result must not be reached through another tool, command, path, or host. Independent work continues; the main session asks the user about the refused step, while subagents report it to their parent as a blocker.
+- Source: [OMO `192c1138` refusal rule](https://github.com/code-yeongyu/oh-my-openagent/commit/192c1138).
 
-### 2026-10-26 선별 이식
+### 2026-10-26 Selective ports
 
-- **프리셋 갱신:** Senpi `a854e7acffa90aba674b9454279035a2fb7140f4`로 고정했습니다. 갱신기는 새 `@earendil-works/pi-ai/utils/fable55-launch` 의존성만 명시적으로 허용하고, 다른 소스와 같은 SHA에서 내려받아 번들에 포함합니다. 임의 패키지 import와 허용 범위 밖 소스는 계속 거부합니다.
-- **모델 선택:** Kimi Code의 `k3.1-pro`와 K3.1 별칭은 전용 `kimi-k3-1`로, Fable/Mythos 5.5는 구형 Fable 5 대신 5.1 프롬프트를 재사용하는 `claude-fable-5-5`로 선택됩니다. 이 SHA에서 Fable 5.5는 아직 출시 준비 상태이며, 모델 기본값·제공자·권한을 변경하지 않습니다.
-- **Frontend:** 일반 UI는 주 행동과 정보 위계를 우선하며, 고급 연출을 무조건 요구하지 않습니다. 불필요한 장식·반복 정보·꾸며낸 사회적 증거는 줄이되 필수 입력·데이터·문구와 사용자 레퍼런스는 보존합니다.
-- **Visual QA:** 기존 UI 수정은 가능한 경우 수정 전 baseline을 확보해 같은 상태의 결과와 비교합니다. 실제 결함과 취향 차이를 구분하며, 취향만으로 수정 루프를 반복하지 않습니다. 명시적 레퍼런스 불일치와 필수 콘텐츠 손실은 결함입니다.
-- **리서치 교정:** 교정 후 영향을 받은 사실·숫자·한정어·출처 연결을 원본과 재대조하고 무효화된 검증만 다시 수행합니다. 별도 fact-ledger 실행 도구나 새 검증 명령은 도입하지 않습니다.
-- **OMP:** 설치본과 최신 정식 릴리스 `18.12.6`의 계약을 유지합니다. 미출시 main의 `/resume` background-job 취소 동작은 아직 현재 런타임의 보장으로 문서화하지 않습니다.
+- **Preset update:** Pinned to Senpi `a854e7acffa90aba674b9454279035a2fb7140f4`. The updater explicitly allows only the new `@earendil-works/pi-ai/utils/fable55-launch` dependency, downloads it from the same SHA as the other sources, and includes it in the bundle. Arbitrary package imports and sources outside the allowed scope remain rejected.
+- **Model selection:** Kimi Code's `k3.1-pro` and K3.1 aliases select the dedicated `kimi-k3-1`; Fable/Mythos 5.5 selects `claude-fable-5-5`, which reuses the 5.1 prompt instead of the older Fable 5 prompt. At this SHA, Fable 5.5 is still being prepared for release; model defaults, providers, and permissions are unchanged.
+- **Frontend:** Ordinary UI prioritizes the primary action and information hierarchy, without unconditionally requiring elaborate presentation. Reduces unnecessary decoration, repeated information, and fabricated social proof while preserving required inputs, data, copy, and user references.
+- **Visual QA:** When modifying an existing UI, captures a baseline before the change when possible and compares it with the result in the same state. Distinguishes actual defects from differences in taste and does not repeat fix loops based on taste alone. Explicit reference mismatches and loss of required content are defects.
+- **Research corrections:** After a correction, compares affected facts, numbers, qualifiers, and source connections against the originals again and reruns only invalidated verification. Does not introduce a separate fact-ledger execution tool or new verification commands.
+- **OMP:** Retains the contracts of the installed version and latest stable release, `18.12.6`. The `/resume` background-job cancellation behavior in unreleased main is not yet documented as a guarantee of the current runtime.
 
-출처: [Senpi 프리셋 변경 기록](https://github.com/code-yeongyu/senpi/blob/a854e7acffa90aba674b9454279035a2fb7140f4/packages/coding-agent/src/core/extensions/builtin/prompt-preset/changes.md), [OMO frontend·visual-qa 변경](https://github.com/code-yeongyu/oh-my-openagent/commit/9d731da51c1ee9bee8a337851263ce7d2d26a1d4), [OMO 리서치 교정 계약](https://github.com/code-yeongyu/oh-my-openagent/commit/637d524ba33c1631e5e7d2e245e64077dd733aa7).
+Sources: [Senpi preset change history](https://github.com/code-yeongyu/senpi/blob/a854e7acffa90aba674b9454279035a2fb7140f4/packages/coding-agent/src/core/extensions/builtin/prompt-preset/changes.md), [OMO frontend and visual-qa changes](https://github.com/code-yeongyu/oh-my-openagent/commit/9d731da51c1ee9bee8a337851263ce7d2d26a1d4), [OMO research correction contract](https://github.com/code-yeongyu/oh-my-openagent/commit/637d524ba33c1631e5e7d2e245e64077dd733aa7).
 
-### 2026-10-23 위임 역할 대조와 이식
+### 2026-10-23 Delegated role comparison and ports
 
-OMO의 specialist와 실행 카테고리는 서로 다른 축입니다. 아래는 OMO `541c6029`와 설치된 OMP `18.12.6`의 실제 역할 계약을 대조한 결과이며, 이름이나 모델의 등가표가 아닙니다.
+OMO specialists and execution categories are separate dimensions. The table below compares the actual role contracts in OMO `541c6029` and the installed OMP `18.12.6`; it is not a table of equivalent names or models.
 
-| OMO 역할·카테고리 | OMP 대응 | 이식한 선택 기준과 한계 |
+| OMO role or category | OMP counterpart | Ported selection criteria and limitations |
 | --- | --- | --- |
-| `explore` | `scout` | 낯선 코드의 위치·흐름·근거 탐색. 이미 아는 파일의 단일 조회는 직접 수행합니다. |
-| `librarian` | `scout`의 부분 대응 | 도구가 지원하는 외부 근거 수집. 라이브러리·버전·공식 출처·링크 요구를 assignment에 명시하며, 전문 역할 전체가 같다고 가정하지 않습니다. |
-| `quick` | `sonic`의 부분 대응 | 명시된 단계·금지 범위·성공 기준을 따르는 기계적 수정과 정해진 데이터 수집. 파일 수가 많아도 변환이 확정돼 있으면 후보이며, 짧은 코드라도 원인·계약 판단이 필요하면 제외합니다. |
-| `deep-low` | 기본 worker (`agent` 생략) | 코드·테스트·히스토리로 결정을 해결할 수 있는 한 목표의 조사·구현. OMP sonic의 low-reasoning 계약 때문에 `deep-low` 전체를 sonic으로 치환하지 않습니다. |
-| `deep-high` | 직접 대응 없음 | 미정 trade-off·경계 계약·새 메커니즘·불변식 판단을 부모 또는 적합한 추론 worker에 배정합니다. 역할 이름만으로 모델·추론 수준을 보장하지 않습니다. |
-| `ultrabrain`, `oracle`의 설계·디버깅 자문 | 직접 대응 없음 | 부모 또는 명시적 추론 assignment를 받은 worker. 추론 자체가 산출물이면 근거·반례·버린 대안·실행 가능한 추천을 요구하며, 자문에는 수정 금지를 명시합니다. |
-| `metis` / `plan-consultant`, `momus` / `plan-reviewer` | 직접 대응 없음 | 요구·계획 분석은 해당 역할이 실제로 광고될 때만 사용하고, 아니면 수정 금지 기본 worker에 맡깁니다. OMP의 diff 전용 `reviewer`로 강제 치환하지 않습니다. |
-| `code-reviewer`, 구현 후 검토 | `reviewer` | 새 diff가 도입한 구체적 버그 검토만 대응합니다. 원본 응답 형식을 보존하며 구현·실행 QA·일반 계획 검토와 구분합니다. |
-| `oracle`의 보안 우려 중 저장소 취약점 분석 | `security-reviewer`의 부분 대응 | 입력에서 제어·위험 지점으로 이어지는 취약점 근거 확인. 일반 반론 역할, 공격 실행, 네트워크 조사는 맡기지 않습니다. |
-| 직접 대응 없음 | `seance` | `sourceSession`으로 지정한 과거 세션과 하위 기록의 읽기 전용 자문입니다. |
-| `unspecified-low/high` | 별도 역할 없음 | 전문 역할이 맞지 않을 때의 fallback 판단만 가져옵니다. 작업 범위와 미해결 추론을 구분하고 실제 OMP worker 계약으로 선택합니다. |
+| `explore` | `scout` | Finds locations, flows, and evidence in unfamiliar code. Perform a single lookup in an already known file directly. |
+| `librarian` | Partial counterpart in `scout` | Collects external evidence supported by the tools. Specify library, version, official source, and link requirements in the assignment; do not assume the entire specialist role is equivalent. |
+| `quick` | Partial counterpart in `sonic` | Mechanical edits and predefined data collection following explicit steps, prohibited scope, and success criteria. A transformation can qualify even across many files if it is fully determined; even short code is excluded if it requires judgment about causes or contracts. |
+| `deep-low` | Default worker (omit `agent`) | Investigation and implementation toward one goal whose decisions can be resolved through code, tests, and history. Do not replace all of `deep-low` with sonic because of OMP sonic's low-reasoning contract. |
+| `deep-high` | No direct counterpart | Assign unresolved trade-offs, boundary contracts, new mechanisms, and invariant judgments to the parent or a suitable reasoning worker. A role name alone does not guarantee a model or reasoning level. |
+| Design and debugging consultation from `ultrabrain` or `oracle` | No direct counterpart | The parent or a worker given an explicit reasoning assignment. When reasoning itself is the deliverable, require evidence, counterexamples, rejected alternatives, and actionable recommendations; explicitly prohibit edits for consultation. |
+| `metis` / `plan-consultant`, `momus` / `plan-reviewer` | No direct counterpart | Use these roles for requirements and plan analysis only when they are actually advertised; otherwise assign a default worker with edits prohibited. Do not force substitution with OMP's diff-only `reviewer`. |
+| `code-reviewer`, post-implementation review | `reviewer` | Corresponds only to review of concrete bugs introduced by a new diff. Preserve the original response format and distinguish it from implementation, execution QA, and general plan review. |
+| Repository vulnerability analysis within `oracle` security concerns | Partial counterpart in `security-reviewer` | Checks vulnerability evidence leading from inputs to control or risk points. Do not assign general counterargument work, attack execution, or network investigation. |
+| No direct counterpart | `seance` | Read-only consultation with the past session specified by `sourceSession` and its child records. |
+| `unspecified-low/high` | No separate role | Import only the fallback judgment used when no specialist role fits. Distinguish the work scope from unresolved reasoning and select according to the actual OMP worker contract. |
 
-`host.ts`의 기존 routing adapter를 통해 기본 호스트 Tool Policy와 지원 provider의 native `task` 설명에 같은 선택 기준을 적용합니다. 결정이 열려 있으면 영향받는 수정 전에 읽은 근거·미결정 사항·대안을 부모에게 반환하고, 부모가 해결하거나 같은 brief와 근거를 적합한 worker로 넘깁니다. sonic을 쓰기 위한 불필요한 분할이나, 일반 worker에 대한 무조건적인 선호를 모두 피합니다. 모델 배정·도구 권한·자식 프리셋 주입 조건은 이 변경의 대상이 아닙니다.
+Applies the same selection criteria to the default host Tool Policy and the native `task` descriptions of supported providers through the existing routing adapter in `host.ts`. If a decision remains open, return the evidence read, unresolved issues, and alternatives to the parent before making affected edits; the parent resolves it or passes the same brief and evidence to a suitable worker. Avoid both unnecessary splitting merely to use sonic and unconditional preference for a general worker. Model assignment, tool permissions, and conditions for injecting child presets are outside the scope of this change.
 
-출처: [OMO Senpi 실행 카테고리·선택 조건](https://github.com/code-yeongyu/oh-my-openagent/blob/541c6029eac63033fd7b76e7244be5d3f37e4024/packages/senpi-task/src/category/openai-categories.ts), [OMO 탐색·외부 조사·자문 구분](https://github.com/code-yeongyu/oh-my-openagent/blob/541c6029eac63033fd7b76e7244be5d3f37e4024/packages/omo-opencode/src/agents/dynamic-agent-core-sections.ts), [OMP 기본 worker·sonic 정의](https://github.com/can1357/oh-my-pi/blob/v18.12.6/packages/coding-agent/src/task/agents.ts), [OMP 역할 프롬프트](https://github.com/can1357/oh-my-pi/tree/v18.12.6/packages/coding-agent/src/prompts/agents).
+Sources: [OMO Senpi execution categories and selection conditions](https://github.com/code-yeongyu/oh-my-openagent/blob/541c6029eac63033fd7b76e7244be5d3f37e4024/packages/senpi-task/src/category/openai-categories.ts), [OMO distinctions between exploration, external research, and consultation](https://github.com/code-yeongyu/oh-my-openagent/blob/541c6029eac63033fd7b76e7244be5d3f37e4024/packages/omo-opencode/src/agents/dynamic-agent-core-sections.ts), [OMP default worker and sonic definitions](https://github.com/can1357/oh-my-pi/blob/v18.12.6/packages/coding-agent/src/task/agents.ts), [OMP role prompts](https://github.com/can1357/oh-my-pi/tree/v18.12.6/packages/coding-agent/src/prompts/agents).
 
-### 2026-10-22 선별 이식
+### 2026-10-22 Selective ports
 
-- **탐색과 추론 분리:** scout는 위치 탐색·근거 수집에 사용하고, 원인 분석·경쟁 가설·계약 트레이드오프·불변식 판단은 부모 또는 적합한 일반 작업자에게 맡깁니다. 읽기 전용은 작업 권한이지 추론 난도가 아닙니다. 탐색으로 해결하지 못한 판단은 근거와 미해결 선택지를 반환해 부모가 처리하거나 다시 배정합니다. 일반 작업자의 수정 금지는 명시하되 읽기 전용 샌드박스로 오인하지 않습니다.
-- `host.ts`는 기본 호스트 템플릿의 Tool Policy에서 알려진 탐색 강제 문구만 보정합니다. `payload.ts`는 지원 provider 요청의 native `task` 설명에 같은 보정을 적용합니다. 도구 이름·인자 스키마·실행·모델 배정은 변경하지 않으며, 프로젝트 지침·사용자 메시지·커스텀 시스템 프롬프트·자식 역할은 보존합니다. OMO의 `deep-high`·`ultrabrain` 카테고리를 OMP 도구 인자로 추가하지 않습니다.
-- 이 보정은 현재 알려진 OMP 문구에 한정됩니다. OpenAI Responses/Codex/Completions, Anthropic, Google 및 Bedrock 도구 설명 경로를 지원하며, provider hook을 거치지 않는 전송과 미지원 요청 형식은 변경하지 않습니다. 역할 이름만으로 큰 모델이 선택된다고 보장하지 않으며, 필요한 모델을 배정할 수 없으면 부모가 추론하거나 해당 제한을 보고합니다.
-- **`wait` 계약:** 시작한 작업뿐 아니라 이번 실행에서 보낸 메시지의 답장을 기다릴 수 있고, 실행 중인 작업과 대기 중인 답장이 모두 없으면 즉시 반환한다는 OMP 18.12.4+ 의미를 공통 계약에 반영했습니다.
-- **시각 재현:** 요청된 스크린샷·영상·3D·도표 재현은 실제 원본과 렌더를 같은 상태·시점·뷰포트에서 비교합니다. 대표 상태는 원본에서 선택하며 고정 프레임 수·새 비교 manifest·별도 반복 횟수를 강제하지 않습니다. 약속한 보고서는 데모와 함께 전달하고, HTML을 선택했을 때만 실제 브라우저 표시와 artifact 링크를 사용합니다.
-- **frontend 범위:** HTML/CSS/SVG 보고서·그림·슬라이드·인쇄 산출물을 포함합니다. 일반 텍스트 답변에는 적용하지 않습니다.
-- **전용 리뷰어 (10월 23일 역할 계약으로 정정):** code diff 검토는 `tasks[].agent: "reviewer"`, 저장소 취약점 분석은 `security-reviewer`로 보냅니다. 요구·계획·일반 산출물 평가는 실제 지원하는 전문 역할 또는 명시적 수정 금지 기본 worker에 맡깁니다. specialist가 맞는 작업을 자체 JSON 형식 때문에 일반 task로 우회하지 않습니다. 부모가 원본 리뷰를 보존하고 필요한 결과 형식으로 변환하며, 누락된 근거·검토 범위·승인·신뢰도를 만들어 채우지 않습니다.
-- 출처: [OMO `d98fe7ac`의 추론 라우팅](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/packages/senpi-task/src/category/openai-categories.ts), [시각 비교 변경](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/changes/unreleased/10812.md), [OMP wait 계약](https://github.com/can1357/oh-my-pi/blob/v18.12.6/packages/coding-agent/src/prompts/tools/wait.md). Senpi `71e88e1`은 기존 pin과 31개 프리셋의 terminal/app 렌더 62개가 동일해 원본 번들을 갱신하지 않았습니다.
+- **Separate exploration from reasoning:** Use scout to locate code and collect evidence; leave cause analysis, competing hypotheses, contract trade-offs, and invariant judgments to the parent or a suitable general worker. Read-only describes work permissions, not reasoning difficulty. Return judgments that exploration could not resolve with evidence and unresolved options so the parent can handle or reassign them. Explicitly prohibit edits by a general worker where required, without mistaking this for a read-only sandbox.
+- `host.ts` adapts only the known wording that mandates exploration in the default host template's Tool Policy. `payload.ts` applies the same adaptation to native `task` descriptions in supported provider requests. Tool names, argument schemas, execution, and model assignment are unchanged; project instructions, user messages, custom system prompts, and child roles are preserved. OMO's `deep-high` and `ultrabrain` categories are not added as OMP tool arguments.
+- This adaptation is limited to the currently known OMP wording. Supports the OpenAI Responses/Codex/Completions, Anthropic, Google, and Bedrock tool description paths; transports that bypass provider hooks and unsupported request formats are unchanged. A role name alone does not guarantee selection of a large model; if the required model cannot be assigned, the parent performs the reasoning or reports that limitation.
+- **`wait` contract:** Incorporated OMP 18.12.4+ semantics into the shared contract: it can wait for replies to messages sent during the current run as well as work that was started, and returns immediately when there are neither running jobs nor pending replies.
+- **Visual reproduction:** For requested screenshot, video, 3D, and diagram reproductions, compare the actual original with the render in the same state, at the same point in time, and in the same viewport. Select representative states from the original, without mandating a fixed frame count, a new comparison manifest, or a separate iteration count. Deliver promised reports with the demo; use an actual browser display and artifact link only when HTML is chosen.
+- **Frontend scope:** Includes HTML/CSS/SVG reports, illustrations, slides, and print deliverables. Does not apply to plain-text responses.
+- **Dedicated reviewers (corrected by the October 23 role contract):** Send code diff reviews to `tasks[].agent: "reviewer"` and repository vulnerability analysis to `security-reviewer`. Assign requirements, plans, and general deliverable evaluations to an actually supported specialist role or a default worker explicitly prohibited from editing. Do not bypass a suitable specialist with a general task merely because of a custom JSON format. The parent preserves the original review and converts it to the required result format, without inventing missing evidence, review coverage, approvals, or confidence.
+- Sources: [OMO `d98fe7ac` reasoning routing](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/packages/senpi-task/src/category/openai-categories.ts), [Visual comparison changes](https://github.com/code-yeongyu/oh-my-openagent/blob/d98fe7ac1aeb2355fd6ef416310e24ff3ae0dd21/changes/unreleased/10812.md), [OMP wait contract](https://github.com/can1357/oh-my-pi/blob/v18.12.6/packages/coding-agent/src/prompts/tools/wait.md). The 62 terminal/app renders of the 31 presets in Senpi `71e88e1` were identical to the existing pin, so the source bundle was not updated.
 
-### 2026-10-19 호환성 점검
+### 2026-10-19 Compatibility check
 
-- upstream 프리셋 후보 `83d3ea5`는 리비전 헤더를 제외하면 기존 프리셋 번들과 동일해 원본 pin을 유지했습니다. `--check`의 `changed:true`는 헤더 변경도 포함하므로 새 프롬프트가 있다는 뜻은 아닙니다.
-- upstream `8593083`의 accent-stripe 디자인 지침은 사용자 레퍼런스와 기존 디자인을 우선하는 조건으로 선별 반영합니다. 별도 스타일 검사기·고정 감사 절차는 가져오지 않습니다.
-- OMP 보정은 blocking `ask`와 명시적 승인 경계를 유지하고, 요청한 정리·리팩터링에 불필요한 재승인을 요구하지 않습니다. 고정 진행 보고 양식 대신 결과·검증·막힌 항목을 전달하며, 복구 시 사용자·다른 작업자의 변경을 보존합니다.
-- Astra 비동기 지침은 원문 단위 변환을 먼저 수행해 일반 문구 치환이 watcher의 `async: true`, `timeout: 0` 보정을 무효화하지 않도록 했습니다.
-- OMP 18.12.x의 native goal과 전문 워크플로의 durable state를 구분합니다. 일반 UI 변경에는 새 `DESIGN.md`나 Lighthouse 감사를 강제하지 않고, review는 고정 시나리오 수 대신 변경 경로와 실제 위험을 검증합니다. 전역 `AGENTS.md`는 변경하지 않습니다.
+- Upstream preset candidate `83d3ea5` was identical to the existing preset bundle except for the revision header, so the source pin was retained. `changed:true` from `--check` also includes header changes and therefore does not mean there is a new prompt.
+- Selectively incorporates the accent-stripe design guidance from upstream `8593083`, subject to prioritizing user references and existing designs. Does not import a separate style checker or fixed audit procedure.
+- OMP adaptations retain blocking `ask` and explicit approval boundaries without requiring unnecessary reapproval for requested cleanup or refactoring. Communicate outcomes, verification, and blockers instead of using a fixed progress report format; preserve user and other workers' changes during recovery.
+- Astra's asynchronous guidance is first transformed at the original text block level so that general wording replacements do not invalidate the watcher adaptations for `async: true` and `timeout: 0`.
+- Distinguishes OMP 18.12.x native goals from the durable state of specialized workflows. Does not mandate a new `DESIGN.md` or Lighthouse audit for ordinary UI changes; review verifies changed paths and actual risks instead of a fixed number of scenarios. The global `AGENTS.md` is unchanged.

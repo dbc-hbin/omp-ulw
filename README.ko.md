@@ -94,7 +94,7 @@ bun test
 
 자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
 
-변경 이력은 [CHANGELOG.md](CHANGELOG.md)를 참고하세요.
+변경 이력은 [CHANGELOG.ko.md](CHANGELOG.ko.md)를 참고하세요.
 
 ## 테스트
 
