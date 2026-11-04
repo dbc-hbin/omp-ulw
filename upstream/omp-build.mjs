@@ -12,9 +12,10 @@ export { terminalOrApp } from "./types.ts";
 export function buildDynamicSystemPrompt(options) {
   const tools = categorizeTools(options.selectedTools);
   const surface = options.surface ?? "terminal";
+  const sharedSections = options.sharedSections ?? "diet";
   const sections = options.corePrompt
-    ? [options.corePrompt({ tools, toolSection: "", surface, appName: "omp" })]
-    : [buildIdentitySection("omp"), "", buildIntentGate({ tools, surface }), "", buildWorkingTaskSection(), "", buildVerificationSection({ surface }), "", buildPoliciesSection(), "", buildHandoffSection({ surface }), "", buildStyleSection({ surface })];
+    ? [options.corePrompt({ tools, toolSection: "", surface, appName: "omp", sharedSections })]
+    : [buildIdentitySection("omp", sharedSections), "", buildIntentGate({ tools, surface, sharedSections }), "", buildWorkingTaskSection({ sharedSections }), "", buildVerificationSection({ surface, sharedSections }), "", buildPoliciesSection({ sharedSections }), "", buildHandoffSection({ surface, sharedSections }), "", buildStyleSection({ surface, sharedSections })];
   const tuning = options.tuningSection?.trim();
   if (tuning) sections.push("", tuning);
   return sections.join("\n");

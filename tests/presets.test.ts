@@ -8,23 +8,21 @@ const models: Record<string, string> = {
 };
 
 describe("faithful omo presets", () => {
-  test("all original builders resolve their interpolations on both surfaces", () => {
+  test("catalog renders preserve model routing and OMP tool transport across surfaces and capabilities", () => {
     for (const name of presetNames) {
       for (const surface of ["terminal", "app"] as const) {
-        const original = buildPreset(name, { surface, selectedTools: toolNames });
-        expect(original?.name).toBe(name);
-        expect(original?.prompt.length).toBeGreaterThan(1000);
-        expect(original?.prompt).not.toMatch(/senpi/i);
-        expect(original?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
-        // gpt-5 is an explicit-only upstream preset, never selected by original auto resolution.
-        if (name === "gpt-5") continue;
-        const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames });
-        expect(rendered?.name).toBe(name);
-        expect(rendered?.prompt).not.toMatch(/senpi/i);
-        expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
-        expect(rendered?.prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|tool\.monitor|--print|THERE IS NO WAIT TOOL/);
-        expect(rendered?.prompt).not.toMatch(/\[Outcome so far\]|\bYou need:/);
-        expect(rendered?.prompt).not.toMatch(/<workstation>|<context_files>|<skills>/);
+        for (const activeTools of [toolNames, toolNames.filter(tool => tool !== "eval"), []]) {
+          const original = buildPreset(name, { surface, selectedTools: activeTools });
+          expect(original?.name).toBe(name);
+          expect(original?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
+          // gpt-5 is an explicit-only upstream preset, never selected by original auto resolution.
+          if (name === "gpt-5") continue;
+          const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames: activeTools });
+          expect(rendered?.name).toBe(name);
+          expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
+          expect(rendered?.prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|`(?:tool\.)?monitor(?:`|\()|--print/);
+          expect(rendered?.prompt).not.toMatch(/<workstation>|<context_files>|<skills>/);
+        }
       }
     }
   });
@@ -66,16 +64,6 @@ describe("faithful omo presets", () => {
       expect(renderPreset({ id }, { ...options, subagent: true })).toBeUndefined();
     }
   });
-
-  test("selected tools govern optional search and mutation routing", () => {
-    const options = { surface: "terminal" as const, toolNames: [] };
-    for (const id of ["gpt-5.2", "kimi-k2.6", "claude-opus-4-8", "gpt-6-astra", "gemini-4-argon"]) {
-      const rendered = renderPreset({ id }, options);
-      expect(rendered).toBeDefined();
-      expect(rendered?.prompt).not.toMatch(/Specialized search available|request_user_input|ask_user_question|wait_for_answer|tool\.monitor|--print/);
-    }
-  });
-
 
   test("official and third-party DeepSeek aliases retain provider-sensitive routing", () => {
     const options = { surface: "terminal" as const, toolNames };

@@ -92,6 +92,16 @@ bun test
 
 자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
 
+### 2026-11-04 모델 프리셋과 OMP 보정 갱신
+
+- **프리셋:** Senpi `9815495b8ee5e936e48d1ba5e293eea7642a0529`로 갱신했습니다. 등록 수는 33개이며 새 모델 추가는 없습니다. GPT-6 Astra는 근본 원인 진단, 간결한 코어, 완료 조건에 통합한 검증, 새 문체 지침을 사용합니다.
+- **모델별 공통 지침:** 업스트림의 `sharedSections: "full" | "diet"` 선택을 모델 코어와 기본 조립 경로에 전달합니다. Opus·Fable 9개 프리셋은 축약 전 원문을 유지하고, 나머지 24개는 새 공통 지침 또는 Astra 코어 개정을 적용합니다. 도구·프로젝트·스킬·워크스테이션 영역은 계속 OMP가 소유합니다.
+- **OMP 보정:** 전체형·축약형 양쪽의 보고 형식과 요청 의도 분류를 보정합니다. 활성 `ask`는 업스트림 질문 규칙의 조건을 충족한 뒤 OMP의 blocking 계약으로 변환됩니다. Astra는 `eval` 유무 모두에서 Senpi `monitor` 대신 async bash와 native `wait`를 사용합니다. 승인 없는 외부·유료 작업과 사용자 변경 복원을 허용하지 않으며, DeepSeek V4.1의 축약된 지침 우선순위·백그라운드 대기도 OMP 계약에 맞췄습니다.
+- **OMO:** `dev` `8c087588677b63ccb80affb46f2c485625f929b1`의 모델 프롬프트·에이전트 트리는 이전 `8bda141b` 기준과 동일합니다. 기존 거부 확정 규칙을 유지하며 추가 이식은 없습니다.
+- **OMP:** 설치본과 최신 정식 릴리스 `18.16.0` (`650f3a108229ee11bf68ba3377f4e8c3391cd424`)을 기준으로 시스템 프롬프트 경계, task 지침, 부모·자식 세션 및 provider 훅 계약을 확인했습니다. 호스트 보정 코드는 그대로 호환됩니다. 미출시 main `ff0a986b`의 user-chosen effort와 per-call model 충돌 규칙은 정식 버전의 계약으로 이식하지 않습니다.
+
+출처: [Senpi 고정 리비전](https://github.com/code-yeongyu/senpi/tree/9815495b8ee5e936e48d1ba5e293eea7642a0529), [Astra 코어 개정](https://github.com/code-yeongyu/senpi/commit/d92272573fc01f38d8798d20391d77dc3853778a), [Opus·Fable 원문 복원](https://github.com/code-yeongyu/senpi/commit/71845495e8bb0362cac2f44a6a11a961be9af659), [OMO 비교 기준](https://github.com/code-yeongyu/oh-my-openagent/commit/8c087588677b63ccb80affb46f2c485625f929b1), [OMP 18.16.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.16.0).
+
 ### 2026-11-03 ULW 책임 축소
 
 - 명령 이름·별칭·템플릿·비활성화 플래그와 goal 연결·상태 복원·계속 실행 훅은 보존했습니다.
