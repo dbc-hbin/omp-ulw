@@ -42,7 +42,7 @@ Dispatch three background native tasks together, using context + tasks as shown 
 - B, system-boundary: exactly three causes naming specific boundary and violated contract. Consider SDK behavior, middleware, gateway rewriting, build/runtime env, module order, shared-library versions, ABI and transport negotiation.
 - C, invariant-violation: exactly five load-bearing assumptions, each with the smallest falsification query and predicted observable if true vs false.
 
-Maintain the actual pending set and collect all three terminal receipts under the first-wake wait semantics before synthesis. Reasoning is a proposed query, never runtime confirmation. A failed/missing payload is retried with a fresh child only after terminal collection; retain successful siblings. Do not replace a running child due to elapsed time.
+Maintain the actual pending set and collect all three terminal receipts under the native wait contract in [02-investigate.md](02-investigate.md) before synthesis. Reasoning is a proposed query, never runtime confirmation. A failed/missing payload is retried with a fresh child only after terminal collection; retain successful siblings. Do not replace a running child due to elapsed time.
 
 ## Synthesizing across three Oracles
 

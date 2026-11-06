@@ -112,7 +112,7 @@ await tool.task({
 });
 ```
 
-Omit agent for the default worker; senior-task only when listed and difficult reasoning merits it. No category; pass `model` only as an exact ID the live task schema advertises as approved. Replace example artifacts with observed paths. Track actual ids in a pending set; native wait({}) wakes on first settled result/message, not an entire batch. Validate the actual terminal response from task/wait or agent://; remove only terminal entries. Retain verified siblings, collect a failed terminal child before any replacement, never duplicate a live writer. Integrate owned results before opening the next batch; final report requires empty pending set.
+Omit agent for the default worker; senior-task only when listed and difficult reasoning merits it. No category; pass `model` only as an exact ID the live task schema advertises as approved. Replace example artifacts with observed paths. Track actual ids in a pending set. Native `wait({})` may return without a new terminal result, with multiple results/messages, or due to steering. It takes no child handles and is not a wave barrier. Wait only when blocked on your own pending jobs/services or a blocking answer owed; process available results before waiting again. Reconcile results by actual id and validate the actual terminal response from task/wait or agent://; remove only terminal entries. Retain verified siblings, collect a failed terminal child before any replacement, never duplicate a live writer. Integrate owned results before opening the next batch; final report requires empty pending set.
 
 ## Phase 4b - Prove the test cuts serially, then cut
 

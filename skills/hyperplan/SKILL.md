@@ -40,11 +40,11 @@ Each child reads relevant project evidence and returns 3-7 stable, numbered find
 
 Use the Round 1 schema in [round contracts](references/rounds.md). A child assignment specifies TASK, DELIVERABLE, SCOPE, VERIFY, and STOP WHEN. VERIFY means inspect citations and the required payload, not run unrelated builds.
 
-## First-wake collection: every wave
+## Pending-set collection: every wave
 
-Immediately record returned actual child ids in a pending set. Work independently while they run. Native `wait({})` wakes on the first settled job, message, or steering interrupt; it does not accept handles and does not guarantee the wave is complete.
+Immediately record returned actual child ids in a pending set. Work independently while they run. Native `wait({})` may return without a new terminal result, with multiple results/messages, or due to steering. It takes no child handles and is not a wave barrier. Wait only when blocked on your own pending jobs/services or a blocking answer owed; process available results before waiting again.
 
-At each wake reconcile auto-delivered results and returned jobs by actual id. Remove only terminal children; retain unfinished siblings, record failed/cancelled jobs, and validate the requested receipt from the actual terminal response or full `agent://<actual-id>` payload. Use structured fields only when actually returned. A preview, `resultText`, message, or still-running snapshot is not completion. Keep waiting only when the next step needs a pending result. Advance only when the wave's pending set is empty and all five required payloads are valid.
+Reconcile auto-delivered results and returned jobs by actual id. Remove only terminal children; retain unfinished siblings, record failed/cancelled jobs, and validate the requested receipt from the actual terminal response or full `agent://<actual-id>` payload. Use structured fields only when actually returned. A preview, `resultText`, message, or still-running snapshot is not completion. Advance only when the wave's pending set is empty and all five required payloads are valid.
 
 Validate perspective/round identity, stable ids, complete required coverage, and evidence independently. An invalid output is a failed contract. Retain verified siblings; replace only a terminal failed lane with its exact failure context and bind the new actual id to the same logical lane. Do not treat silence or elapsed time as failure, poll repeatedly, or sleep. If native delegation is unavailable, use the lead's single-agent analysis only as an explicitly labeled fallback: skip the five-lane round mechanics, do not claim five independent perspectives, cross-perspective attacks, or a complete hyperplan receipt, and produce only a reduced analysis subject to the normal planning approval gate. Preserve the missing-capability gate and ask the user whether to accept that reduced analysis or stop. Each logical lane gets at most one replacement attempt; after that, record the failure and surface the blocked gap for explicit user-directed recovery rather than retrying indefinitely.
 
@@ -87,7 +87,7 @@ After explicit approval, dispatch a separate planner child, not a debate member.
 
 The planner owns structure, sequencing, dependencies, parallelization, and task-specific success criteria. Every hard constraint is binding, every mitigation appears in the relevant task, and every unresolved question gates its descendants. Do not re-explore settled evidence unless a contradiction requires it. Planning approval authorizes the formal plan only, not implementation, commits, PRs, deployment, or destructive commands.
 
-Collect its actual id with the same first-wake procedure. Verify the plan covers every surviving constraint and gate, and read the actual artifact before delivery. If the child returns questions, relay them faithfully and resolve them before accepting the plan. Do not present an invalid draft as complete.
+Collect its actual id with the same pending-set procedure. Verify the plan covers every surviving constraint and gate, and read the actual artifact before delivery. If the child returns questions, relay them faithfully and resolve them before accepting the plan. Do not present an invalid draft as complete.
 
 ## 6. Delivery and cleanup
 

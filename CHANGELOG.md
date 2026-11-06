@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-06 Skill references and OMP 18.17 wait contract
+
+- **Programming references:** Fixed seven skill-relative paths in the Python and Rust references by restoring their language subdirectories, including the Python enforcement script path.
+- **Native waiting:** Updated workflow instructions to allow a wait to return without a new terminal result, with multiple results/messages, or on a steering interruption. Wait only on owned work or a blocking answer owed; process available results before waiting again. Actual-id reconciliation and terminal-only dependency completion remain required.
+- **OMP:** Checked installed/latest stable `18.17.0` (`75e7801e247d4e3263439d4cc08ccad60dc64bdd`). The previously deferred user-chosen effort and per-call model conflict rules are now stable and remain intact through the existing adapters; no duplicate rule or adapter change is needed.
+- **Upstream comparison:** OMO `dev` `f2a520fff532b30223c9ca785bf845c11898f58a` has unchanged core prompt and agent trees. Senpi `f90d22da976a65083a699fa9fa70988d7c438095` has unchanged model/shared prompt trees; all 132 renders (33 presets, terminal/app, eval on/off) match the pinned revision, so the preset bundle remains unchanged.
+
+Sources: [OMO reference repairs](https://github.com/code-yeongyu/oh-my-openagent/commit/ab2c2d538e650cd1182aa20854dee837de1362c1), [OMP wait delivery](https://github.com/can1357/oh-my-pi/commit/adcb8800b6409c649a622b45170192b439459c89), [OMP idle waits](https://github.com/can1357/oh-my-pi/commit/4565560e2876723f924ad988a402e1421d5b1d67), [OMP 18.17.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.17.0).
+
 ### 2026-11-04 Model preset and OMP adaptation updates
 
 - **Presets:** Updated to Senpi `9815495b8ee5e936e48d1ba5e293eea7642a0529`. There are 33 registered presets, with no new models added. GPT-6 Astra uses root-cause diagnosis, a concise core, verification integrated into completion conditions, and new writing guidance.

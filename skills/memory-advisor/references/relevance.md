@@ -53,7 +53,7 @@ await tool.task({
 
 The assignment instructs the child to read this skill, use `recall({query})` and optionally `reflect({query, context})`, perform only bounded relevant source reads, and make no memory/file/project mutations. No persistence, shell, daemon, injection, or memory filesystem operations belong in this advisor. Its only write capability used is an explicitly needed structured note to the actual lead's agent URI.
 
-Record the returned actual child id. Wait through first wakes, keeping the child pending until terminal structured output arrives. An urgent message is advisory evidence, not a terminal completion. Do not spawn a second advisor to watch the first.
+Record the returned actual child id. Follow the skill's native wait contract and pending-set collection procedure, keeping the child pending until terminal structured output arrives. An urgent message is advisory evidence, not a terminal completion. Do not spawn a second advisor to watch the first.
 
 ## Relevance examples
 

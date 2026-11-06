@@ -45,7 +45,7 @@ When a candidate qualifies, return the strict relevance note to the lead through
 
 ## Lead collection and use
 
-Record the actual child id in a pending set. Native `wait({})` wakes on the first result/message/interrupt; it does not accept handles or guarantee the advisor is terminal. Reconcile actual ids, keep unfinished work pending, and remove only terminal jobs. Validate terminal status and the requested receipt fields in the actual task/wait response or agent URI; messages/previews are not completion. Missing or invalid required payloads are failed contracts, not an excuse to mutate memory.
+Record the actual child id in a pending set. Native `wait({})` may return without a new terminal result, with multiple results/messages, or due to steering. It takes no child handles and is not a wave barrier. Wait only when blocked on your own pending jobs/services or a blocking answer owed; process available results before waiting again. Reconcile actual ids, keep unfinished work pending, and remove only terminal jobs. Validate terminal status and the requested receipt fields in the actual task/wait response or agent URI; messages/previews are not completion. Missing or invalid required payloads are failed contracts, not an excuse to mutate memory.
 
 The lead treats the note as reference and checks it against current intent. It may alter the next action only if the observation actually applies. The advisor does not issue commands or store missing memories. For explicitly requested durable persistence, use the separate [reflection workflow](../reflection/SKILL.md), not an expanded advisor role.
 

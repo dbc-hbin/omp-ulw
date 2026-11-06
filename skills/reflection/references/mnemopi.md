@@ -93,4 +93,4 @@ await tool.task({
 });
 ```
 
-The assignment includes the actual skill path, transcript coverage, no-question child contract, no further delegation, no system/user-skill edits, required API schemas and stop condition. Omit agent for default; select only listed actual roles. Record returned child ids and collect via first-wake `wait({})`, never a fake wave barrier or automatic second process. Reconcile every terminal output by actual id and validate the strict payload before the lead claims persistence.
+The assignment includes the actual skill path, transcript coverage, no-question child contract, no further delegation, no system/user-skill edits, required API schemas and stop condition. Omit agent for default; select only listed actual roles. Record returned child ids and follow the skill's native wait contract and pending-set collection procedure, never a fake wave barrier or automatic second process. Reconcile every terminal output by actual id and validate the strict payload before the lead claims persistence.
