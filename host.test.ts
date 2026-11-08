@@ -52,8 +52,8 @@ test("behavior replacement preserves host capabilities, project instructions, an
   expect(result?.originalBehavior).not.toContain("<skills>");
 });
 
-test("current OMP system template replaces only the role block", () => {
-  const ompTemplate = readFileSync(new URL("./tests/fixtures/omp-system-prompt.md", import.meta.url), "utf8");
+test.each(["§", "⁂"])("OMP %s system template replaces only the role block", (marker) => {
+  const ompTemplate = readFileSync(new URL("./tests/fixtures/omp-system-prompt.md", import.meta.url), "utf8").replaceAll("§", marker);
   const project = "<repo-rules>Keep the existing task contract</repo-rules>";
   const agent = "Review only; do not edit outside the assigned paths";
   const replacement = "<omp-model-preset>Model-specific role</omp-model-preset>";
@@ -64,20 +64,20 @@ test("current OMP system template replaces only the role block", () => {
   const first = result?.blocks[0] ?? "";
   expect(first).toContain(replacement);
   expect(first).not.toContain("You are omp's trusted coding assistant.");
-  for (const marker of [
-    "§ Runtime",
-    "§ Scratchpad",
-    "§ Tool Policy",
-    "§ Workflow",
-    "§ Delivery",
-    "§ Critical",
+  for (const retained of [
+    `${marker} Runtime`,
+    `${marker} Scratchpad`,
+    `${marker} Tool Policy`,
+    `${marker} Workflow`,
+    `${marker} Delivery`,
+    `${marker} Critical`,
     "skill://<name>",
     "native `task` schema",
   ]) {
-    expect(first).toContain(marker);
+    expect(first).toContain(retained);
   }
   expect(result?.originalBehavior).toContain("You are omp's trusted coding assistant.");
-  expect(result?.originalBehavior).not.toContain("§ Runtime");
+  expect(result?.originalBehavior).not.toContain(`${marker} Runtime`);
 });
 
 test("project and global context in block zero survive replacement", () => {
@@ -103,9 +103,13 @@ test("research routing changes only the host policy region, never project or run
   expect(result.blocks[1]).toBe(project);
 });
 
-test("custom and unfamiliar prompts are never replaced", () => {
-  expect(replaceHostBehavior(["You are a read-only reviewer"], "replacement")).toBeUndefined();
-  expect(replaceHostBehavior([base.replace("§ Runtime", "Host capabilities")], "replacement")).toBeUndefined();
+test.each([
+  "You are a read-only reviewer",
+  base.replace("§ Runtime", "Host capabilities"),
+  base.replace("§ Runtime", "⁂ Runtime"),
+  base.replaceAll("§", "⁂").replace("⁂ Workflow", "§ Workflow"),
+])("custom, incomplete and mixed-marker prompts are preserved (%#)", (template) => {
+  expect(replaceHostBehavior([template], "replacement")).toBeUndefined();
 });
 
 test("an already-owned profile cannot be nested by a second installation", () => {

@@ -24,6 +24,11 @@ Patterns must parse as one AST node; wrap incomplete declarations before
 searching. Narrow `path` first and treat parse errors as query failures, not
 evidence that no match exists.
 
+`$$$` is lazy and does not backtrack: it stops at the first node that lets the
+rest of the pattern match, then commits. For `foo($$$A, b, $$$C)` against
+`foo(a, c, b, b, c)`, `A` captures `[a, c]` and `C` captures `[b, c]`.
+Restructure the pattern if a later split is required.
+
 ## Rewrite discipline
 
 Structural rewrites are higher risk than searches:

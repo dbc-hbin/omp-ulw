@@ -36,8 +36,10 @@ Per-surface patterns and pitfalls: read `references/execution-surfaces.md` befor
   older spellings.
 - **numpy** when numeric work goes beyond SQL/DataFrame aggregation: statistical tests,
   linear algebra, FFT, random sampling.
-- **matplotlib** for standalone charts when installed; static SVG/HTML via `skill://visualize` for self-contained browser artifacts — read `references/visualization.md` first; it carries the
-  quality bar and a mandatory visual check.
+- **matplotlib** for standalone PNG charts in kernels, files or documents when installed;
+  HTML with static markup/SVG via `skill://visualize` for self-contained browser artifacts.
+  Read `references/visualization.md` first either way; it carries the quality bar and a
+  mandatory visual check.
 
 Performance folklore ("X is Nx faster at filtering") varies with data shape, cardinality,
 and hardware. When the engine choice materially matters, measure on the actual data instead
@@ -59,7 +61,9 @@ a direct scan. Then place the work:
   takes longer.
 - **Query remotely, in place** when the data lives elsewhere: DuckDB reads http(s)/S3
   Parquet with projection/predicate pushdown when supported; CSV usually requires scanning
-  the stream. Query only the needed data and report actual network behavior. When data sits on another machine you can execute
+  the stream. Query only the needed data and report actual network behavior. When data sits
+  in a database, aggregate there in its own SQL at the reader's required grain and return
+  the aggregate result rows, not a table dump. When data sits on another machine you can execute
   on, ship the query to the data and return the small result. Rule: result much smaller
   than data — move the query; repeated local iteration planned — move a pruned copy of the
   data once.

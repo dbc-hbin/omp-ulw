@@ -210,7 +210,7 @@ try {
       for (const block of injected.blocks.slice(1)) assert(system.includes(block), `${role}: outbound payload must retain each trailing block`);
       assert(JSON.stringify(body.messages).includes(assignment(role)), `${role}: outbound assignment retained`);
       const native = original.blocks.join("\n\n");
-      const nativeRole = native.lastIndexOf("§ Role");
+      const nativeRole = Math.max(native.lastIndexOf("§ Role"), native.lastIndexOf("⁂ Role"));
       assert(nativeRole >= 0, `${role}: native child role is present`);
       // The host appends role/cooperation/completion after its project footer.
       assert(system.includes(native.slice(nativeRole)), `${role}: appended native role and completion contract must survive intact`);

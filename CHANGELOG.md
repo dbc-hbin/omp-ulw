@@ -2,6 +2,16 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-09 OMP marker compatibility and OMO skill updates
+
+- **OMP adapter:** Accept both the stable `§` and upcoming `⁂` system section markers while requiring one consistent marker per template. Preserve custom templates, host capabilities, project rules and child assignments. Extend the existing role-replacement regression and native child smoke for both forms.
+- **Chart correctness:** Aggregate near the data source, name the reporting time zone, mark unfinished buckets on their own bars, and cross-check a headline figure against a named second source. Separate browser HTML artifacts from standalone PNG delivery using OMP's actual display tools.
+- **Visualize and frontend:** Scope CSS classes, measure bar geometry and legend colors in the existing four theme/viewport captures, and align end labels. Simple chart/table/diagram artifacts skip design-system, Lighthouse and research gates unless explicitly required; build, lint, accessibility, behavior and visual QA remain required.
+- **Skill consistency:** Include 1920 px page-layout captures in the visual reviewer instructions; align programming refactor triggers and the frontend's single-primary-action accent rule. Document ast-grep's observed lazy `$$$` capture and keep conflicting native goals blocked with loop state owned by the lead session.
+- **Comparison baselines:** OMO `dev` `adddd17004076e799c2de18ccfdee29e12525ace`; installed/latest stable OMP `18.18.1` (`24439066040e006eb08da7b204f0ac41c79d2de9`), with marker compatibility prepared for unreleased main `9f603337c893bb29530bed6ad1c267cd88519275`. Senpi `e7b059887ea797fc71ef457f5df52156e5705235` still matches all 132 renders of the 33 pinned presets, so the bundle is unchanged.
+
+Sources: [OMO chart policy](https://github.com/code-yeongyu/oh-my-openagent/commit/0472192d549b861abfc5c1d6f1c3f12caf6c12c8), [OMO skill audit](https://github.com/code-yeongyu/oh-my-openagent/commit/e313b72ba1901544453e529ecbf9a22eec2ea4d7), [OMP marker change](https://github.com/can1357/oh-my-pi/commit/1c241750ae247d1c43678d68a2eec0c1bd853e2b), [OMP 18.18.1](https://github.com/can1357/oh-my-pi/releases/tag/v18.18.1).
+
 ### 2026-11-06 Skill references and OMP 18.17 wait contract
 
 - **Programming references:** Fixed seven skill-relative paths in the Python and Rust references by restoring their language subdirectories, including the Python enforcement script path.

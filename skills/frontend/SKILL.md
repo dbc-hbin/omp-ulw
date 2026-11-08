@@ -11,6 +11,14 @@ This file is a router, not a rulebook. The rules live in four rulesets under `re
 
 **Match the design ambition to the brief.** Ordinary dashboards, admin tools, and reports prioritize useful hierarchy, readable data, and a clear main action. Small edits follow styled sibling components and the minimum relevant references. Expressive material, atmosphere, and high-craft exploration belong to briefs that request them or references that require them; the design references' premium/flatness guidance does not impose that ambition on ordinary work. Protect the requested visual quality alongside behavior and accessibility.
 
+**Simple chart, table or diagram artifacts.** A self-contained HTML artifact delivered
+through `skill://visualize` follows that skill's actual browser/file contract. This route
+is exempt from creating `DESIGN.md`, Lighthouse and design research lanes unless the user
+explicitly requests them or the project requires them. It still follows applicable build
+rules, the draft guard, draft and rendered-page lint, accessibility and behavior checks,
+and actual visual QA. This exception scopes the design-system workflow and routing below;
+it does not exempt product UI or weaken an explicit reference or project audit gate.
+
 ## OMP runtime and platform boundary
 
 Consult [the OMP contract](skill://ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. This port owns its design knowledge locally; never route to disabled design-family skills. Confirm the actual surface before web gates: native SwiftUI/AppKit/UIKit or Android Compose/Views/mixed hosting goes to `references/native/workflow.md` and its platform reference. Native work uses existing native styles and actual app verification, not CSS tokens, DOM, Lighthouse or browser mockups as app proof. Web/React Native/Flutter retain their own toolkits.
@@ -60,7 +68,8 @@ Set `SKILL_DIR` to the observed absolute directory containing this `SKILL.md` (r
 
 ## Design System and Component Workflow
 
-Every implementation must choose one of these branches before UI code changes:
+Except for the simple-artifact route above, every implementation must choose one of these
+branches before UI code changes:
 
 1. **Concrete visual reference:** the user supplied a reference — treat it as the visual contract, then handle it by kind:
    - **Static visual reference** (screenshot, generated mockup, Stitch/Imagen output, Figma export, overview, or annotated packet): load `references/design/image-to-code-skill.md` plus the relevant design/perfection files, extract the reference's exact tokens, layout geometry, copy, spacing, states, and responsive intent into `DESIGN.md`, then implement reusable primitives against that contract.

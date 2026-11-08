@@ -2,6 +2,16 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-09 OMP 표식 호환성과 OMO 스킬 갱신
+
+- **OMP 어댑터:** 안정판의 `§`와 차기 `⁂` 시스템 섹션 표식을 모두 인식하며, 한 템플릿 안에서는 같은 표식만 허용합니다. 사용자 정의 템플릿, 호스트 기능, 프로젝트 규칙과 자식 할당은 보존합니다. 기존 역할 치환 회귀 검사와 native 자식 smoke를 두 표식에 맞췄습니다.
+- **차트 정확성:** 데이터가 있는 곳에서 집계하고 보고 시간대를 명시하며, 미완료 구간은 해당 막대에 표시하고 핵심 수치를 이름을 밝힌 두 번째 출처로 교차검증합니다. 브라우저 HTML 결과물과 독립 PNG 전달 경로를 OMP의 실제 표시 도구에 맞춰 구분합니다.
+- **Visualize·frontend:** CSS 클래스 범위를 분리하고 기존 네 가지 테마·화면 폭 캡처에서 막대 치수·범례 색을 측정하며 양끝 축 라벨을 정렬합니다. 단순 차트·표·다이어그램 결과물은 명시적 요구가 없으면 디자인 시스템·Lighthouse·리서치 게이트를 생략하지만 빌드·lint·접근성·동작·시각 검증은 유지합니다.
+- **스킬 정합성:** 시각 리뷰 지시에 페이지 레이아웃의 1920 px 캡처를 포함하고, programming의 refactor 조건과 frontend의 주 행동 하나 강조 규칙을 맞췄습니다. 도구에서 확인한 ast-grep의 lazy `$$$` 캡처를 설명하고, 충돌하는 native goal은 차단하며 루프 상태는 리드 세션이 소유하도록 명시합니다.
+- **비교 기준:** OMO `dev` `adddd17004076e799c2de18ccfdee29e12525ace`, 설치본·최신 안정판 OMP `18.18.1` (`24439066040e006eb08da7b204f0ac41c79d2de9`)을 기준으로 미출시 main `9f603337c893bb29530bed6ad1c267cd88519275`의 표식 변경에 대비합니다. Senpi `e7b059887ea797fc71ef457f5df52156e5705235`는 고정된 33개 프리셋의 132개 생성 결과와 같아 번들을 유지합니다.
+
+출처: [OMO 차트 정책](https://github.com/code-yeongyu/oh-my-openagent/commit/0472192d549b861abfc5c1d6f1c3f12caf6c12c8), [OMO 스킬 감사](https://github.com/code-yeongyu/oh-my-openagent/commit/e313b72ba1901544453e529ecbf9a22eec2ea4d7), [OMP 표식 변경](https://github.com/can1357/oh-my-pi/commit/1c241750ae247d1c43678d68a2eec0c1bd853e2b), [OMP 18.18.1](https://github.com/can1357/oh-my-pi/releases/tag/v18.18.1).
+
 ### 2026-11-06 스킬 참조 경로와 OMP 18.17 대기 계약 갱신
 
 - **프로그래밍 참조:** Python·Rust 참조 문서의 스킬 상대 경로 7곳에 누락된 언어별 하위 디렉터리를 복원했습니다. Python 규칙 검사 스크립트 경로도 포함합니다.

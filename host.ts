@@ -27,14 +27,17 @@ export function adaptResearchRouting(text: string): string {
 export function replaceHostBehavior(blocks: string[], behavior: string): HostPrompt | undefined {
   const base = blocks[0];
   if (!base || /<om[op]-model-preset>/.test(base)) return undefined;
-  const role = base.indexOf("\n§ Role\n");
-  const runtime = base.indexOf("\n§ Runtime\n", role);
-  const policy = base.indexOf("\n§ Tool Policy\n", runtime);
-  const workflow = base.indexOf("\n§ Workflow\n", policy);
-  if (role < 0 || runtime <= role || policy <= runtime || workflow <= policy) return undefined;
+  const heading = /\n([§⁂]) Role\n/.exec(base);
+  if (!heading) return undefined;
+  const role = heading.index;
+  const marker = heading[1];
+  const runtime = base.indexOf(`\n${marker} Runtime\n`, role);
+  const policy = base.indexOf(`\n${marker} Tool Policy\n`, runtime);
+  const workflow = base.indexOf(`\n${marker} Workflow\n`, policy);
+  if (runtime <= role || policy <= runtime || workflow <= policy) return undefined;
   // Preserve host/project context and capability contracts. Only the known
   // research-routing prose in Tool Policy is adapted outside the role body.
-  const roleBodyStart = role + "\n§ Role\n".length;
+  const roleBodyStart = role + heading[0].length;
   const originalBehavior = base.slice(roleBodyStart, runtime);
   const host = base.slice(0, roleBodyStart) + behavior + "\n" + base.slice(runtime, policy)
     + adaptResearchRouting(base.slice(policy, workflow)) + base.slice(workflow);

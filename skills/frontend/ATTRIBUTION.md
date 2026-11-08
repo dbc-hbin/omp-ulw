@@ -297,6 +297,19 @@ the layout verification matrix and `tests/pattern-runtime.spec.mjs` of StyleGall
 - Code licensed under the MIT License (Copyright (c) 2026 IYEN); documentation under
   CC BY 4.0.
 
+## OMP port modifications (2026-11-09)
+
+The simple chart/table/diagram artifact exception in `frontend/SKILL.md` is adapted from
+the [OMO chart correctness change `0472192d549b861abfc5c1d6f1c3f12caf6c12c8`](https://github.com/code-yeongyu/oh-my-openagent/commit/0472192d549b861abfc5c1d6f1c3f12caf6c12c8),
+reconciled with [`frontend/SKILL.md` at pinned final revision `adddd17004076e799c2de18ccfdee29e12525ace`](https://github.com/code-yeongyu/oh-my-openagent/blob/adddd17004076e799c2de18ccfdee29e12525ace/packages/shared-skills/skills/frontend/SKILL.md).
+OMP uses actual browser display and file artifacts rather than upstream inline HTML APIs.
+The exception preserves applicable build rules, draft/rendered lint, accessibility,
+behavior and visual QA, and does not override explicit user or project audit requirements.
+No new third-party files or runtime APIs are introduced by this policy port.
+
+The single-primary-action accent rule in `references/design/design-system-architecture.md`
+follows the [OMO skill audit `e313b72ba1901544453e529ecbf9a22eec2ea4d7`](https://github.com/code-yeongyu/oh-my-openagent/commit/e313b72ba1901544453e529ecbf9a22eec2ea4d7).
+
 ## OMP port modifications (2026-11-01)
 
 The craft-floor, grounding, detect SDK and draft-guard files are copied from OMO
