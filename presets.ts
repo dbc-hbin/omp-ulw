@@ -172,6 +172,18 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     .replace("Its matching line wakes you.", "The async watch auto-delivers its result; call native wait with no arguments only while blocked on that pending watch.")
     .replace(" A cell that awaits the wait holds the js kernel until the cell limit kills it.", " Never hold a foreground js cell on the watching command.")
     .replace("running session or child", "running session or task"));
+  if (options.toolNames.includes("bash") || options.toolNames.includes("eval")) {
+    prompt += "\n\n## OMP shell execution";
+    if (options.toolNames.includes("bash")) {
+      prompt += "\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
+    }
+    if (options.toolNames.includes("eval")) {
+      prompt += "\n\nUse `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool; do not assume variables or functions transfer between them.";
+      prompt += options.toolNames.includes("bash")
+        ? " Use native async bash for long jobs and watches."
+        : " Keep long jobs and watches out of `sh()`.";
+    }
+  }
   // Apply generic wording only after matching the intact upstream async directives.
   prompt = prompt
     .replaceAll("session tools", "available process controls")

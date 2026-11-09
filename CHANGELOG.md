@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-09 Shell execution guidance
+
+- Add common shell guidance to supported model presets according to their active tools. Sequence bash calls that depend on shell state; an overlapping call reported as a copy sees the last completed command-boundary state, and its changes do not persist in the original shell.
+- Use `sh()` only when the live eval documentation exposes it. It runs short commands to completion without auto-backgrounding and has persistent shell state separate from the bash tool. Keep long jobs and watches in native async bash when available.
+- Apply the same execution boundaries in the data-scientist reference. Preserve OMP-owned tool descriptions and schemas; no runtime upgrade or generated preset bundle change is included. The shell-copy behavior is in OMP 18.18.2; `sh()` is still unreleased at the inspected main revision.
+
+Sources: [OMP overlapping shell copies](https://github.com/can1357/oh-my-pi/commit/1e2fbfd2e24f1f40a15e58dae90b7d6d2e2dac8a), [OMP eval shell helper](https://github.com/can1357/oh-my-pi/commit/d013a0a2695cd3fa2fd494b12d99bc93c30a0915).
+
 ### 2026-11-09 OMP marker compatibility and OMO skill updates
 
 - **OMP adapter:** Accept both the stable `§` and upcoming `⁂` system section markers while requiring one consistent marker per template. Preserve custom templates, host capabilities, project rules and child assignments. Extend the existing role-replacement regression and native child smoke for both forms.

@@ -29,6 +29,14 @@ COUNT/SUM may return BigInt; convert precisely to String or range-checked Number
 
 ## One-shots and isolation
 
+Use `sh()` for short shell commands only when the live eval documentation exposes
+it. It waits for completion without auto-backgrounding and has persistent shell
+state separate from the bash tool, so variables and functions do not transfer
+between them. Keep long jobs and watches in native async bash. Sequence bash calls
+that depend on shell state: an overlapping call reported as a copy sees the last
+completed command-boundary state, and its changes do not persist in the original
+shell.
+
 An existing environment can run `python3 "$SKILL_DIR/scripts/quick-query.py" data.csv "SELECT ... FROM data"` after confirming all its imports. Batch related queries per process. A uv environment is optional isolation, not assumed installed: use `uv run --offline --no-sync` only with a prepared project environment, or run its interpreter directly. If a required package is absent, finish independent inspection and report the exact prerequisite; any install is an explicit setup decision, not an analysis side effect.
 
 For heavy/remote inputs read [placement](placement.md); put memory-hungry work in native async bash. Results auto-deliver; call native wait() with no arguments only when blocked on a pending job you started. Do not repeat shell status polling or sleeps. Retain the query, file/input digest, grain, filters, null/duplicate handling, row counts and timing with output.
