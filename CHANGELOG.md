@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-09 Generated frontend reference sources
+
+- Replace tracked third-party frontend reference bodies with four pinned Git submodules and an explicit local materialization command, following OMO's source policy. Existing runtime paths and OMP-owned guides remain intact; generated files are ignored by Git.
+- Generate design, taste, UI/UX and designpowers references before installation or deployment. Preserve license notices, scoped OMP reference adaptations, designpowers description normalization and Python sibling-import bytecode suppression. Taste references retain their complete pinned bodies instead of historical capture omissions.
+- Use the pinned UI/UX Pro Max source instead of the previously customized corpus, as explicitly selected. Local data corrections, motion dials, additional desktop-stack datasets and unsupported reference files are removed; the pinned search registry's datasets and stacks remain available.
+- Document recursive cloning, source initialization, regeneration and copying the complete materialized skill tree for offline deployment. No network or generation is added to OMP runtime.
+
+Sources: [OMO reference manifest](https://github.com/code-yeongyu/oh-my-openagent/blob/511dc35e22a7c4e2cebb8f0c5bab74b8660dc430/packages/shared-skills/scripts/frontend-refs-manifest.mjs), [OMO materializer](https://github.com/code-yeongyu/oh-my-openagent/blob/511dc35e22a7c4e2cebb8f0c5bab74b8660dc430/packages/shared-skills/scripts/materialize-frontend-refs.mjs).
+
 ### 2026-11-09 Model-first prompt ownership
 
 - Give supported model profiles ownership of ordinary working methods. Remove overlapping native planning, rereading, delegation and verification defaults while preserving tools, permissions, project context and child contracts; restore native defaults for unsupported-model fallback.

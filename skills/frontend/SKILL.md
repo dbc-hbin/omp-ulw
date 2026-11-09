@@ -144,7 +144,7 @@ python3 -B "$SKILL_DIR/references/ui-ux-db/scripts/search.py" "<query>" --domain
 python3 -B "$SKILL_DIR/references/ui-ux-db/scripts/search.py" "<query>" --stack <stack>               # stack best practices
 ```
 
-Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `web` `icons` `gsap` `google-fonts`. Stack lookup requires explicit `--stack`; supported examples include `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `astro`, `swiftui`, `react-native`, `flutter`, `shadcn`, and `jetpack-compose`. Read the CLI help for the complete registry.
+Domains: `product` `style` `typography` `color` `landing` `chart` `ux` `react` `web` `icons` `google-fonts`. Stack lookup requires explicit `--stack`; supported examples include `html-tailwind`, `react`, `nextjs`, `vue`, `svelte`, `astro`, `swiftui`, `react-native`, `flutter`, `shadcn`, and `jetpack-compose`. Read the CLI help for the complete registry. The database follows the pinned upstream corpus; local motion-dial and additional desktop-stack extensions are not included.
 
 ## Ruleset 4 — designpowers (`references/designpowers/`)
 

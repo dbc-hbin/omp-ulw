@@ -1,20 +1,20 @@
 # ATTRIBUTION / NOTICE
 
-This package (`@oh-my-opencode/shared-skills`) includes third-party content that is
-redistributed under its original license, consistent with the project's distribution
-license (see `LICENSE.md`: "All third party components incorporated into the
-oh-my-opencode Software are licensed under the original license provided by the owner of
-the applicable component"). Each upstream's license and required notices are reproduced
-below. Modifications to the original files are noted where applicable.
+This OMP extension redistributes the reference assets below under their original
+licenses. Each upstream's license and required notices are reproduced below.
+Modifications to the original files are noted where applicable.
 
 These third-party references are NOT committed to this repository. Each upstream is
-tracked as a pinned git submodule under `packages/shared-skills/upstreams/<name>`, and the
-build materializes the referenced files path-mapped into this skill's `references/` tree,
-when packaging the published artifact. The file bodies are copied verbatim, except
-materialized `SKILL.md` frontmatter may normalize an unquoted single-line `description:`
-scalar into a JSON-quoted YAML string so Codex/OpenCode frontmatter parsing remains
-deterministic; the description text itself is unchanged. The `Pinned upstream commit` line
-in each section below records the exact submodule commit that the materialization reads.
+tracked as a pinned git submodule under `upstream/skills/<name>`. Run
+`bun upstream/materialize-frontend-refs.mjs` after initializing the recorded submodules.
+The generator writes the existing runtime paths in this skill's `references/` tree.
+It copies file bodies verbatim except for the existing scoped OMP adaptations in
+`upstream/adapt-frontend-refs.mjs`, description quoting in designpowers skill
+references and suppression of Python sibling-import bytecode writes. The
+`Pinned upstream commit` lines below document the corresponding Git index gitlinks.
+The manifest in `upstream/frontend-refs-manifest.mjs` owns the exact output allowlist.
+OMP-owned guides and integration documents remain tracked; the generated reference
+bodies do not. A deployment must include the materialized `skills/` tree.
 
 ---
 
@@ -24,7 +24,7 @@ The brand design-system reference files under `frontend/references/design/<brand
 (Apple, Stripe, Linear, Nike, BMW, Airbnb, Bugatti, Tesla, and the other named brands)
 are path-mapped verbatim copies of the `design-systems/<brand>/DESIGN.md` files from the
 Open Design project. They are not committed here; the build materializes them from the
-pinned submodule under `packages/shared-skills/upstreams/open-design` into
+pinned submodule under `upstream/skills/open-design` into
 `frontend/references/design/<brand>.md` (dots in `<brand>` map to dashes for the upstream
 directory name, e.g. `linear.app` -> `linear-app`).
 
@@ -71,8 +71,9 @@ taste-skill project (each `skills/<name>/SKILL.md` is renamed to
 `stitch-design-example.md` is a path-mapped verbatim copy of `skills/stitch-skill/DESIGN.md`,
 the worked example of the design-system document that the stitch skill exports.
 They are not committed here; the build materializes them from the pinned submodule under
-`packages/shared-skills/upstreams/taste-skill`. Only the allowed frontmatter description
-quoting normalization described above may alter these materialized `SKILL.md` files.
+`upstream/skills/taste-skill`. Three mapped references retain this port's existing
+task-scoping adaptations through `upstream/adapt-frontend-refs.mjs`; the complete
+pinned bodies are retained rather than historical capture omissions.
 
 - Source: https://github.com/Leonxlnx/taste-skill
 - Official site: https://www.tasteskill.dev/
@@ -107,13 +108,18 @@ SOFTWARE.
 ## 3. UI/UX Pro Max — Design Intelligence Skill (Next Level Builder) — ui-ux-db
 
 The search engine and dataset under `frontend/references/ui-ux-db/` (`scripts/core.py`,
-`scripts/search.py`, `scripts/design_system.py`, `README.md`, and the `data/*.csv`
+`scripts/search.py`, `scripts/design_system.py`, the quick reference, and the `data/*.csv`
 knowledge base) are path-mapped verbatim copies from the UI/UX Pro Max skill. They are not
 committed here; the build materializes them from the pinned submodule under
-`packages/shared-skills/upstreams/ui-ux-pro-max`:
+`upstream/skills/ui-ux-pro-max`:
 `scripts/*.py` from `src/ui-ux-pro-max/scripts/`, `data/*.csv` from
-`src/ui-ux-pro-max/data/` (`data/web-interface.csv` maps from the upstream
-`data/app-interface.csv`), and `README.md` from `.claude/skills/ui-ux-pro-max/SKILL.md`.
+`src/ui-ux-pro-max/data/`. Dataset filenames retain the source names, including
+`app-interface.csv`; this preserves the pinned search engine's own registry.
+The generated quick reference comes from `src/ui-ux-pro-max/templates/base/quick-reference.md`.
+The local `README.md` is an OMP integration guide, not the upstream skill entrypoint.
+The former customized corpus is replaced by these pinned sources; no local delta is
+applied. Python scripts only insert `sys.dont_write_bytecode = True` before their
+first sibling import so normal searches do not modify the installed skill.
 
 - Source: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
 - Pinned upstream commit: f32d6a61cdf0bfd57404c45854583fd19ff95088
@@ -151,13 +157,14 @@ SOFTWARE.
 The designpowers reference corpus under `frontend/references/designpowers/vendor/` is
 path-mapped from the designpowers project. It is not committed here; the build
 materializes the selected files from the pinned submodule under
-`packages/shared-skills/upstreams/designpowers`. The materialized set includes the
+`upstream/skills/designpowers`. The materialized set includes the
 upstream `LICENSE`, ten `agents/*.md` role-reference files, and selected
 `skills/*/SKILL.md` files renamed to `vendor/skills/*/reference.md` so they remain
 reference documents instead of nested skill entrypoints. Bridge/state/router integration skills are intentionally
 excluded; see `frontend/references/designpowers/UPSTREAM.md` for the allowlist and
-exclusion list. Only the allowed frontmatter description quoting normalization described
-above may alter these materialized `reference.md` files.
+exclusion list. The generator retains this port's existing OMP role, tool, state-path
+and reference-link adaptations through `upstream/adapt-frontend-refs.mjs`, then applies
+the frontmatter description quoting normalization described above.
 
 - Source: https://github.com/Owl-Listener/designpowers
 - Pinned upstream commit: cb00757da9d554591fa78d27aa1854d60a05c4f7

@@ -6,10 +6,11 @@ OMP용 모델 프롬프트와 Native ULW 워크플로 확장입니다. extension
 
 ## 사용
 
-OMP가 설치된 환경에서 실행합니다.
+Git·Bun·OMP가 설치된 환경에서 실행합니다.
 
 ```bash
-git clone https://github.com/dbc-hbin/omp-ulw.git
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
+bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
 omp -e ./omp-ulw/index.ts
 ```
 
@@ -76,6 +77,19 @@ onboarding were not ported.
 명시적 커스텀/인식 불가 시스템 템플릿은 그대로 유지하고, 미지원 모델은 기본 OMP 역할을 사용합니다. 자식에서 ULW를 자동 활성화하지 않습니다. `seance`처럼 OMP가 확장 자체를 격리하는 세션은 이 주입 경로의 대상이 아닙니다. provider 요청 훅을 우회하는 전송은 메인과 마찬가지로 턴 시작 시점의 프리셋만 보장합니다. 설치된 확장 변경은 새 OMP 세션을 시작해야 반영됩니다.
 
 실제 주입되는 프롬프트와 워크플로 포인터는 `omp-` 태그를 사용합니다. 기존 세션 복원과 CLI 호환성을 위해 저장된 `omo-ultrawork:*` 키와 `--omo-ultrawork-disabled`, `--omo-ulw-workflows-disabled`, `--omo-ulw-continuation-disabled` 플래그는 유지하며, 이전 `omo-` 프롬프트 태그도 읽을 수 있습니다. `upstream/`의 원본 지침은 `presets.ts`를 거쳐 OMP 도구 계약으로 변환된 뒤 전달됩니다.
+
+## Frontend 외부 참조 생성
+
+외부 디자인 참조, UI/UX 조사 데이터와 designpowers 참조 본문은 `upstream/skills/` 아래 네 Git 서브모듈의 고정 커밋에서 생성합니다. 생성 파일은 Git에서 제외하며, 기존 `skills/frontend/references/` 경로를 유지합니다. OMP용 안내문과 통합 규칙은 계속 추적합니다.
+
+저장소를 갱신한 뒤 기록된 원본 리비전을 초기화하고 다시 생성합니다.
+
+```bash
+git submodule update --init --recursive
+bun upstream/materialize-frontend-refs.mjs
+```
+
+서브모듈 초기화에는 네트워크가 필요하며, 생성과 일반 OMP 실행은 로컬에서 처리합니다. Git 없이 배포할 때는 생성이 끝난 `skills/` 트리 전체를 복사합니다. GitHub의 소스 압축 파일만 받으면 서브모듈 내용과 생성 참조는 포함되지 않습니다.
 
 ## GitHub에서 프리셋 갱신
 

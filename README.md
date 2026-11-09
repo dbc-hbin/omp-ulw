@@ -6,10 +6,11 @@ Model-specific prompts and native ULW workflows for [Oh My Pi (OMP)](https://git
 
 ## Getting started
 
-With OMP installed:
+With Git, Bun and OMP installed:
 
 ```bash
-git clone https://github.com/dbc-hbin/omp-ulw.git
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
+bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
 omp -e ./omp-ulw/index.ts
 ```
 
@@ -42,6 +43,19 @@ Additional skills include `debugging`, `programming`, `review-work`, `visual-qa`
 - [`upstream/omp-build.mjs`](upstream/omp-build.mjs): avoids duplicating sections already supplied by OMP.
 
 For supported profiles, model-specific guidance takes precedence over generic OMP working style; duplicated native planning, rereading, delegation and verification rules are removed. Tool availability is refreshed before provider requests. Subagents retain their specialist role, permissions and completion protocol. Custom or unrecognized system templates are preserved; unsupported models retain native OMP behavior, including after fallback. Restart OMP after changing an installed extension.
+
+## Frontend reference sources
+
+Third-party design references, UI/UX research data and designpowers reference bodies are generated from four pinned Git submodules under `upstream/skills/`. Their generated files are ignored by Git and retain the existing paths under `skills/frontend/references/`. OMP-specific guides and integration rules remain tracked.
+
+After pulling an update, initialize the recorded source revisions and regenerate:
+
+```bash
+git submodule update --init --recursive
+bun upstream/materialize-frontend-refs.mjs
+```
+
+Submodule initialization needs network access; generation and normal OMP use are local. Copy the complete materialized `skills/` tree when deploying without Git. A GitHub source archive alone omits the submodule contents and generated references.
 
 ## Updating presets
 

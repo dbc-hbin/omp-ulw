@@ -1,0 +1,3 @@
+[test]
+# Pinned reference sources have their own suites; they are not extension tests.
+pathIgnorePatterns = ["upstream/skills/**"]

@@ -6,10 +6,11 @@
 
 ## 快速开始
 
-安装 OMP 后运行：
+安装 Git、Bun 和 OMP 后运行：
 
 ```bash
-git clone https://github.com/dbc-hbin/omp-ulw.git
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
+bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
 omp -e ./omp-ulw/index.ts
 ```
 
@@ -42,6 +43,19 @@ omp -e ./omp-ulw/index.ts
 - [`upstream/omp-build.mjs`](upstream/omp-build.mjs)：避免重复注入 OMP 已提供的内容。
 
 受支持模型的工作方式优先于通用 OMP 指令，重复的规划、重读、委派和验证要求会被移除。每次请求前刷新可用工具。子代理保留其专业角色、权限与完成协议。自定义或无法识别的系统模板保持不变；不受支持的模型及其回退保留 OMP 默认行为。更改已安装的扩展后，请重启 OMP。
+
+## 生成前端参考文件
+
+第三方设计参考、UI/UX 研究数据和 designpowers 参考正文由 `upstream/skills/` 下四个 Git 子模块的固定提交生成。生成文件不纳入 Git，仍使用 `skills/frontend/references/` 下的原有路径；OMP 专用指南与集成规则继续跟踪。
+
+更新仓库后，初始化记录的版本并重新生成：
+
+```bash
+git submodule update --init --recursive
+bun upstream/materialize-frontend-refs.mjs
+```
+
+初始化子模块需要网络，生成和正常运行 OMP 均在本地完成。无需 Git 的部署应复制生成后的完整 `skills/` 目录。GitHub 源码压缩包本身不包含子模块内容和生成参考。
 
 ## 更新预设
 

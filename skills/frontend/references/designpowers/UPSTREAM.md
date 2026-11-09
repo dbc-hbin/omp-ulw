@@ -4,19 +4,19 @@ Upstream project: `Owl-Listener/designpowers`
 
 Upstream repository: `https://github.com/Owl-Listener/designpowers`
 
-Historical upstream submodule path: `packages/shared-skills/upstreams/designpowers` (not present in this OMP package).
+Local upstream submodule path: `upstream/skills/designpowers`.
 
 Pinned upstream commit: `cb00757da9d554591fa78d27aa1854d60a05c4f7`
 
 ## Materialized Files
 
-The upstream build materialized third-party designpowers files into `packages/shared-skills/skills/frontend/references/designpowers/vendor/`. This OMP package ships the resulting files directly under this reference's `vendor/` directory; no materialization step is required.
+Run `bun upstream/materialize-frontend-refs.mjs` from the extension checkout after initializing its pinned submodules. It materializes the allowlisted third-party designpowers files into this reference's `vendor/` directory.
 
 - `LICENSE` -> `vendor/LICENSE`
 - `agents/*.md` allowlist -> `vendor/agents/`
 - selected `skills/*/SKILL.md` allowlist -> `vendor/skills/*/reference.md`
 
-The upstream package ignored its materialized `vendor/` directory and included it through `.npmignore`. Here, `vendor/` is tracked source material, not generated output.
+The materialized `vendor/` directory is ignored by Git. Copy the complete generated `skills/` tree when deploying without the source submodules.
 
 ## Included Upstream Skills
 
@@ -77,4 +77,4 @@ These upstream skills are intentionally excluded because they are bridge/state/r
 
 ## Source Of Truth
 
-Upstream historical path map lived in `packages/shared-skills/scripts/designpowers-refs-manifest.mjs` and is consumed by `packages/shared-skills/scripts/materialize-frontend-refs.mjs`.
+The local path map lives in `upstream/frontend-refs-manifest.mjs` and is consumed by `upstream/materialize-frontend-refs.mjs`. It follows OMO's allowlist and deterministic frontmatter normalization, preserving this port's OMP role, tool, state and link adaptations through `upstream/adapt-frontend-refs.mjs`.

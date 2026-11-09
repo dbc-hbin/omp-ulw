@@ -1,0 +1,16 @@
+[submodule "open-design"]
+	path = upstream/skills/open-design
+	url = https://github.com/nexu-io/open-design.git
+	shallow = true
+[submodule "taste-skill"]
+	path = upstream/skills/taste-skill
+	url = https://github.com/Leonxlnx/taste-skill.git
+	shallow = true
+[submodule "ui-ux-pro-max"]
+	path = upstream/skills/ui-ux-pro-max
+	url = https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git
+	shallow = true
+[submodule "designpowers"]
+	path = upstream/skills/designpowers
+	url = https://github.com/Owl-Listener/designpowers.git
+	shallow = true

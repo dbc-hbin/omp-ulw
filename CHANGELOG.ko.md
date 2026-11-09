@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-09 Frontend 외부 참조 생성 전환
+
+- OMO의 원본 관리 방식을 따라 frontend 외부 참조 본문의 직접 추적을 네 고정 Git 서브모듈과 명시적 로컬 생성 명령으로 대체합니다. 기존 런타임 경로와 OMP용 안내문은 유지하고 생성 파일은 Git에서 제외합니다.
+- 설치·배포 전에 디자인·taste·UI/UX·designpowers 참조를 생성합니다. 라이선스 고지, 범위가 정해진 OMP 참조 보정, designpowers 설명 필드 정규화와 Python 형제 모듈의 바이트코드 생성 억제를 보존합니다. taste 참조는 과거 캡처 생략문 대신 고정 원본의 전체 본문을 유지합니다.
+- 사용자 선택에 따라 기존 확장 UI/UX 자료 대신 고정된 UI/UX Pro Max 원본을 사용합니다. 로컬 데이터 보정·motion dial·추가 데스크톱 스택·원본에 없는 참조는 제거하고, 고정 검색 엔진의 레지스트리에 있는 데이터와 스택은 유지합니다.
+- 재귀 clone·원본 초기화·재생성·오프라인 배포용 생성 완료 스킬 트리 복사를 문서화합니다. OMP 런타임에는 네트워크나 생성 작업을 추가하지 않습니다.
+
+출처: [OMO 참조 목록](https://github.com/code-yeongyu/oh-my-openagent/blob/511dc35e22a7c4e2cebb8f0c5bab74b8660dc430/packages/shared-skills/scripts/frontend-refs-manifest.mjs), [OMO 생성기](https://github.com/code-yeongyu/oh-my-openagent/blob/511dc35e22a7c4e2cebb8f0c5bab74b8660dc430/packages/shared-skills/scripts/materialize-frontend-refs.mjs).
+
 ### 2026-11-09 모델별 지침 우선과 충돌 정리
 
 - 지원 모델의 일반 작업 방식을 모델 프리셋이 소유하도록 정리합니다. 겹치는 native 계획·재읽기·위임·검증 지침을 제거하되 도구·권한·프로젝트·자식 계약은 보존하며, 미지원 모델 fallback에서는 native 기본 행동을 복원합니다.
