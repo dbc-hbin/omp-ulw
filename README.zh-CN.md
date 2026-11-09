@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | 简体中文
 
-面向 [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi) 的模型专用提示词和原生 ULW 工作流扩展。它提供会话级 ULW 启用、规划、执行、研究及专业技能；通用执行和工具策略由 OMP 负责。
+面向 [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi) 的模型专用提示词和原生 ULW 工作流扩展。模型预设负责工作方式，OMP 保留工具协议、权限与原生模式功能；扩展还提供会话级 ULW 启用、规划、执行、研究及专业技能。
 
 ## 快速开始
 
@@ -14,6 +14,8 @@ omp -e ./omp-ulw/index.ts
 ```
 
 在交互式 TUI 中，使用 `/ulw <任务>`、`ulw <任务>` 或 `/goal ulw <任务>` 同时启用 ULW 和原生目标。已有目标不会被替换。RPC 客户端须单独创建原生目标；`/goal` 是 TUI 命令。
+
+命令或别名必须位于输入开头，可带前导空白。`Explain ulw`、`Explain /ulw` 等讨论不会启用工作流。暂停或达到预算限制的现有目标也保留所有权。
 
 ## 工作流
 
@@ -35,10 +37,11 @@ omp -e ./omp-ulw/index.ts
 - [`upstream/presets.js`](upstream/presets.js)：生成的上游模型预设和选择规则。
 - [`presets.ts`](presets.ts)：将提示词适配到 OMP 的工具和异步契约。
 - [`index.ts`](index.ts)：为主会话和受支持的子代理会话应用提示词。
+- [`host-guidance.ts`](host-guidance.ts)：移除与模型工作方式重复的 OMP 默认指令，同时保留工具与权限契约。
 - [`upstream/update.mjs`](upstream/update.mjs)：从固定的上游版本更新预设。
 - [`upstream/omp-build.mjs`](upstream/omp-build.mjs)：避免重复注入 OMP 已提供的内容。
 
-子代理使用各自选择的模型和可用工具。自定义或无法识别的系统模板保持不变；不受支持的模型保留 OMP 默认角色。更改已安装的扩展后，请重启 OMP。
+受支持模型的工作方式优先于通用 OMP 指令，重复的规划、重读、委派和验证要求会被移除。每次请求前刷新可用工具。子代理保留其专业角色、权限与完成协议。自定义或无法识别的系统模板保持不变；不受支持的模型及其回退保留 OMP 默认行为。更改已安装的扩展后，请重启 OMP。
 
 ## 更新预设
 

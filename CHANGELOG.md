@@ -2,6 +2,20 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-09 Model-first prompt ownership
+
+- Give supported model profiles ownership of ordinary working methods. Remove overlapping native planning, rereading, delegation and verification defaults while preserving tools, permissions, project context and child contracts; restore native defaults for unsupported-model fallback.
+- Refresh active capabilities before provider requests, remove redundant eval/todo batching mandates and contradictory bash-redirection wording for supported profiles, and stop native orchestration notices from forcing unchanged source/gate reruns. Eval keeps its workpool delivery and waiting contract; unsupported models keep native tool descriptions and batching defaults.
+- Resolve internal preset cadence, blocking-question, missing-tool, explanation-only intent, recovery and async/service inconsistencies without changing the generated upstream bundle.
+- Require ULW commands and aliases at the start of input. Discussion remains inert, specialized workflows avoid competing native goals, and paused/budget-limited goals retain ownership.
+- Align planning with native local-plan/propose permissions, keep research continuation with its owner, and share one bounded visual-QA repair loop and applicable capture matrix. Workflow documents no longer impose duplicate dispatch rules.
+- Pass approved native local plans directly into explicitly selected execution workflows. Keep the approved artifact unchanged and track its task references in the existing Boulder work, including continuation.
+
+### 2026-11-09 Parallel routing deduplication
+
+- Remove the two generic batching directions from the recognized OMP Tool Policy. Model presets already choose how to execute independent calls for their active tools.
+- Preserve prerequisite resolution, the remaining host policy, tool descriptions and schemas, project context, and child assignments. Custom system templates remain unchanged.
+
 ### 2026-11-09 Shell execution guidance
 
 - Add common shell guidance to supported model presets according to their active tools. Sequence bash calls that depend on shell state; an overlapping call reported as a copy sees the last completed command-boundary state, and its changes do not persist in the original shell.

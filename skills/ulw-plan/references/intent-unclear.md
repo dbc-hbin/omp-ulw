@@ -23,6 +23,6 @@ When the user cannot articulate the outcome, offer two or three concrete approac
 
 Gap analysis must challenge the most consequential assumption: is its constraint real, and does the proposal introduce complexity unsupported by the request? Reframing may simplify the approach but must not silently defer requested behavior. Record evidence and reversibility for changed defaults.
 
-Present the derived approach and defaults before final-plan creation. The approval gate remains planning-only; an explicit no-plan ulw-execute invocation already supplies approval for its prerequisite plan. Surface defaults again in the plan's **Decisions I made for you** summary.
+Outside native plan mode, present the derived approach and defaults before final-plan creation; the gate remains planning-only, and explicit no-plan ulw-execute already authorizes its prerequisite plan. In native plan mode, record these decisions in the canonical local plan and use `xd://propose` after completion and review, as specified in [full-workflow](full-workflow.md). Surface defaults in the plan's permitted decisions/assumptions section.
 
 Adversarial plan review is default-on unless explicitly declined; it is especially important when defaults substituted for an interview. Apply the identity binding, blocker eligibility and progress-based convergence in [full-workflow](full-workflow.md). A trivial task does not cancel an explicitly requested review. Return the complete plan and review disposition without beginning implementation.

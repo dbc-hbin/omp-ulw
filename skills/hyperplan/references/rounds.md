@@ -1,8 +1,8 @@
 # Strict round contracts and native dispatch
 
-Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). Include the appropriate JSON schema below in the task assignment as the required receipt shape; validate the actual terminal response yourself. Do not send outputSchema/schemaMode unless exposed by the current task schema. Every nested object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
+Read [the entry](../SKILL.md) and [OMP contract](../../ulw-loop/references/omp-contract.md). The JSON schemas below define the lead's workflow receipts. Request their fields from children without overriding native completion protocols; when a native format is required, retain the raw terminal response and normalize only supported fields in the lead. Do not send outputSchema/schemaMode unless exposed by the current task schema. Every nested receipt object disallows additional properties. Runtime completion status is distinct from workflow payload fields.
 
-These schemas govern deliberative perspective rounds and planner synthesis, which use default workers for their reasoning/writing role, not to evade a specialist's native format. A separate independent review of an existing code diff uses `tasks[].agent = "reviewer"`, and repository vulnerability analysis uses `security-reviewer`; the parent retains that specialist's raw native response and normalizes the needed workflow receipt from observed evidence and verified task identity, without imposing these round schemas on it; if either specialist is unavailable for its target, record the capability gap instead of substituting a default worker. Plan review, plan gap analysis, claim verification, or an artifact assessment without a code diff is not code-diff or vulnerability work: omit `agent` and assign a fresh read-only default worker explicit no-edit scope plus the required receipt criteria (for plans, a fresh read-only plan-review worker), validating its ordinary report yourself. Missing coverage or verdicts remain unresolved, not fabricated PASS. Role compatibility is not a custom-JSON workaround, and a specialist is never dropped for a target its role does cover.
+These receipts cover deliberative perspective rounds and planner synthesis. Assign compatible read-only reasoning workers; this is not code-diff review. Preserve required native completion sections and normalize only observed evidence and verified identity. Missing coverage or verdicts remain unresolved.
 
 The perspective enum is always `skeptic`, `validator`, `researcher`, `architect`, `creative`. Stable finding ids are lead-validated, globally unique, and never renumbered between rounds. Evidence strings contain an actual file:line, official URL, user statement provenance, or explicit `no evidence found`; never fabricated citations.
 
@@ -103,7 +103,7 @@ The lead checks one response per own finding. DEFEND and REFINE require nonempty
 }
 ```
 
-`completed` requires the approved artifact to exist, a complete readable plan in `report`, and no blocking questions. `questions` requires nonempty questions and no claim of completion. The lead reads the artifact and checks all constraints/mitigations/gates independently. Ask is main-session-only and blocking; no answer never grants approval.
+`completed` requires complete readable plan text in `report` and no blocking questions. In native plan mode or a read-only child assignment, `planPath` identifies the intended canonical artifact, not a claim that the child wrote it; the lead writes the permitted artifact and checks constraints/mitigations/gates before workflow completion. Otherwise the assigned plan artifact must exist. `questions` requires nonempty questions and no claim of completion. Keep native child completion sections intact; the lead normalizes this receipt. Native plan approval is exclusively the lead's `xd://propose` submission, never a child or ask/chat approval.
 
 ## Dispatch construction
 
@@ -116,12 +116,12 @@ await tool.task({
   context: sharedRequestAndReadOnlyConstraints,
   tasks: assignments.map(assignment => ({
     name: assignment.uniqueCamelCaseName,
-    task: assignment.selfContainedRoundInstructions + "\nReturn JSON matching this receipt schema: " + JSON.stringify(round1Schema),
+    task: assignment.selfContainedRoundInstructions + "\nCover these receipt fields in your native completion format; matching JSON is optional when compatible: " + JSON.stringify(round1Schema),
     solutionSpace: "Open evidence-based investigation; independently challenge assumptions from the assigned perspective."
   }))
 });
 ```
 
-Omitted `agent` selects the native default for these deliberative perspective assignments. Separate code-diff review follows the reviewer routing above, and repository vulnerability analysis the security-reviewer routing, with parent normalization; plan or artifact assessment without a code diff uses a fresh read-only default worker with explicit no-edit scope. Select only listed roles and preserve missing capabilities as gaps. The task text supplies exact allowed read paths, no-write scope, perspective instructions, finding id prefix, actual lead id if messaging is needed, and observable completion. Shared material belongs in top-level context, not solutionSpace. Later rounds replace the task instructions and schema with the relevant round contract and evidence bundle.
+The task text supplies allowed reads, no-write scope, perspective, finding id prefix, actual lead id when messaging is needed, and observable completion. Later rounds use the relevant round fields and evidence bundle. The planner returns proposed text when native plan mode or its assignment forbids writes; the lead persists the canonical artifact.
 
-Record actual returned child ids before any further action. Follow the skill's native wait contract and pending-set collection procedure: reconcile terminal payloads/messages by actual id, remove only terminal children, and keep unfinished ids pending. Process available results before waiting again, and wait only while blocked on your own pending jobs/services or a blocking answer owed. Never advance on the first reply alone. Clarifications use `write` to `agent://<actual-id>` only after that id is returned; logical perspective names are never transport recipients. There is no team SDK or invented category/model field.
+Record actual returned child ids in the pending set and reconcile terminal payloads by that identity. Never advance on the first reply alone while required lanes remain pending. Clarifications use actual returned ids, never logical perspective names as transport recipients. Use the model and native tool guidance for waiting and dispatch.

@@ -6,7 +6,7 @@
  * Changelog: child sessions receive their own model profile while preserving
  * host-owned specialist roles, assignments, tools and completion protocols.
  * Changelog: retain ULW activation, specialised workflow state and continuation;
- * common execution policy belongs to OMP.
+ * model profiles own working methods; native tools, permissions and modes remain authoritative.
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
  * Additional commands: /debugging, /review-work, /visual-qa, /visualize,
  * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
@@ -26,7 +26,8 @@
  * reproducible updater live in upstream/; presets.ts contains transport adaptations.
  */
 import { replaceHostBehavior } from "./host";
-import { rewritePresetPayload, rewriteTaskGuidancePayload } from "./payload";
+import { adaptOrchestrateNotice, projectHostGuidance } from "./host-guidance";
+import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
 import { renderPreset } from "./presets";
 import type { PresetModel, PresetOptions } from "./presets";
 import { registerUlw, ulwDirective } from "./ulw";
@@ -42,6 +43,7 @@ interface ModelPromptApi {
   getActiveTools(): string[];
   getAllTools(): Array<{ name: string }>;
   on(event: "before_agent_start", handler: (event: { systemPrompt: string[] }, ctx: PromptContext) => { systemPrompt: string[] } | undefined): void;
+  on(event: "context", handler: (event: { messages: Record<string, unknown>[] }, ctx: PromptContext) => { messages: Record<string, unknown>[] } | undefined): void;
   on(event: "before_provider_request", handler: (event: { payload: unknown }, ctx: PromptContext) => unknown): void;
 }
 
@@ -58,12 +60,14 @@ export default function ompUlw(pi: ExtensionApi): void {
   pi.setLabel("omp-ulw");
   registerUlw(pi);
   let originalBehavior: string | undefined;
+  let originalHost: string | undefined;
   let options: PresetOptions = { surface: "terminal", toolNames: [] };
-  const profiles = new Map<string, string>();
+  const profiles = new Map<string, { prompt: string; modelGuidance: boolean }>();
   let warned = false;
 
   pi.on("before_agent_start", (event, ctx) => {
     originalBehavior = undefined;
+    originalHost = undefined;
     profiles.clear();
     const active = new Set(pi.getActiveTools());
     options = {
@@ -89,9 +93,24 @@ export default function ompUlw(pi: ExtensionApi): void {
       return;
     }
     originalBehavior = result.originalBehavior;
-    if (preset && ctx.model) profiles.set(JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]), marked);
+    if (preset && ctx.model) profiles.set(JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name, options.toolNames]), { prompt: marked, modelGuidance: true });
     if (!preset) result.blocks[0] = result.blocks[0].replace(marked, markPreset(originalBehavior, ctx.agent.kind === "sub"));
+    originalHost = result.blocks[0];
+    result.blocks[0] = projectHostGuidance(result.blocks[0], originalHost, preset !== undefined);
     return { systemPrompt: result.blocks };
+  });
+
+  pi.on("context", (event, ctx) => {
+    if (originalHost === undefined || !ctx.model || !renderPreset(ctx.model, options)) return;
+    let changed = false;
+    const messages = event.messages.map(message => {
+      if (message.role !== "custom" || message.customType !== "orchestrate-notice" || typeof message.content !== "string") return message;
+      const content = adaptOrchestrateNotice(message.content);
+      if (content === message.content) return message;
+      changed = true;
+      return { ...message, content };
+    });
+    return changed ? { messages } : undefined;
   });
 
   pi.on("before_provider_request", (event, ctx) => {
@@ -99,16 +118,21 @@ export default function ompUlw(pi: ExtensionApi): void {
     const payload = ctx.agent.kind === "main" ? rewritePresetPayload(event.payload, ctx.model.api,
       `<omp-ulw-policy>\n<ultrawork-mode>${ulwDirective}</ultrawork-mode>\n</omp-ulw-policy>`,
       /<(om[op]-ulw-policy)>[\s\S]*?<\/\1>/g) : event.payload;
-    if (originalBehavior === undefined) return payload;
-    const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name]);
+    if (originalBehavior === undefined || originalHost === undefined) return payload;
+    const active = new Set(pi.getActiveTools());
+    options = { ...options, toolNames: pi.getAllTools().map(tool => tool.name).filter(name => active.has(name)) };
+    const key = JSON.stringify([ctx.model.provider, ctx.model.id, ctx.model.name, options.toolNames]);
     let replacement = profiles.get(key);
     if (replacement === undefined) {
       const preset = renderPreset(ctx.model, options);
-      replacement = markPreset(preset?.prompt ?? originalBehavior, ctx.agent.kind === "sub");
+      replacement = { prompt: markPreset(preset?.prompt ?? originalBehavior, ctx.agent.kind === "sub"), modelGuidance: preset !== undefined };
       profiles.set(key, replacement);
     }
-    // Adapt only native task routing prose alongside our owned profile marker.
-    // Tool schemas, custom prompts and child assignments remain host-owned.
-    return rewriteTaskGuidancePayload(rewritePresetPayload(payload, ctx.model.api, replacement), ctx.model.api);
+    const host = originalHost;
+    const modelGuidance = replacement.modelGuidance;
+    const refreshed = rewritePresetPayload(payload, ctx.model.api, replacement.prompt);
+    const projected = rewritePresetPayload(refreshed, ctx.model.api,
+      text => projectHostGuidance(text, host, modelGuidance), /^[\s\S]+$/);
+    return modelGuidance ? rewriteToolGuidancePayload(projected, ctx.model.api) : projected;
   });
 }

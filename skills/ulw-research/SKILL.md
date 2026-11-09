@@ -12,7 +12,7 @@ metadata:
 
 Activate only on an explicit `ulw-research`, `/ulw-research`, `$ulw-research`, `ulw research`, `ultradebate`/`hyperdebate` research request, or an explicit request for this exhaustive research/deep-investigation workflow, in any language. Preserve combined `mass ulw research`, `mulw research`, and `ulw mass research` entry points. Ordinary questions, debugging, and another workflow's context gathering do not activate it; bare ULW does not select it. On activation include `ULW-RESEARCH MODE ENABLED!`.
 
-Current native OMP instructions own execution policy; see the [host authority boundary](../ulw-loop/references/omp-contract.md). The extension connects an explicit research invocation to native `workflowz` unless the user selected a native keyword. This skill adds the research evidence and deliverable contract without duplicating the native execution policy.
+Use the [host authority boundary](../ulw-loop/references/omp-contract.md) for model guidance, native modes and permissions. Supported command-bridge invocations connect research to native `workflowz` unless the user supplied a native keyword; semantic skill selection alone does not prove that mode is active. This skill owns research evidence and deliverables.
 
 ## Research brief and durable evidence
 

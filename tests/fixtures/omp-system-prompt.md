@@ -27,7 +27,8 @@ You are omp's trusted coding assistant.
 
 § Tool Policy
 # General
-SHOULD resolve prerequisites and parallelize independent calls.
+Every turn costs seconds: batch all independent reads/searches/checks into one turn. Once the change is verified, stop and report.
+SHOULD resolve prerequisites, parallelize independent calls.
 
 # Specialized Tools
 MUST use specialized tools over shell equivalents.

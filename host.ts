@@ -35,11 +35,12 @@ export function replaceHostBehavior(blocks: string[], behavior: string): HostPro
   const policy = base.indexOf(`\n${marker} Tool Policy\n`, runtime);
   const workflow = base.indexOf(`\n${marker} Workflow\n`, policy);
   if (runtime <= role || policy <= runtime || workflow <= policy) return undefined;
-  // Preserve host/project context and capability contracts. Only the known
-  // research-routing prose in Tool Policy is adapted outside the role body.
+  // Preserve native defaults here so unsupported-model fallback can restore them.
+  // Model-specific behavioral projection happens after this replacement.
   const roleBodyStart = role + heading[0].length;
   const originalBehavior = base.slice(roleBodyStart, runtime);
   const host = base.slice(0, roleBodyStart) + behavior + "\n" + base.slice(runtime, policy)
-    + adaptResearchRouting(base.slice(policy, workflow)) + base.slice(workflow);
+    + adaptResearchRouting(base.slice(policy, workflow))
+    + base.slice(workflow);
   return { blocks: [host, ...blocks.slice(1)], originalBehavior };
 }

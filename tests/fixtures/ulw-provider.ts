@@ -29,6 +29,13 @@ export default function probe(pi: ProbeApi): void {
       mkdirSync(dir, { recursive: true });
       path = join(dir, "goals.json");
       writeFileSync(path, JSON.stringify({ status: "active", goals: [{ status: "pending" }] }));
+    } else if (kind === "execute-native") {
+      mkdirSync(join(ctx.cwd, "doc"), { recursive: true });
+      path = join(ctx.cwd, "doc/boulder.json");
+      writeFileSync(path, JSON.stringify({ schema_version: 2, works: { probe: {
+        status: "active", session_ids: ["omp:" + id], active_plan: "local://approved-plan.md",
+        execution_tasks: [{ plan_ref: "Approach step 1", status: "pending" }, { plan_ref: "Verification", status: "pending" }],
+      } } }));
     } else {
       mkdirSync(join(ctx.cwd, "doc/plans"), { recursive: true });
       path = join(ctx.cwd, "doc/plans/probe.md");

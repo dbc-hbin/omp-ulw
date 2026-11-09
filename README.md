@@ -2,7 +2,7 @@
 
 English | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
-Model-specific prompts and native ULW workflows for [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi). The extension provides session-level ULW activation, planning, execution, research, and specialist skills while leaving shared execution and tool policies to OMP.
+Model-specific prompts and native ULW workflows for [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi). Model profiles own working methods; OMP supplies tool schemas, permissions and native mode capabilities. The extension also provides session-level ULW activation, planning, execution, research and specialist skills.
 
 ## Getting started
 
@@ -14,6 +14,8 @@ omp -e ./omp-ulw/index.ts
 ```
 
 In the interactive TUI, use `/ulw <task>`, `ulw <task>`, or `/goal ulw <task>` to activate ULW and a native goal. An existing goal is not replaced. RPC clients must create a native goal separately; `/goal` is a TUI command.
+
+Put the command or alias at the start of the input, after optional whitespace. Discussion such as `Explain ulw`, `Explain /ulw` or `What does /ulw-plan do?` stays inert. Existing paused and budget-limited goals also retain ownership.
 
 ## Workflows
 
@@ -35,10 +37,11 @@ Additional skills include `debugging`, `programming`, `review-work`, `visual-qa`
 - [`upstream/presets.js`](upstream/presets.js): generated upstream model presets and selection rules.
 - [`presets.ts`](presets.ts): adapts prompts to OMP's tool and async contracts.
 - [`index.ts`](index.ts): applies prompts to main and supported subagent sessions.
+- [`host-guidance.ts`](host-guidance.ts): removes overlapping native behavioral defaults for selected profiles while preserving tool and permission contracts.
 - [`upstream/update.mjs`](upstream/update.mjs): updates presets from a pinned upstream revision.
 - [`upstream/omp-build.mjs`](upstream/omp-build.mjs): avoids duplicating sections already supplied by OMP.
 
-Subagents use their own selected model and available tools. Custom or unrecognized system templates are preserved; unsupported models retain the default OMP role. Restart OMP after changing an installed extension.
+For supported profiles, model-specific guidance takes precedence over generic OMP working style; duplicated native planning, rereading, delegation and verification rules are removed. Tool availability is refreshed before provider requests. Subagents retain their specialist role, permissions and completion protocol. Custom or unrecognized system templates are preserved; unsupported models retain native OMP behavior, including after fallback. Restart OMP after changing an installed extension.
 
 ## Updating presets
 

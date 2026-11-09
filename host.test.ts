@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { adaptResearchRouting, replaceHostBehavior } from "./host";
+import { projectHostGuidance } from "./host-guidance";
 
 const base = `<system-conventions>Host message conventions</system-conventions>
 § Role
@@ -117,4 +118,31 @@ test("an already-owned profile cannot be nested by a second installation", () =>
     const first = replaceHostBehavior([base], `<${prefix}-model-preset>profile</${prefix}-model-preset>`);
     expect(replaceHostBehavior(first?.blocks ?? [], "<omp-model-preset>other</omp-model-preset>")).toBeUndefined();
   }
+});
+
+test("model guidance owns behavioral sections while native capability and permission regions survive", () => {
+  const template = base.replace("Original workflow", "# 1. Scope\nNATIVE_SCOPE\n# 4. Implement\nPERMISSION_BOUNDARY\n# 5. Verify\nNATIVE_CHECKS\n# 6. Cleanup\nNATIVE_CLEANUP");
+  const prepared = replaceHostBehavior([template], "<omp-model-preset>MODEL_BEHAVIOR</omp-model-preset>");
+  if (!prepared) throw new Error("Expected recognized host template");
+  const source = prepared.blocks[0];
+  const result = projectHostGuidance(source, source, true);
+  const policyAt = source.indexOf("\n§ Tool Policy\n");
+  expect(result.slice(0, result.indexOf("\n§ Tool Policy\n"))).toBe(source.slice(0, policyAt));
+  expect(result.slice(result.indexOf("\n§ Delivery\n"))).toBe(source.slice(source.indexOf("\n§ Delivery\n")));
+  // These headings are keys consumed by the host-section parser.
+  for (const section of ["# General\n", "# Delegation\n", "# 1. Scope\n", "# 5. Verify\n", "# 6. Cleanup\n"]) {
+    expect(result.includes(section)).toBe(false);
+  }
+  expect(result.includes("# Tool I/O\n")).toBe(true);
+  expect(result.includes("# Specialized Tools\n")).toBe(true);
+  expect(result.includes("# 4. Implement\nPERMISSION_BOUNDARY")).toBe(true);
+});
+
+test("native fallback restores its original policy without replacing the current profile or appended context", () => {
+  const prepared = replaceHostBehavior([base], "<omp-model-preset>FALLBACK_ROLE</omp-model-preset>");
+  if (!prepared) throw new Error("Expected recognized host template");
+  const source = prepared.blocks[0];
+  const policyRemoved = source.replace("# General\nOriginal delegation preference\n", "");
+  const context = "\n<project-context>Do not change project ownership</project-context>";
+  expect(projectHostGuidance(policyRemoved + context, source, false)).toBe(source + context);
 });

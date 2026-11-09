@@ -1,6 +1,6 @@
 # ulw-research - deliverable contract
 
-This reference owns report state, format promises, evidence-preserving validation and the existing report-tools interface. Native OMP owns execution policy. Keep the requested destination/format; a demo or reproduction does not replace a promised report.
+This reference owns report state, format promises, evidence-preserving validation and the existing report-tools interface. Use the [responsibility boundary](../../ulw-loop/references/omp-contract.md) for working methods and permissions. Keep the requested destination/format; a demo or reproduction does not replace a promised report.
 
 ## 1. Lanes and destination
 

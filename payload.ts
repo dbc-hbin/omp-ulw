@@ -1,18 +1,20 @@
 import { adaptResearchRouting } from "./host";
+import { adaptToolGuidance } from "./host-guidance";
 
 const PRESET_REGION = /<(om[op]-model-preset)>[\s\S]*?<\/\1>/g;
 
 type PayloadObject = Record<string, unknown>;
+type PromptReplacement = string | ((match: string) => string);
 
 function payloadObject(value: unknown): PayloadObject | undefined {
 	if (typeof value !== "object" || value === null || Array.isArray(value)) return undefined;
 	return value as PayloadObject;
 }
 
-function rewriteText(value: unknown, replacement: string, region: RegExp): unknown {
+function rewriteText(value: unknown, replacement: PromptReplacement, region: RegExp): unknown {
 	if (typeof value !== "string") return value;
 	// Callback replacement keeps literal dollar sequences in preset text intact.
-	return value.replace(region, () => replacement);
+	return value.replace(region, typeof replacement === "string" ? () => replacement : replacement);
 }
 
 function rewriteField(object: PayloadObject, key: string, rewrite: (value: unknown) => unknown): PayloadObject {
@@ -35,7 +37,7 @@ function rewriteArray(value: unknown, rewrite: (item: unknown) => unknown): unkn
 	return result ?? value;
 }
 
-function rewriteBlocks(value: unknown, replacement: string, typed: boolean, region: RegExp): unknown {
+function rewriteBlocks(value: unknown, replacement: PromptReplacement, typed: boolean, region: RegExp): unknown {
 	if (typeof value === "string") return rewriteText(value, replacement, region);
 	return rewriteArray(value, block => {
 		const object = payloadObject(block);
@@ -44,7 +46,7 @@ function rewriteBlocks(value: unknown, replacement: string, typed: boolean, regi
 	});
 }
 
-function rewriteMessages(value: unknown, replacement: string, region: RegExp): unknown {
+function rewriteMessages(value: unknown, replacement: PromptReplacement, region: RegExp): unknown {
 	return rewriteArray(value, message => {
 		const object = payloadObject(message);
 		if (!object || (object.role !== "system" && object.role !== "developer")) return message;
@@ -54,7 +56,7 @@ function rewriteMessages(value: unknown, replacement: string, region: RegExp): u
 	});
 }
 
-function rewriteGoogle(object: PayloadObject, replacement: string, region: RegExp): PayloadObject {
+function rewriteGoogle(object: PayloadObject, replacement: PromptReplacement, region: RegExp): PayloadObject {
 	return rewriteField(object, "systemInstruction", instruction => {
 		if (typeof instruction === "string") return rewriteText(instruction, replacement, region);
 		const content = payloadObject(instruction);
@@ -63,7 +65,7 @@ function rewriteGoogle(object: PayloadObject, replacement: string, region: RegEx
 	});
 }
 
-function rewriteGitLabFlow(object: PayloadObject, replacement: string, region: RegExp): PayloadObject {
+function rewriteGitLabFlow(object: PayloadObject, replacement: PromptReplacement, region: RegExp): PayloadObject {
 	return rewriteField(object, "flowConfig", config => {
 		const flow = payloadObject(config);
 		if (!flow) return config;
@@ -78,15 +80,18 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: string, region: R
 	});
 }
 
-function rewriteTaskDefinition(value: unknown): unknown {
+function rewriteToolDefinition(value: unknown): unknown {
 	const object = payloadObject(value);
-	if (!object || object.name !== "task") return value;
+	if (!object || typeof object.name !== "string" || !["task", "todo", "bash", "eval"].includes(object.name)) return value;
+	const name = object.name;
 	return rewriteField(object, "description", description =>
-		typeof description === "string" ? adaptResearchRouting(description) : description);
+		typeof description === "string"
+			? name === "task" ? adaptResearchRouting(description) : adaptToolGuidance(name, description)
+			: description);
 }
 
-/** Change only the native task description; schemas, execution and other tools stay intact. */
-export function rewriteTaskGuidancePayload(payload: unknown, api: string): unknown {
+/** Change known native guidance only; schemas, execution and custom tools stay intact. */
+export function rewriteToolGuidancePayload(payload: unknown, api: string): unknown {
 	const object = payloadObject(payload);
 	if (!object) return payload;
 	const rewriteFunctions = (value: unknown): unknown => rewriteArray(value, tool => {
@@ -95,15 +100,15 @@ export function rewriteTaskGuidancePayload(payload: unknown, api: string): unkno
 		if (entry.type === "namespace" && entry.name === "functions") {
 			return rewriteField(entry, "tools", rewriteFunctions);
 		}
-		return entry.type === "function" ? rewriteTaskDefinition(entry) : tool;
+		return entry.type === "function" ? rewriteToolDefinition(entry) : tool;
 	});
 	const rewriteChatTools = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
-		return entry?.type === "function" ? rewriteField(entry, "function", rewriteTaskDefinition) : tool;
+		return entry?.type === "function" ? rewriteField(entry, "function", rewriteToolDefinition) : tool;
 	});
 	const rewriteGoogleTools = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
-		return entry ? rewriteField(entry, "functionDeclarations", declarations => rewriteArray(declarations, rewriteTaskDefinition)) : tool;
+		return entry ? rewriteField(entry, "functionDeclarations", declarations => rewriteArray(declarations, rewriteToolDefinition)) : tool;
 	});
 	const rewriteBedrock = (value: unknown): unknown => {
 		const entry = payloadObject(value);
@@ -111,7 +116,7 @@ export function rewriteTaskGuidancePayload(payload: unknown, api: string): unkno
 			const configObject = payloadObject(config);
 			return configObject ? rewriteField(configObject, "tools", tools => rewriteArray(tools, tool => {
 				const definition = payloadObject(tool);
-				return definition ? rewriteField(definition, "toolSpec", rewriteTaskDefinition) : tool;
+				return definition ? rewriteField(definition, "toolSpec", rewriteToolDefinition) : tool;
 			})) : config;
 		}) : value;
 	};
@@ -126,7 +131,7 @@ export function rewriteTaskGuidancePayload(payload: unknown, api: string): unkno
 		case "ollama-chat":
 			return rewriteField(object, "tools", rewriteChatTools);
 		case "anthropic-messages":
-			return rewriteField(object, "tools", tools => rewriteArray(tools, rewriteTaskDefinition));
+			return rewriteField(object, "tools", tools => rewriteArray(tools, rewriteToolDefinition));
 		case "google-generative-ai":
 		case "google-vertex": {
 			const rewritten = rewriteField(object, "tools", rewriteGoogleTools);
@@ -151,7 +156,7 @@ export function rewriteTaskGuidancePayload(payload: unknown, api: string): unkno
  * Unknown APIs/shapes, missing markers, and already-current presets retain identity.
  * Regions must be wholly contained in a single text field; blocks are never merged.
  */
-export function rewritePresetPayload(payload: unknown, api: string, replacement: string, region = PRESET_REGION): unknown {
+export function rewritePresetPayload(payload: unknown, api: string, replacement: PromptReplacement, region = PRESET_REGION): unknown {
 	const object = payloadObject(payload);
 	if (!object) return payload;
 	switch (api) {

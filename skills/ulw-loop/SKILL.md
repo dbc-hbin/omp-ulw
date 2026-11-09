@@ -8,7 +8,7 @@ metadata:
 
 # ulw-loop
 
-Activate only for an explicit ulw-loop or durable checkpointed execution request. Bare ULW does not select it. Current native OMP instructions govern execution; the [host authority boundary](references/omp-contract.md) applies. This skill owns the richer multi-goal state, not another general orchestration policy.
+Activate only for an explicit ulw-loop or durable checkpointed execution request. Bare ULW does not select it. Use the [host authority boundary](references/omp-contract.md) for model guidance, native modes and permissions. This skill owns the richer multi-goal state and evidence.
 
 ## State contract
 

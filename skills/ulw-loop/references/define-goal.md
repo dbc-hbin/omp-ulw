@@ -1,6 +1,6 @@
 # Define Goal
 
-This reference defines the content of the loop's binding record. Current native OMP instructions decide how to investigate missing context, resolve owner decisions and perform the work.
+This reference defines the content of the loop's binding record; use the [responsibility boundary](omp-contract.md) for working methods and permissions.
 
 ## Binding objective
 
@@ -17,7 +17,7 @@ Read existing state first. Continue matching active intent; do not silently repl
 
 Every criterion needs a stable `id`, exact `scenario`, binary `pass_condition` and literal `expected_evidence` path before work begins. The scenario names inputs and the observable result; a criterion that cannot fail is not useful. Declare `essential` explicitly when a criterion may be deferred past a non-final checkpoint. Final completion still requires it.
 
-Keep criteria proportional to the goal. Existing LIGHT/HEAVY metadata may remain: LIGHT describes a known-pattern goal, normally one or two criteria for the deliverable and riskiest edge; HEAVY covers new boundaries or significant risk, with happy path, edge, regression and adversarial coverage. These labels do not route workers or choose models; current OMP owns that choice.
+Keep criteria proportional to the goal. Existing LIGHT/HEAVY metadata may remain: LIGHT describes a known-pattern goal, normally one or two criteria for the deliverable and riskiest edge; HEAVY covers new boundaries or significant risk, with happy path, edge, regression and adversarial coverage. These are evidence-coverage labels, not worker or model selectors.
 
 The evidence standard follows the deliverable: a behavior needs its actual usage result, a performance target needs a baseline and named measurement, and research needs a cited answer with source artifacts. Pick thresholds that decide acceptance, not decorative precision. Capture paths and adversarial applicability in advance; record observed results later through the [ledger contract](omp-ledger.md).
 

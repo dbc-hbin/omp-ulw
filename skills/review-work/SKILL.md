@@ -1,13 +1,11 @@
 ---
 name: review-work
-description: "Post-implementation gate review: the root runs real-surface QA, then ONE fresh reviewer audits the goal, constraints, code, security, context and QA artifacts."
+description: "Post-implementation gate review: root-owned real-surface QA and fresh independent review of the goal, constraints, code, security, context and QA artifacts."
 ---
 
 # Review work - Two-lane gate
 
-Consult [the OMP contract](../ulw-loop/references/omp-contract.md) only for native dispatch, result handling or workflow-state details not resolved by current tool schemas and host instructions; reuse it if already read in this session. Activate for an explicit completed-work gate review, not automatically on bare ULW. A review-only request is read-only. An explicit “review and fix” request authorizes only minimal in-scope fixes for confirmed blockers, followed by fresh affected QA and review; it does not authorize unrelated refactoring, destructive actions, external writes, or commits. Exactly two lanes: root-owned hands-on QA and ONE fresh read-only reviewer. No panel, no sub-reviewers and no delegated manual QA. The result passes only when all applicable QA rows are verified PASS and the reviewer has a valid APPROVE receipt.
-
-This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
+Consult [the responsibility boundary](../ulw-loop/references/omp-contract.md) for model guidance, native modes and permissions. Activate for an explicit completed-work gate review, not automatically on bare ULW. A review-only request is read-only. An explicit “review and fix” request authorizes only minimal in-scope fixes for confirmed blockers, followed by fresh affected QA and review; it does not authorize unrelated refactoring, destructive actions, external writes or commits. The gate needs root-owned hands-on QA and fresh independent read-only review. Dispatch count and grouping follow selected model guidance and any explicit native mode; this workflow does not require a one-off task or prohibit a required native review group. Reviewers cannot delegate or replace root manual QA. Passing requires every applicable QA row verified PASS and a supported APPROVE receipt covering all required review scopes.
 
 ## Phase 0 - Gather context and bind the scope
 
@@ -15,7 +13,7 @@ Collect original GOAL, every CONSTRAINT, BACKGROUND and conversation decisions; 
 
 Inspect git status --short, branch/base and the user's named scope. For uncommitted work review staged and unstaged diffs plus explicitly relevant untracked files. For a branch/PR discover the correct target branch/merge-base or user-specified commits; then collect that comparison. Do not assume main or HEAD~1, omit untracked changes, or change the working tree to manufacture a clean diff. Bind captures to HEAD plus working-content diff/digest and untracked inputs. A passing result belongs to this content, not just its commit id.
 
-Use find/glob/read to locate actual run/test commands from manifests/build configuration. LSP answers references/callers; grep finds TODO/FIXME/HACK and literal docs/config. Mine scoped git log and relevant reverts; use read-only github search_issues/search_prs when configured for related history. Record source -> finding -> why it matters. External messaging is never part of context mining. Do not browse unrelated code or expand the goal from tracker suggestions.
+Locate actual run/test commands from project configuration and inspect relevant callers and docs/config. Mine scoped history and reverts, plus related issues/PRs when accessible. Record source -> finding -> why it matters. External messaging is never part of context mining. Do not browse unrelated code or expand the goal from tracker suggestions.
 
 A separate worktree is OPTIONAL when isolation is necessary and safe, not required for dirty local work. Prefer the current tree without branch switching. If using an owned review worktree, preserve uncommitted inputs explicitly, record ownership and leave user work intact. Never force removal, reset, checkout user files or remove the worktree while a child is using it. Worktree creation/cleanup does not authorize commits or destructive commands.
 
@@ -26,7 +24,7 @@ Reuse already-captured real-surface proof only when it covers the FINAL content.
 | Surface | Proof |
 |---|---|
 | HTTP | Live endpoint request/status/headers/body and persisted state readback |
-| CLI | Actual command, arguments, stdout/stderr/exit code and side-effect state; native async bash, PTY for interaction |
+| CLI | Actual command, arguments, stdout/stderr/exit code and side-effect state |
 | TUI | Actual rendered terminal and visual capture for color/layout/CJK claims; plain capture-pane is insufficient |
 | Web | Use exposed browser tools or skill://cua-driver; actual browser actions, semantic postconditions and screenshots |
 | Desktop | Installed cua-driver skill and actual running app, fresh AX/state, action log and screenshot |
@@ -37,11 +35,11 @@ Cover happy path, changed path, relevant boundary/error/adversarial cases and cl
 
 Create a root-owned QA matrix with criterion, scenario/action, expected, raw observed, PASS/FAIL/UNPROVEN/N/A, artifact path, invocation, content identity and cleanup receipt. Artifact paths must exist and be nonempty; include screenshots plus semantic assertions, not success prose. N/A requires a goal-specific reason; required blocked rows cannot become N/A. Store requested evidence privately when it contains auth/customer data.
 
-Follow repository and host test policy. Capture required reproduction first, then run relevant final lint/type/build/tests once when ready; broaden or repeat for a new change/failure only. Prose-only edits receive review without phrase/word-count tests; machine-consumed values may be validated through the real parser. Start long commands and event/log condition watches through native async bash; results auto-deliver, and call native wait() with no arguments only when blocked on a pending job you started. Subscribe to the exact event before triggering; no repeated polling or fixed sleeps.
+Record verification selected under model guidance, applicable native modes and project requirements. Reuse current results that cover the final inputs; edits invalidate affected proof. Prose-only edits receive review without phrase/word-count tests; machine-consumed values may be validated through the real parser.
 
-## Phase 2 - ONE fresh reviewer
+## Phase 2 - Fresh independent review
 
-After QA capture, launch one native background task with `agent: "reviewer"` inside its `tasks[]` entry; do independent root teardown/report work while it reads. Use `security-reviewer` instead only for an explicitly security-only review. Do not omit the specialist merely to obtain custom JSON. The reviewer uses its native response format and cannot implement fixes, modify inputs, spawn agents, or substitute for the root QA. It receives self-contained context, exact scope/diff, goal/constraints/background, current input identity, history findings, code/neighbor paths, QA matrix and existing artifact paths. If the required specialist is not advertised, report the capability gap rather than silently treating a general worker as an equivalent review. Use this example only after discovering the actual paths and native task schema:
+After QA capture, obtain fresh read-only assessment of the required scopes under the live dispatch contract. Code-diff review uses the advertised `reviewer`; repository vulnerability analysis uses `security-reviewer`. A plan, prose or artifact assessment outside those roles' advertised scope uses a compatible read-only worker. Preserve specialist native formats; custom JSON never justifies bypassing a matching specialist. Assessors cannot implement fixes, modify inputs, spawn agents or substitute for root QA. Supply self-contained scope/diff, goal/constraints/background, current input identity, history findings, relevant paths, QA matrix and existing artifacts. Missing required specialist capability is a gap. The single-assessment example below illustrates a compatible dispatch; adapt grouping to an explicit native mode rather than treating the example as a fixed count:
 
 The receipt schema below belongs to the parent. Preserve the reviewer's raw terminal response and derive the receipt from its actual findings, assessment and coverage plus the parent's bound input identity and QA records. A native no-findings result is not automatically APPROVE: the parent must establish that the requested scope and applicable QA were covered. Do not invent a reviewer confidence, finding, checked criterion or approval that the response does not support. Missing substantive coverage leaves the gate INCONCLUSIVE; JSON formatting alone is not a failed review.
 
@@ -91,9 +89,9 @@ The parent normalizes APPROVE only with complete evidence, no blockers and all a
 
 ## Phase 3 - Collect receipts and cleanup
 
-Record the actual returned child id in a pending set. Native `wait({})` may return without a new terminal result, with multiple results/messages, or due to steering. It takes no child handles and is not a wave barrier. Wait only when blocked on your own pending jobs/services or a blocking answer owed; process available results before waiting again. Reconcile every actual id; remove only terminal children, keep running entries pending and continue independent root work. Confirm terminal status, retain the actual task/wait response or agent:// payload and normalize its substantive assessment into the parent-owned receipt. Wrapper text, acknowledgements, silence, timeout and still-running snapshots are not verdicts. Validate the normalized fields without requiring the specialist to emit the workflow's JSON; unsupported coverage remains unresolved. Never replace a live reviewer just because it is slow.
+Track actual returned assessment ids and their assigned scopes in the root's pending set. Retain terminal raw responses and normalize supported assessments into the parent-owned receipt; remove only terminal entries. Messages, acknowledgements, silence, timeout and running snapshots are not verdicts. Unsupported coverage remains unresolved. Do not replace a live assessor merely because it is slow.
 
-After terminal failure or missing substantive assessment, retain current QA and launch one fresh, smaller reviewer replacement with the exact failure; no concurrent review panel. One replacement is the retry bound for a review. Do not respawn merely because native output is not the workflow's JSON. A valid re-review after authorized fixes is a fresh reviewer with delta + updated current evidence, never re-tasking a stale reviewer. Report unresolved evidence or reviewer capability gaps as INCONCLUSIVE; do not claim review passed. Recover a blocked review only after explicit user direction supplies the missing capability or accepts the unresolved gate.
+After terminal failure or missing substantive assessment, retain current QA; permit at most one replacement for each failed assessment scope with the exact failure context. An explicit native review group does not reset this bound. Do not respawn merely because native output is not workflow JSON. Authorized fixes require fresh affected review with the delta and updated evidence. Report unresolved evidence or capability gaps as INCONCLUSIVE; accepting a disclosed gap does not turn it into PASS.
 
 For review-only requests, root fixes require separate authorization; for an explicit review-and-fix request, apply only the minimal confirmed blocker fixes described above. Changed content stales dependent QA and approval. Run affected QA/checks and collect a fresh review after fixes. Stop only root-owned service/browser handles, preserve requested artifacts and cleanup receipts; optional owned worktree cleanup waits for terminal reviewer collection and must preserve user work. No force removal.
 

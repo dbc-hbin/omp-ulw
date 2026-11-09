@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { rewritePresetPayload, rewriteTaskGuidancePayload } from "./payload";
+import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
 import { adaptResearchRouting } from "./host";
 
 const oldPreset = "<omp-model-preset>old profile</omp-model-preset>";
@@ -29,15 +29,15 @@ test("task routing adaptation preserves transport structure, schemas, unrelated 
 	for (const { api, payload, expected } of shapes) {
 		const input = { ...payload, messages, metadata: { description } };
 		const snapshot = structuredClone(input);
-		const result = rewriteTaskGuidancePayload(input, api);
+		const result = rewriteToolGuidancePayload(input, api);
 		expect(result).toEqual({ ...expected, messages, metadata: { description } });
 		expect(input).toEqual(snapshot);
-		expect(rewriteTaskGuidancePayload(result, api)).toBe(result);
+		expect(rewriteToolGuidancePayload(result, api)).toBe(result);
 	}
 	const custom = { tools: [{ type: "function", function: { ...task, description: "User-authored task contract" } }] };
-	expect(rewriteTaskGuidancePayload(custom, "openai-completions")).toBe(custom);
+	expect(rewriteToolGuidancePayload(custom, "openai-completions")).toBe(custom);
 	const unknown = { tools: [task], messages };
-	expect(rewriteTaskGuidancePayload(unknown, "unknown-api")).toBe(unknown);
+	expect(rewriteToolGuidancePayload(unknown, "unknown-api")).toBe(unknown);
 });
 
 const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = [

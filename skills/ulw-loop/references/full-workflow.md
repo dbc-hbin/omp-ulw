@@ -1,6 +1,6 @@
 # Loop checkpoints and steering
 
-The [ledger specification](omp-ledger.md) defines files, statuses, fingerprints and verifier commands; [Define Goal](define-goal.md) defines initial criteria. Current native OMP instructions own execution, task decomposition, delegation, tools, waiting, permissions, testing and QA procedures. This reference adds only loop state transitions and validator-compatible evidence.
+The [ledger specification](omp-ledger.md) defines files, statuses, fingerprints and verifier commands; [Define Goal](define-goal.md) defines initial criteria. Use the [responsibility boundary](omp-contract.md) for model guidance, native modes and permissions. This reference adds only loop state transitions and validator-compatible evidence.
 
 ## Criterion and goal transitions
 
@@ -16,7 +16,7 @@ A non-final goal completes after every essential criterion passes on fresh evide
 
 The final checkpoint requires every criterion across all goals to pass and `quality-gate.json` to validate. The verifier consumes `manualQa`, `iteration` and `criteriaCoverage`, plus snapshot binding. Include `gateReview` when OMP or the user requires an independent review. These are evidence fields, not additional OMP orchestration instructions.
 
-Freeze the evidence-bearing content. Populate the gate from actual main-session surface evidence and the verification results required by live OMP. Reuse fresh results where they already establish the fields; no extra full rerun or review is required merely to fill this file. A fix invalidates affected proof and any affected review approval. When review is required, a missing or inconclusive assessment blocks completion; never remove an unsuccessful review record to pass the validator. OMP owns review and recovery procedure.
+Freeze the evidence-bearing content. Populate the gate from actual main-session surface evidence and verification selected under the shared responsibility boundary. Reuse fresh results where they already establish the fields; no extra full rerun or review is required merely to fill this file. A fix invalidates affected proof and any affected review approval. When review is required, a missing or inconclusive assessment blocks completion; never remove an unsuccessful review record to pass the validator.
 
 Record verification results and any required review in the ledger, binding them to the frozen snapshot.
 

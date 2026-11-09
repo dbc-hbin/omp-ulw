@@ -8,9 +8,9 @@ metadata:
 
 # ulw-plan
 
-Produce one decision-complete plan at `doc/plans/<slug>.md`, with its durable draft at `doc/drafts/<slug>.md`. Planning permits read-only investigation and writes to those plan artifacts, not product changes or delegated implementation. Approval of a plan approach authorizes plan creation only. A later explicit implementation request changes the active scope; plan completion alone never does.
+Produce one decision-complete plan. Outside native plan mode, use `doc/plans/<slug>.md` and its durable draft at `doc/drafts/<slug>.md`; approval of the approach authorizes plan creation only. In native plan mode, the lead writes the canonical `local://<slug>-plan.md` using the host's plan format, keeps planning/review state in `local://<slug>-draft.md`, and submits the completed plan through `xd://propose`. Do not create `doc/` artifacts or request plan approval through ask/chat in that mode. Children investigate and return proposed content under their read-only completion contract; the lead alone writes the artifacts. Planning never authorizes product changes or delegated implementation. Execution follows the user's request and any required native approval.
 
-Current native OMP instructions own execution, delegation, role/model selection, tools, async work, verification, permissions and reporting. See the [host authority boundary](../ulw-loop/references/omp-contract.md) for precedence, not a second runtime policy.
+Use the [host authority boundary](../ulw-loop/references/omp-contract.md) for model guidance, native permissions and execution modes. This workflow adds planning artifacts and evidence requirements.
 
 ## Ground and decide
 
@@ -27,12 +27,12 @@ If the distinction itself matters and remains ambiguous, ask one focused questio
 
 ## Approve, produce, review
 
-Follow [artifact and plan-review details](references/full-workflow.md). Present the grounded approach and adopted assumptions before creating the final plan. Record `status: awaiting-approval` and the next action in the draft; do not treat an absent response as approval. Resume that decision rather than repeating investigation. An explicit no-plan `ulw-execute` request already authorizes its prerequisite plan; the planner returns that artifact to the execution workflow without adding another generic approval gate.
+Follow [artifact and plan-review details](references/full-workflow.md). Outside native plan mode, present the grounded approach and adopted assumptions before creating the final plan; record `status: awaiting-approval` and the next action in the draft. An absent response is not approval; resume the pending decision. An explicit no-plan `ulw-execute` request already authorizes its prerequisite plan without another generic approval gate. In native plan mode, write and review the canonical local plan first, then submit its slug through `xd://propose`; prerequisite planning does not bypass that approval route.
 
-Use the existing [scaffold script](scripts/scaffold-plan.mjs), whose [templates](scripts/plan-templates.mjs) define the output schema. Preserve its section names, checkbox grammar and durable fields. Fill decisions, exact references, dependencies, acceptance criteria and evidence expectations so the executor does not need the interview context. Fill the human TL;DR last.
+Outside native plan mode, use the existing [scaffold script](scripts/scaffold-plan.mjs), whose [templates](scripts/plan-templates.mjs) define the output schema. Preserve its section names, checkbox grammar and durable fields. In native plan mode, use the host's required format instead of the scaffold; carry the same decisions, dependencies, acceptance and review evidence in permitted sections. The executor must not need the interview context.
 
 Adversarial **plan** review is default-on unless the user explicitly declines it. A high-accuracy/deep-review request sets `review_required: true`, including on an existing plan; answering more carefully is not a substitute. This reviews the completeness and feasibility of the plan, not a code diff. Use fresh read-only plan assessment under current OMP, not a code-review role selected for its name. Record the exact plan identity, findings and review result; apply the convergence rules in the reference.
 
 ## Deliver
 
-Return the plan path, approach, affected-user outcome, actual implementation/final-verification task counts, important defaults and review disposition. Identify unresolved decisions honestly. Handoff is [ulw-execute](../ulw-execute/SKILL.md): `/ulw-execute <plan-name>` in this or another session, only when the user requests execution. A completed planning request ends with the reviewed plan, not implementation.
+Outside native plan mode, return the plan path, approach, affected-user outcome, actual implementation/final-verification task counts, important defaults and review disposition. Identify unresolved decisions honestly. Handoff is [ulw-execute](../ulw-execute/SKILL.md): `/ulw-execute <plan-name>` only when the user requests execution. In native plan mode, submit the reviewed canonical local plan through `xd://propose`; the user's execution selection owns the next step and does not itself select a durable ULW workflow. When the user already selected ulw-execute, record that ownership and the local plan URI in Context before review/proposal so a fresh execution context retains it. After native approval, that workflow accepts the exact URI and keeps progress in Boulder without changing the approved plan. Planning alone never starts implementation.

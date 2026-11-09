@@ -1,10 +1,63 @@
 import { expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import ompUlw from "./index";
 import { renderPreset } from "./presets";
 import type { UlwContext } from "./ulw";
 import { ulwDirective } from "./ulw";
 
 type Handler = (event: never, ctx: never) => unknown;
+
+test("unsupported models preserve native policy and tools at turn start and after supported-model fallback", () => {
+  const base = readFileSync(new URL("./tests/fixtures/omp-system-prompt.md", import.meta.url), "utf8");
+  const nativeTools = ["eval", "todo", "bash"].map(name => ({
+    type: "function",
+    function: {
+      name,
+      description: name === "eval" ? "One cell per call;\nFor 2+ independent items, use a named `workpool()`; results auto-deliver."
+        : name === "todo" ? "`todo` NEVER takes a turn of its own: emit it in the same response (parallel tool calls)"
+        : "Persistent shell: No `head`/`tail`/redirection;",
+      parameters: { type: "object", properties: { value: { type: "string" } } },
+    },
+  }));
+  for (const initialModel of ["unknown-model", "gpt-6.1-sol"]) {
+    const handlers = new Map<string, Handler[]>();
+    ompUlw({
+      setLabel: () => {}, getActiveTools: () => ["eval", "todo", "bash"], getAllTools: () => nativeTools.map(tool => ({ name: tool.function.name })),
+      registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
+      getFlag: () => false, appendEntry: () => {},
+      on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
+    });
+    const ctx = {
+      cwd: ".", mode: "rpc", agent: { kind: "main" },
+      sessionManager: { getSessionId: () => "native-fallback", getBranch: () => [] },
+      ui: { notify: () => {} }, model: { id: initialModel, api: "openai-completions" },
+    };
+    let blocks = [base];
+    for (const handler of handlers.get("before_agent_start") ?? []) {
+      const result = Reflect.apply(handler, undefined, [{ prompt: "ordinary task", systemPrompt: blocks }, ctx]);
+      if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt)) blocks = result.systemPrompt;
+    }
+    const nativeRegion = base.slice(base.indexOf("\n§ Tool Policy\n"));
+    if (initialModel === "unknown-model") expect(blocks[0].slice(blocks[0].indexOf("\n§ Tool Policy\n"))).toBe(nativeRegion);
+    const request = handlers.get("before_provider_request")?.[0];
+    if (!request) throw new Error("Expected provider request hook");
+    const payload = { messages: [{ role: "system", content: blocks[0] }], tools: nativeTools };
+    for (const id of ["unknown-model", "gpt-6.1-sol", "unknown-model"]) {
+      ctx.model.id = id;
+      const result: unknown = Reflect.apply(request, undefined, [{ payload }, ctx]);
+      if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages) || !("tools" in result)) throw new Error("Expected provider payload");
+      const message: unknown = result.messages[0];
+      if (typeof message !== "object" || message === null || !("content" in message) || typeof message.content !== "string") throw new Error("Expected system content");
+      if (id === "unknown-model") {
+        expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).toBe(nativeRegion);
+        expect(result.tools).toEqual(nativeTools);
+      } else {
+        expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).not.toBe(nativeRegion);
+        expect(result.tools).not.toEqual(nativeTools);
+      }
+    }
+  }
+});
 
 test("provider fallback refreshes the profile even with identical model id and name", () => {
   const handlers = new Map<string, Handler[]>();
@@ -111,6 +164,14 @@ test("child profiles follow their model while preserving role, assignment, tools
   }
   // A new turn must use the child's current tool set, not a parent's or an earlier turn's.
   activeTools = ["read"];
+  const currentPayload = { messages: blocks.map(content => ({ role: "system", content })) };
+  const refreshed: unknown = Reflect.apply(hook, undefined, [{ payload: currentPayload }, ctx]);
+  if (typeof refreshed !== "object" || refreshed === null || !("messages" in refreshed) || !Array.isArray(refreshed.messages)) {
+    throw new Error("Expected refreshed provider messages");
+  }
+  const currentProfile = renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true });
+  if (!currentProfile) throw new Error("Expected selected child profile");
+  expect(refreshed.messages[0].content).toContain(`<omp-model-preset>\n${currentProfile.prompt}`);
   const result = handlers.get("before_agent_start")![1]({ prompt: "continue", systemPrompt: assignment } as never, ctx as never) as { systemPrompt: string[] };
   expect(result.systemPrompt[0]).toContain(`<omp-model-preset>\n${renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })!.prompt}`);
   expect(result.systemPrompt.slice(1)).toEqual(assignment.slice(1));

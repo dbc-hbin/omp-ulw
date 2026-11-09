@@ -106,7 +106,7 @@ describe("Native ULW session behavior", () => {
     }
     expect(host.prepare("ulw ship the fix")?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
 
-    for (const text of ["Explain `/ulw`", "Read /ulw/notes.md"]) {
+    for (const text of ["Explain `/ulw`", "Explain /ulw", "What does /ulw-plan do?", "Read /ulw/notes.md", "Explain ulw", "What does ultrawork mean?", "Please use ulw loop for this task", "Please use /ulw loop for this task"]) {
       expect(host.emit("input", { text, source: "interactive" })).toBeUndefined();
     }
     for (const source of ["rpc", "extension"]) {
@@ -114,10 +114,29 @@ describe("Native ULW session behavior", () => {
         expect(host.emit("input", { text, source })).toBeUndefined();
       }
     }
-    host.emit("goal_updated", { goal: { status: "active" }, state: { enabled: true } });
-    expect(host.emit("input", { text: "ulw continue the active goal", source: "interactive" })).toBeUndefined();
-    expect(host.emit("input", { text: "/ulw continue the active goal", source: "interactive" })).toBeUndefined();
+    for (const [status, enabled] of [["active", true], ["paused", false], ["budget-limited", false]]) {
+      host.emit("goal_updated", { goal: { status }, state: { enabled } });
+      expect(host.emit("input", { text: "ulw continue the existing goal", source: "interactive" })).toBeUndefined();
+      expect(host.emit("input", { text: "/ulw continue the existing goal", source: "interactive" })).toBeUndefined();
+    }
+    for (const status of ["complete", "dropped", undefined]) {
+      host.emit("goal_updated", { goal: status ? { status } : null, state: { enabled: false } });
+      expect(host.emit("input", { text: "ulw start the next goal", source: "interactive" })).toEqual({ text: "/goal ulw start the next goal" });
+    }
     expect(host.emit("input", { text: "ulw-loop continue the ledger", source: "interactive" })).toEqual({ text: "ulw-loop orchestrate continue the ledger" });
+  });
+
+  test("explicit specialised invocations never create a competing plain goal, including with pointers disabled", () => {
+    for (const disabled of [false, true]) {
+      for (const text of ["ulw loop the task", "ulw plan the task", "ulw execute the task", "ulw research the task", "ulw mass the task"]) {
+        const host = new Host();
+        host.flags.set("omo-ulw-workflows-disabled", disabled);
+        const result = host.emit("input", { text, source: "interactive" }) as { text: string } | undefined;
+        expect(result?.text.startsWith("/goal ") ?? false).toBe(false);
+        if (disabled) expect(result).toBeUndefined();
+        else expect(host.prepare(text)?.message?.content).toContain("-pointer>");
+      }
+    }
   });
   test("legacy prompt blocks remain inert and are replaced on session resume", () => {
     for (const prefix of ["omo", "omp"]) {
@@ -171,7 +190,7 @@ describe("Native ULW session behavior", () => {
         for (const prompt of [expanded, expanded.replaceAll("\n", "\r\n"), `/skill:${name} ${args}`]) {
           const host = new Host();
           const prepared = host.emit("before_agent_start", { prompt, systemPrompt: ["host"] }) as Prepared | undefined;
-          const armed = args.startsWith("ulw") || args.includes("\nulw ");
+          const armed = args.startsWith("ulw");
           expect(prepared?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>")) ?? false).toBe(armed);
           expect(host.entries).toHaveLength(armed ? 1 : 0);
           expect(prepared?.message?.content.includes("<omp-ulw-plan-pointer>") ?? false).toBe(args.startsWith("ulw-plan"));
@@ -188,6 +207,9 @@ describe("Native ULW session behavior", () => {
 
   test("references, prohibitions and relayed text do not arm or emit workflow pointers", () => {
     for (const text of [
+      "Explain ulw", "Explain /ulw", "What does /ulw-plan do?", "What does ultrawork mean?", "Explain ulw-plan", "Explain meth", "Please use ulw loop for this task", "Please use /ulw loop for this task",
+      "check doc/ulw/notes.md, then ulw the fix", "Do not use tmux, but ulw the fix", "don\u2019t use tmux \u2014 ulw this", "don't run the old one; ulw the new one", "do not stop until done, ulw", 'Explain "ulw-loop", then ulw fix it', "> old ulw plan\nulw fix it",
+      "check doc/ulw/notes.md, then /ulw the fix", "Do not use tmux, but /ulw the fix", "don't run the old one; /ulw the new one", "> old ulw plan\n/ulw fix it",
       "Read doc/ulw/notes.md", "open ulw-plan.md", "summarize ulw.md", "branch fix/ulw-plan-gate", "senpi-ulw-loop lane", "mass-ulw-loop-runner", "ulw-research_v2", "read ulw-execute/ledger.jsonl", "read C:\\ulw-plan\\notes.md",
       "Do not use ulw; fix this normally", "Don't load mass-ulw or ulw-research", "never run ulw-loop, ultrawork, or any skill here",
       "> ulw plan the old task", "[REPORT] worker mentioned ulw-loop", "[worker -> parent] ulw research", "Worker (abc), parent: ulw-loop",
@@ -196,11 +218,12 @@ describe("Native ULW session behavior", () => {
       const host = new Host();
       expect({ text, prepared: host.prepare(text) }).toEqual({ text, prepared: undefined });
       expect(host.entries).toHaveLength(0);
+      expect(host.emit("before_agent_start", { prompt: text, systemPrompt: ["host"] })).toBeUndefined();
     }
   });
 
-  test("real invocations survive reference masking and contrast clauses", () => {
-    for (const text of ["ulw-loop fix it", "ULTRAWORK: fix it", "ulw-plan.", "check doc/ulw/notes.md, then ulw the fix", "Do not use tmux, but ulw the fix", "don\u2019t use tmux \u2014 ulw this", "don't run the old one; ulw the new one", "do not stop until done, ulw", 'Explain "ulw-loop", then ulw fix it', "> old ulw plan\nulw fix it"]) {
+  test("leading aliases activate while references and contrast clauses remain task arguments", () => {
+    for (const text of ["ulw-loop fix it", "ULTRAWORK: fix it", "ulw-plan.", "/ulw check doc/ulw/notes.md", "/ulw Do not use tmux, but fix it", "  /ulw-loop fix this", "\nULW fix this"]) {
       expect(new Host().prepare(text)?.systemPrompt.some(block => block.startsWith("<omp-ulw-policy>"))).toBe(true);
     }
     const mass = new Host();
@@ -263,8 +286,9 @@ describe("Native ULW session behavior", () => {
       expect(message?.content).toContain(`<omp-${name}-pointer>`);
       expect(existsSync(new URL(`./skills/${name}/SKILL.md`, import.meta.url))).toBe(true);
     }
-    const overlap = new Host().prepare("mass ulw-loop and ulw research");
-    for (const name of ["mass-ulw", "ulw-loop", "ulw-research"]) expect(overlap?.message?.content).toContain(`<omp-${name}-pointer>`);
+    const overlap = new Host().prepare("mass ulw research the sources");
+    for (const name of ["mass-ulw", "ulw-research"]) expect(overlap?.message?.content).toContain(`<omp-${name}-pointer>`);
+    expect(overlap?.message?.content).not.toContain("<omp-ulw-loop-pointer>");
     expect(new Host().prepare("ulw task")?.message).toBeUndefined();
     expect(new Host().prepare('<skill name="ulw-plan">ulw plan</skill>')?.message).toBeUndefined();
   });
@@ -279,6 +303,57 @@ describe("Native ULW session behavior", () => {
 });
 
 describe("evidence-bound ULW continuations", () => {
+  test("native plans continue from session-owned execution progress without a filesystem plan or checkbox rewrite", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "omo-ulw-test-"));
+    try {
+      const host = new Host(cwd);
+      mkdirSync(join(cwd, "doc"));
+      const path = join(cwd, "doc/boulder.json");
+      const work = {
+        status: "active", session_ids: ["omp:other-session"], active_plan: "local://approved-plan.md",
+        execution_tasks: [{ plan_ref: "Approach step 1", status: "pending" }, { plan_ref: "Verification", status: "pending" }],
+      };
+      const save = () => writeFileSync(path, JSON.stringify({ works: { test: work } }));
+      const signal = new AbortController().signal;
+      save();
+      expect(host.emit("session_stop", { signal })).toBeUndefined();
+      work.session_ids = ["omp:test-session"];
+      for (const status of ["pending", "blocked", "complete"]) {
+        work.execution_tasks = [{ plan_ref: "Approach step 1", status }, { plan_ref: "Verification", status: status === "complete" ? "complete" : "pending" }];
+        save();
+        const before = readFileSync(path, "utf8");
+        const result = host.emit("session_stop", { signal }) as Continued;
+        expect(result.continue).toBe(true);
+        expect(result.additionalContext).toContain("local://approved-plan.md");
+        expect(host.emit("session_stop", { signal })).toBeUndefined();
+        expect(readFileSync(path, "utf8")).toBe(before);
+      }
+      work.execution_tasks = [{ plan_ref: "Approach step 1", status: "blocked" }, { plan_ref: "Verification", status: "complete" }];
+      save();
+      expect(host.emit("session_stop", { signal })).toBeUndefined();
+      work.execution_tasks = [{ plan_ref: "Approach step 1", status: "pending" }];
+      for (const status of ["paused", "blocked", "complete", "cancelled"]) {
+        work.status = status;
+        save();
+        expect(host.emit("session_stop", { signal })).toBeUndefined();
+      }
+      expect(existsSync(join(cwd, "doc/plans"))).toBe(false);
+    } finally { rmSync(cwd, { recursive: true, force: true }); }
+  });
+
+  test("native plan continuation requires a nonempty valid execution task set", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "omo-ulw-test-"));
+    try {
+      mkdirSync(join(cwd, "doc"));
+      for (const execution_tasks of [undefined, [], [{ plan_ref: "", status: "pending" }], [{ plan_ref: "Approach step 1", status: "approved" }], [{ plan_ref: "Approach step 1", status: "pending" }, null]]) {
+        writeFileSync(join(cwd, "doc/boulder.json"), JSON.stringify({ works: { test: {
+          status: "active", session_ids: ["omp:test-session"], active_plan: "local://approved-plan.md", execution_tasks,
+        } } }));
+        expect(new Host(cwd).emit("session_stop", { signal: new AbortController().signal })).toBeUndefined();
+      }
+    } finally { rmSync(cwd, { recursive: true, force: true }); }
+  });
+
   test("execute closes blocked rows while independent and final-verification tasks continue", () => {
     const cwd = mkdtempSync(join(tmpdir(), "omo-ulw-test-"));
     try {

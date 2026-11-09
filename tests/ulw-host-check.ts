@@ -14,6 +14,18 @@ const server = Bun.serve({
   async fetch(request) {
     requests.push(await request.json());
     scenarioRequests++;
+    if (continuationState?.kind === "execute-native" && (scenarioRequests === 2 || scenarioRequests === 3)) {
+      const boulder: unknown = JSON.parse(readFileSync(continuationState.path, "utf8"));
+      assert(typeof boulder === "object" && boulder !== null && "works" in boulder && typeof boulder.works === "object" && boulder.works !== null && "probe" in boulder.works);
+      const work = boulder.works.probe;
+      assert(typeof work === "object" && work !== null && "execution_tasks" in work && Array.isArray(work.execution_tasks));
+      for (const task of work.execution_tasks) {
+        assert(typeof task === "object" && task !== null && "status" in task);
+        task.status = "complete";
+      }
+      if (scenarioRequests === 3) Object.assign(work, { status: "complete" });
+      writeFileSync(continuationState.path, JSON.stringify(boulder));
+    }
     if (continuationState && ["loop", "execute"].includes(continuationState.kind) && scenarioRequests === 2) writeFileSync(continuationState.path, continuationState.kind === "loop"
       ? JSON.stringify({ status: "complete", goals: [{ status: "complete" }] }) : "- [x] 1. Local hook probe\n");
     if (continuationState?.kind === "execute" && scenarioRequests === 3) {
@@ -37,7 +49,7 @@ const server = Bun.serve({
     ].join("\n\n"), { headers: { "content-type": "text/event-stream" } });
   },
 });
-async function run(prompts: string[], flags: string[] = [], continuation?: "loop" | "execute" | "execute-blocked" | "execute-mixed", provider?: string, model = "gpt-6.1-sol", loadSkills = false, tools?: string[], streamingBehavior?: "steer" | "followUp"): Promise<string[]> {
+async function run(prompts: string[], flags: string[] = [], continuation?: "loop" | "execute" | "execute-blocked" | "execute-mixed" | "execute-native", provider?: string, model = "gpt-6.1-sol", loadSkills = false, tools?: string[], streamingBehavior?: "steer" | "followUp"): Promise<string[]> {
   const offset = requests.length;
   continuationState = undefined;
   scenarioRequests = 0;
@@ -109,7 +121,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
     for (const [index, prompt] of prompts.entries()) {
       signal = Promise.withResolvers<void>();
       expected = "agent_end";
-      expectedRequests = continuation === "execute" || continuation === "execute-mixed" ? 3 : continuation === "loop" ? 2 : index + 1;
+      expectedRequests = continuation === "execute" || continuation === "execute-mixed" || continuation === "execute-native" ? 3 : continuation === "loop" ? 2 : index + 1;
       child.stdin.write(JSON.stringify({ type: "prompt", id: `prompt-${index}`, message: prompt, ...(streamingBehavior ? { streamingBehavior } : {}) }) + "\n");
       await signal.promise;
       if (failure) throw new Error(JSON.stringify(failure));
@@ -185,7 +197,7 @@ try {
   const quoted = await run(["Explain the quoted token `ulw`."]);
   assert.equal(quoted.length, 1);
   assert(!quoted[0].includes("<omp-ulw-policy>"));
-  for (const text of ["Read doc/ulw/notes.md", "Do not use ulw; fix this normally", "> ulw plan the old task", "[REPORT] worker mentioned ulw-loop", "see https://example.com/search?q=ulw"]) {
+  for (const text of ["Explain ulw", "Explain /ulw", "What does /ulw-plan do?", "What does ultrawork mean?", "Explain ulw-plan", "Please use ulw loop for this task", "Please use /ulw loop for this task", "Do not use tmux, but ulw verify this local probe", "Read doc/ulw/notes.md", "Do not use ulw; fix this normally", "> ulw plan the old task", "[REPORT] worker mentioned ulw-loop", "see https://example.com/search?q=ulw"]) {
     const [prompt] = await run([text]);
     assert(!prompt.includes("<omp-ulw-policy>"), `reference must not arm: ${text}`);
     assert(!JSON.stringify(requests.at(-1)).includes("-pointer>"), `reference must not inject a skill pointer: ${text}`);
@@ -193,7 +205,7 @@ try {
   const [mass] = await run(["/mass-ulw verify this local probe"]);
   assert(!mass.includes("<omp-ulw-policy>"));
   assert(JSON.stringify(requests.at(-1)).includes("<omp-mass-ulw-pointer>"));
-  const [contrast] = await run(["Do not use tmux, but ulw verify this local probe"]);
+  const [contrast] = await run(["/ulw Do not use tmux, but verify this local probe"]);
   assert(contrast.includes("<omp-ulw-policy>"));
   const disabled = await run(["ulw verify this probe"], ["--omo-ultrawork-disabled"]);
   assert.equal(disabled.length, 1);
@@ -259,6 +271,8 @@ try {
   assert.equal(blocked.length, 1, "blocked-only plans must not automatically reopen");
   const mixed = await run(["/ulw-execute exercise independent work and final verification"], [], "execute-mixed");
   assert.equal(mixed.length, 3, "mixed plans must finish pending work and verification without reopening blocked rows");
+  const nativePlan = await run(["/ulw-execute local://approved-plan.md"], [], "execute-native");
+  assert.equal(nativePlan.length, 3, "native plans must continue through approved task progress and settle after completion");
   for (const provider of ["deepseek", "omo-third-party-probe"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, provider);
     const profile = renderPreset({ provider, id: "deepseek-v4-flash-omo-local-probe", name: "DeepSeek V4 Flash" }, { surface: "app", toolNames: [] })!;
