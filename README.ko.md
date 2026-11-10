@@ -47,21 +47,26 @@ OMP 18.16의 별도 RPC `steer`·`follow_up` 요청은 native 키워드 처리�
 
 - **Orchestration:** `ultrawork`, `ulw-plan`, `ulw-execute`, `ulw-loop`, `ulw-research`, `mass-ulw`, `hyperplan`
 - **Code understanding:** `debugging`, `ast-grep`, `lsp-setup`, `refactor`, `programming`
-- **Review and product work:** `review-work`, `remove-ai-slops`, `frontend`, `visual-qa`, `visualize`, `data-scientist`
+- **Review and product work:** `review-work`, `eval-integrity`, `remove-ai-slops`, `frontend`, `visual-qa`, `visualize`, `data-scientist`
+- **Browser and source access:** `browser`, `ultimate-browsing`
 - **Project and memory workflows:** `init-deep`, `reflection`, `memory-advisor`
 
 The three newly ported code skills use the native `xd://ast_grep` and
 `xd://lsp` contracts. `programming` carries the per-language rules, the test
 authoring gate and junk-test classes, and the Bun scripts that `remove-ai-slops`
-calls (`check-test-junk.ts`, `mutation-proof.ts`). Browser automation, session
-archaeology and git history operations remain host-level concerns or project
-rules rather than copied skill bundles. Persistent DAG records are lead-owned
+calls (`check-test-junk.ts`, `mutation-proof.ts`). Session archaeology and git
+history operations remain host-level concerns or project rules rather than
+copied skill bundles. Persistent DAG records are lead-owned
 files, not a separate orchestration runtime. Tip catalogues and first-run
 onboarding were not ported.
 
+`/eval-integrity`는 벤치마크·A/B·LLM 평가의 데이터 누출, 순환 평가와 평가자 독립성을 읽기 전용으로 감사합니다. 리서치와 mass-research의 인계에는 주장별 `OBSERVED` 근거와 종료한 단서의 `PROBED` 기록을 붙입니다. 기억에서 나온 주장은 확인 전까지 LEAD로 남기며, 유효한 기존 근거와 통과한 검사를 불필요하게 다시 수행하지 않습니다.
+
+`/web-browser`는 `browser` 스킬과 `xd://eval/browser`를 읽고 OMP Eval의 native `browser` 객체로 관찰·입력·클릭·프레임·네트워크·캡처를 수행합니다. OMP 자체 `/browser`의 headless·visible 전환은 그대로 유지합니다. `/ultimate-browsing`은 불완전하거나 차단된 출처, 공식 플랫폼 API, 아카이브·미디어 경로를 `read`·`web_search`와 같은 브라우저로 처리합니다. 호스트의 브라우저 우선순위·권한은 유지하며, 일반 관리형 브라우저에는 릴레이가 필요하지 않습니다. 기존 Chrome 세션에 연결할 때만 승인된 릴레이·CDP 경로를 선택합니다. OmOWright 런타임·BrowserSkill daemon·쿠키 추출기·별도 크롤러는 설치하지 않으며, 각 스킬의 attribution에서 원본 전체 대응표와 라이선스를 확인할 수 있습니다.
+
 ## 모델별 프롬프트 위치
 
-- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 출시 준비용 Fable 5.5를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 프리셋 등록은 모델 출시나 기본 모델 추천을 의미하지 않습니다.
+- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 Claude Fable / Mythos 5.2 전용 코어를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 임시 Fable 5.5 항목은 제거됐으며, 프리셋 등록은 기본 모델 추천을 의미하지 않습니다.
 - [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
 - [`index.ts`](index.ts): 메인과 일반 서브에이전트의 턴 시작 시 각 세션의 모델 프롬프트를 적용하고, 지원 provider 요청 훅에서 모델 변경을 반영합니다.
 - [`host-guidance.ts`](host-guidance.ts): 지원 모델의 작업 방식과 겹치는 OMP 기본 행동 지침을 제거하고, 도구·권한·프로젝트 경계를 보존합니다. 미지원 모델로 fallback하면 native 행동 지침을 복원합니다.

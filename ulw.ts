@@ -41,7 +41,7 @@ const workflows: Array<{ name: string; pattern: RegExp; nativeKeyword?: string }
   { name: "ulw-loop", pattern: /\bulw[\s-]*loop\b/i, nativeKeyword: "orchestrate" },
   { name: "ulw-execute", pattern: /\bulw[\s-]*execute\b/i, nativeKeyword: "orchestrate" },
   { name: "ulw-research", pattern: /\b(?:ulw|mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)[\s-]*research\b/i, nativeKeyword: "workflowz" },
-  ...["debugging", "review-work", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"].map(name => ({
+  ...["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"].map(name => ({
     name, pattern: new RegExp(name + String.raw`(?=\s|$)`, "i"),
   })),
 ].map(workflow => ({ ...workflow, pattern: new RegExp(invocationStart + workflow.pattern.source + notIntoIdentifier + String.raw`(?=[\s:.,!?]|$)`, "i") }));
@@ -137,7 +137,8 @@ export function registerUlw(pi: UlwApi): void {
     }
   });
   for (const name of ["ulw", ...workflows.map(workflow => workflow.name)]) {
-    pi.registerCommand(name, {
+    // OMP owns /browser for headless/visible mode; keep that builtin intact.
+    pi.registerCommand(name === "browser" ? "web-browser" : name, {
       description: `Run the OMP-adapted ${name} workflow`,
       handler: async (args, ctx) => {
         commandPending = true;

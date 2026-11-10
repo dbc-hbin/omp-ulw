@@ -18,6 +18,8 @@ The final checkpoint requires every criterion across all goals to pass and `qual
 
 Freeze the evidence-bearing content. Populate the gate from actual main-session surface evidence and verification selected under the shared responsibility boundary. Reuse fresh results where they already establish the fields; no extra full rerun or review is required merely to fill this file. A fix invalidates affected proof and any affected review approval. When review is required, a missing or inconclusive assessment blocks completion; never remove an unsuccessful review record to pass the validator.
 
+Browser surface evidence follows `skill://browser` through native Eval under active host routing, with scoped screenshots, semantic assertions and console/network/HAR from `skill://visual-qa/references/browser-setup.md`. Public managed Chromium is project-shared; authenticated criteria require an authorized real-session relay/CDP connection, never a profile clone. Native surfaces or a legitimate selected fallback use `skill://cua-driver`; optional relay setup is not automatic.
+
 Record verification results and any required review in the ledger, binding them to the frozen snapshot.
 
 ```json

@@ -66,6 +66,8 @@ Use the native task schema and [OMP contract](../../../ulw-loop/references/omp-c
 
 Use scout for read-only discovery; senior-task for difficult investigation when listed, otherwise omit agent. No categories; pass `model` only as an exact ID the live task schema advertises as approved. Each task receives full bug context, its hypothesis, exact allowed paths, source references, no-edit constraints, and bounded acceptance. The default worker may create a repro only in its explicitly owned paths.
 
+For browser reproductions, the Reproduction Engineer uses `skill://browser` and [browser QA](../tools/browser-qa.md): native Eval browser actions, an exact response wait registered before the triggering click, semantic postconditions, screenshots and console/network evidence. Supply the actual authorized backend/tab and ownership; one owner drives shared browser state. A public managed repro cannot establish an authenticated criterion. Keep native GUI reproduction on `skill://cua-driver` and respect active host browser routing.
+
 Concrete invocation shape after inspecting the actual repo and task schema:
 
 ```js

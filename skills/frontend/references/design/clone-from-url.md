@@ -8,7 +8,9 @@ A `DESIGN.md` whose every token, interaction state, and motion value was read fr
 
 ## Phase 1 — Extract the runtime truth (never guess a value)
 
-Use the exposed browser tools to navigate, drive interaction states, evaluate `getComputedStyle` when page JavaScript is available, and capture screenshots. For a browser or native app controlled through cua-driver, read `skill://cua-driver` and follow its advertised tools. Retain the actual session/tab ids and reuse the authorized logged-in context without copying profiles. Computed styles establish rendered tokens; source inspection can complement them for inaccessible cross-origin keyframes.
+Read `skill://browser` and use the native Eval `browser` prelude to navigate, drive interaction states, evaluate `getComputedStyle` and capture screenshots, subject to active host routing and approvals. Public capture may use a task-owned tab in managed Chromium (project-shared, not a guaranteed fresh profile); signed-in capture requires an authorized real-session relay/CDP connection. Do not import OmOWright/BrowserSkill, copy profiles or install/enable relay automatically. Read `skill://cua-driver` for native surfaces or a legitimate selected fallback. Reuse the actual named tab; re-observe after navigation/re-render. Computed styles establish rendered tokens; source inspection can complement them for inaccessible cross-origin keyframes.
+
+With `sourceTab` from the selected route, use `await sourceTab.observe()` to find controls, then `sourceTab.id(observedId).hover()` or `.focus()` to drive each state before evaluating styles. `await sourceTab.frames()` lists embedded documents; use `sourceTab.frame(observedSelectorOrNameOrUrl).evaluate(...)` for their computed tokens. See `skill://browser/references/interaction.md` for frame/shadow-root routing and `skill://visual-qa/references/browser-setup.md` for matched capture/media settings and console/network evidence.
 
 Sweep the page and read, for every meaningful element and every repeated pattern:
 
@@ -18,10 +20,10 @@ Sweep the page and read, for every meaningful element and every repeated pattern
 - **Assets** — `<img>` and background-image URLs, inline SVG, `@font-face` files, video sources. Download the REAL assets; never substitute stock or placeholders.
 - **Responsive** — re-run the sweep at the `/visual-qa` capture widths (390 with mobile emulation, 1440, 1920) and record what actually changes per breakpoint, so the later compare is like for like.
 
-A compact sweep payload to inject through the browser's evaluate action (extend the recorded fields as needed):
+A compact native Eval sweep (extend the recorded fields as needed):
 
 ```js
-() => {
+const tokens = await sourceTab.evaluate(() => {
   const out = [];
   for (const el of document.querySelectorAll("*")) {
     const s = getComputedStyle(el);
@@ -36,7 +38,8 @@ A compact sweep payload to inject through the browser's evaluate action (extend 
     });
   }
   return out;
-}
+});
+console.log(tokens);
 ```
 
 ## Phase 2 — Write the DESIGN.md contract

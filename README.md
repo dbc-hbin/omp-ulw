@@ -31,7 +31,9 @@ Put the command or alias at the start of the input, after optional whitespace. D
 
 Specialized commands add their default keyword when entered through the TUI or RPC `prompt` input, unless a native keyword is already specified. They respect OMP's keyword settings and tool requirements. RPC `steer` and `follow_up` requests bypass native keyword processing; use a `prompt` request with the corresponding `streamingBehavior` instead. Direct `/skill:` calls and initial CLI text that bypass the input hook require an explicit keyword.
 
-Additional skills include `debugging`, `programming`, `review-work`, `visual-qa`, `frontend`, `ast-grep`, `lsp-setup`, and `refactor`. Plain ULW does not automatically enable specialized workflows.
+Additional skills include `debugging`, `programming`, `review-work`, `eval-integrity`, `visual-qa`, `frontend`, `ast-grep`, `lsp-setup`, and `refactor`. `/eval-integrity` audits benchmark, A/B and LLM-judge claims for independent, valid measurement without modifying their inputs. Plain ULW does not automatically enable specialized workflows.
+
+`/web-browser` loads the `browser` skill for OMP's native Eval browser: interactive pages, snapshots, frames, network evidence and captures. OMP's own `/browser` headless/visible command remains intact. Read `xd://eval/browser` first. `/ultimate-browsing` covers incomplete/blocked sources, official platform endpoints, archives and media prerequisites using `read`, `web_search` and the same browser. Host browser routing and permissions remain authoritative. A relay is optional for real Chrome sessions; public managed-browser work does not require one. No OmOWright runtime, BrowserSkill daemon, cookie extractor or crawler is installed by these skills. Their attribution files map the upstream source coverage and retain the source license.
 
 ## Model prompts
 
@@ -43,6 +45,8 @@ Additional skills include `debugging`, `programming`, `review-work`, `visual-qa`
 - [`upstream/omp-build.mjs`](upstream/omp-build.mjs): avoids duplicating sections already supplied by OMP.
 
 For supported profiles, model-specific guidance takes precedence over generic OMP working style; duplicated native planning, rereading, delegation and verification rules are removed. Tool availability is refreshed before provider requests. Subagents retain their specialist role, permissions and completion protocol. Custom or unrecognized system templates are preserved; unsupported models retain native OMP behavior, including after fallback. Restart OMP after changing an installed extension.
+
+The 33 presets include the dedicated Claude Fable / Mythos 5.2 profile, replacing the provisional Fable 5.5 entry. Research and mass-research handoffs attach observed evidence to claims and probes to closed leads; remembered assertions remain leads until checked. Valid recorded evidence is reused without repeating settled checks.
 
 ## Frontend reference sources
 

@@ -25,6 +25,12 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const hasTodo = options.toolNames.includes("todo");
   const hasBash = options.toolNames.includes("bash");
   const hasWait = options.toolNames.includes("wait");
+  if (preset.name === "claude-fable-5-2") {
+    prompt = prompt.replace(
+      "Make routine judgment calls yourself; ask only when different readings would lead to materially different work, and ask after doing everything that does not depend on the answer, through ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",
+      "Make routine judgment calls yourself. Ask when missing information materially changes the deliverable or required authorization is absent; resolve that blocker when it arises and finish independent authorized work where possible. Use ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",
+    );
+  }
   prompt = prompt.replaceAll("`parallel(thunks)`", "`Promise.all` over independent `tool.*` calls")
     .replaceAll("the runtime's parallel helper", "Promise.all over independent tool calls in a JavaScript eval cell");
   if (!hasTodo) {
@@ -156,8 +162,12 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       "one bash call per command, never chained with `;` or `&&`",
       "one bash call per independent command; use `&&` for genuine dependencies as the bash contract requires",
     );
-  // The generated Astra wording is unbounded; OMP must stop retrying after a bounded set.
+  // Preserve diagnosed recovery without bypassing OMP permissions or retry bounds.
   prompt = prompt
+    .replace(
+      "Errors, timeouts, locked files, empty results, and failing tools are ordinary obstacles, not blockers: diagnose them, then work through them with the access you have (wait and retry a call that is safe to repeat, fix the request, use another tool or source) without asking first. A file marked not to be touched, withheld access, or a safety guardrail is a deliberate blocker: leave it alone and look for another safe way to finish.",
+      "Errors, timeouts, locked files, empty results, and failing tools call for diagnosis and recovery with the access you have. Fix the request, use another permitted source or tool, or retry a diagnosed transient failure when safe. Ask when required authorization or a material user decision is missing. Use at most three materially different recovery approaches for the same blocker; if all fail, stop that blocked track, finish independent work, and report the evidence and missing prerequisite. Respect do-not-touch files, withheld access and safety boundaries; never reach a denied result through another route.",
+    )
     .replace(
       "There is no attempt limit: keep going until the objective holds",
       "Use at most three materially different recovery approaches for the same blocker; if all fail, stop that blocked track, finish independent work, and report the evidence and missing prerequisite",

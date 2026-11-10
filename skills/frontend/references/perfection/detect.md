@@ -22,7 +22,7 @@ if (detect.hasFailures(findings)) console.log(detect.formatFindingsText(findings
 
 - `detectPage(target, options)`: `target` is `{ kind: "url", url }` or `{ kind: "html", html }`. Renders at each viewport (default 1440 and 390) and returns sorted, de-duplicated findings.
 - `detectFiles(paths, options)`: HTML files are rendered; CSS/SCSS/Less, JSX/TSX, Vue, Svelte and Astro files run the source-text rules.
-- `lintSnapshot(snapshot, options)` / `lintSources(files, options)`: the pure rule engines, for a snapshot you captured yourself with `collectPageSnapshot` in your own Playwright page or the exposed browser tools.
+- `lintSnapshot(snapshot, options)` / `lintSources(files, options)`: the pure rule engines, for a snapshot captured with `collectPageSnapshot`. For the native Eval browser, read `skill://browser`, then use the raw Puppeteer `page` inside `tab.run` with the collector's actual exported signature; pass local paths/configuration through `args`, since outer closures are not captured. This reuses the authorized browser state without a replacement runtime. The default renderer below remains available for ordinary local rendered-page lint.
 - `renderer`: pass your own `Renderer` to reuse a browser you already drive; the default is `Bun.WebView` (system WebKit on macOS, installed Chrome elsewhere; `createWebViewRenderer({ backend: "chrome" })` matches the upstream engine most closely).
 - Every finding carries `ruleId`, `severity` (`error`, `warning`, `advisory`), `category`, `message`, `fixHint`, and a `location`: an element (`selector`, `rect`, `viewport`), a source position (`file`, `line`, `column`), or the page.
 

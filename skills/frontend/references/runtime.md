@@ -1,6 +1,6 @@
 # OMP visual runtime
 
-Source: upstream frontend workflow, adapted to exposed OMP APIs. Use exposed browser tools for pages; read `skill://cua-driver` before using its browser or native-window route. Capture and emulation guidance: [browser setup](skill://visual-qa/references/browser-setup.md). Use only documented capabilities; do not assume locator, context or emulation helpers.
+Source: upstream frontend workflow, adapted to native OMP APIs. Read `skill://browser` for interactive pages through the active Eval `browser` prelude, subject to host routing and approvals; static URLs use `read`. Capture/emulation, frames, console/network/HAR and motion evidence: [browser setup](skill://visual-qa/references/browser-setup.md). Public managed Chromium is project-shared; authenticated work requires an authorized real-session relay/CDP route. Do not import OmOWright/BrowserSkill, copy profiles or automatically install/enable the optional relay. Read `skill://cua-driver` for native windows or a legitimate user-selected fallback.
 
 ## Image generation
 

@@ -66,7 +66,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
   let failure: unknown;
   const abort = AbortSignal.timeout(60000);
   abort.addEventListener("abort", () => {
-    failure = new Error(`OMP host deadline: provider=${provider ?? "omo-ulw-probe"}, mode=${continuation ?? "ordinary"}, event=${expected}, requests=${scenarioRequests}/${expectedRequests}`);
+    failure = new Error(`OMP host deadline: provider=${provider ?? "omo-ulw-probe"}, mode=${continuation ?? "ordinary"}, event=${expected}, requests=${scenarioRequests}/${expectedRequests}; prompts=${JSON.stringify(prompts)}`);
     signal.reject(failure);
   }, { once: true });
   const output = (async () => {
@@ -102,7 +102,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
         } else if ((expected === "ready" || expected === "configured") && "id" in event && event.id === expected) signal.resolve();
         else if (expected === "agent_end" && event.type === "agent_end" && !("willContinue" in event && event.willContinue === true)) {
           if (scenarioRequests !== expectedRequests) {
-            failure = new Error(`OMP settled with requests=${scenarioRequests}/${expectedRequests}`);
+            failure = new Error(`OMP settled with requests=${scenarioRequests}/${expectedRequests}; model=${model}; continuation=${continuation ?? "ordinary"}; prompts=${JSON.stringify(prompts)}`);
             signal.reject(failure);
           } else signal.resolve();
         }
@@ -158,7 +158,7 @@ try {
     const [prompt] = await run(["/ulw validate the shared directive"], [], undefined, undefined, model);
     assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`));
   }
-  for (const model of ["claude-haiku-5.5", "gemini-4-argon"]) {
+  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
     const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] })!;
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
@@ -167,8 +167,9 @@ try {
   for (const name of ["design", "brand", "design-system", "ui-styling", "ui-ux-pro-max", "slides", "banner-design", "native-ui-design"]) {
     assert(!catalog.includes(`skill://${name}`) && !catalog.includes(`<name>${name}</name>`) && !new RegExp(`^\\s*- ${name}(?: \\(|:)`, "m").test(catalog), `disabled design skill must not be advertised: ${name}`);
   }
-  for (const name of ["debugging", "review-work", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
-    const [prompt] = await run([`/${name} exercise installed routing`]);
+  for (const name of ["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
+    const command = name === "browser" ? "web-browser" : name;
+    const [prompt] = await run([`/${command} exercise installed routing`]);
     const body = JSON.stringify(requests.at(-1));
     assert(body.includes(`<omp-${name}-pointer>`), `real command must resolve its skill pointer: ${name}`);
     assert(body.includes(resolve(`skills/${name}/SKILL.md`)));

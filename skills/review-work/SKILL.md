@@ -26,7 +26,7 @@ Reuse already-captured real-surface proof only when it covers the FINAL content.
 | HTTP | Live endpoint request/status/headers/body and persisted state readback |
 | CLI | Actual command, arguments, stdout/stderr/exit code and side-effect state |
 | TUI | Actual rendered terminal and visual capture for color/layout/CJK claims; plain capture-pane is insufficient |
-| Web | Use exposed browser tools or skill://cua-driver; actual browser actions, semantic postconditions and screenshots |
+| Web | Read `skill://browser`; use native Eval browser actions under active host routing, semantic postconditions and screenshots. Use `skill://visual-qa/references/browser-setup.md` for scoped captures and console/network/HAR; authenticated criteria need authorized real-session relay/CDP. Native surfaces or a legitimate selected fallback use `skill://cua-driver`. |
 | Desktop | Installed cua-driver skill and actual running app, fresh AX/state, action log and screenshot |
 | Library/SDK | Import and exercise the real public API; result transcript/state |
 | Data/migration/config/generated artifact | Read/diff resulting actual artifact and validate through its real consumer |

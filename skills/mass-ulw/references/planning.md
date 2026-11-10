@@ -35,6 +35,8 @@ For large graphs, use bounded reports and staged reduction so downstream nodes c
 
 Keep TASK, DELIVERABLE, SCOPE, VERIFY and STOP WHEN in the assignment when that is the host's brief format. For this graph, their load-bearing content is the node's output path/shape, exact owned files, dependency inputs and binary acceptance observable. The recorded artifact and verdict must establish the declared deliverable, not merely a successful worker return.
 
+VERIFY carries the data behind each factual conclusion: `OBSERVED: <read URL | file:line | command and observed result>`. Conclusions must trace to a page or file actually read or a tool/command result actually observed; distinguish observations from inferences and their limits. Code shape or plausibility alone does not prove runtime behavior. Memory supplies a LEAD to investigate, never independent evidence. DEAD END decisions carry `PROBED: <searches/reads/commands and observed results>`; convergence and settled judgments link to the observations and probes establishing them.
+
 Define verification coverage in the graph before execution, including a final verification stage for code-changing graphs. Its evidence links back to the owning goal criteria. OMP owns test/QA procedures and independent review requirements; this reference adds no parallel testing policy.
 
 ## Research graph composition
@@ -48,6 +50,10 @@ harvest-<a> -> expand-<a> -> verify-<a>
 ```
 
 Each node writes its own file under `<session-dir>/waves/<run-key>/`: `harvest-<a>.md`, `expand-<a>.md`, `verify-<a>.md`. Assignments carry resolved absolute paths. Harvest and expand return candidate claims plus EXPAND tails; verify returns counter-search verdicts, sources and remaining leads. The research owner alone reconciles these into the journal and claim graph.
+
+Carry each claim's OBSERVED evidence and each DEAD END's PROBED evidence in those existing handoff files, including the probes behind a `none` EXPAND tail. Remembered assertions travel as LEADs. Before accepting a consumed claim, verify checks the recorded observation, its source anchor or command result, and whether it supports the claim within the stated scope, then records its counter-search verdict. Reducers preserve these evidence references with each conclusion. Reuse valid recorded evidence; reopen a source or rerun a check only when evidence is missing, inadequate or invalidated, rather than repeating every passed check.
+
+A missing tail or missing observation evidence leaves the affected claim or lane incomplete and holds its consumers. Obtain missing evidence through the actual host's result retrieval and steering contracts, or collect it directly within scope. If unavailable, preserve the gap as unresolved; a successful node return cannot substitute for evidence.
 
 Converge per bounded cluster. Deduplicate new leads against the owning journal and add `expand-<a>-<n>` -> `verify-<a>-<n>` pairs with distinct handoffs when findings require them. Apply the research workflow's convergence contract; the predefined expand stage is one expansion wave, not proof of convergence. Failed or missing handoffs hold only their consumers within the run's attempt bounds.
 

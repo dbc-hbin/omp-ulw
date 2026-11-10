@@ -166,9 +166,11 @@ describe("Native ULW session behavior", () => {
   });
 
   test("new skill commands emit installed pointers without arming ULW or leaking into children", async () => {
-    for (const name of ["debugging", "review-work", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep"]) {
+    for (const name of ["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep"]) {
       const host = new Host();
-      await host.commands.get(name)!("the assigned workflow", host.context);
+      expect(host.commands.has("browser")).toBe(false);
+      const command = name === "browser" ? "web-browser" : name;
+      await host.commands.get(command)!("the assigned workflow", host.context);
       const prepared = host.prepare(host.submitted!, "extension")!;
       expect(prepared.systemPrompt).toEqual(["host", "project rules"]);
       expect(prepared.message?.content).toContain(`<omp-${name}-pointer>`);

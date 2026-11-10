@@ -101,6 +101,8 @@ Retain these receipt names and fields when recording delegated completion. They 
 
 `FullyDone` means a claim has confirmed verification and its acceptance evidence is present; only `confirmed` permits `[x]`. Missing or inconclusive evidence is not a pass. Applicable adversarial evidence includes risks such as `stale_state`, `dirty_worktree` and `misleading_success_output` when triggered by the task.
 
+Browser acceptance uses `skill://browser` and native Eval under active host routing; `skill://visual-qa/references/browser-setup.md` supplies scoped captures and console/network/HAR evidence. Public managed Chromium is project-shared; signed-in criteria require an authorized real-session relay/CDP route, never a profile clone. Native surfaces or a legitimate selected fallback use `skill://cua-driver`. Optional relay setup is not an automatic prerequisite.
+
 For non-confirmed attempts, record the failing check and first error line, stripping volatile paths, timestamps, process/run ids and durations. Count attempts per checkbox across splits and resumes, from its first dispatch (`checkpoint_opened_at`). Bound the checkpoint at a consecutively repeated failure signature, the third failed attempt, or four hours open. A plan may adjust the numbers but cannot remove the bound; check elapsed time on resume and completion events.
 
 At a bound, settle the attempt and mark `[~]` with the unmet gap and last evidence. Append an `unmet` entry describing what each attempt changed; propagate blocked dependencies and continue independent work. Below the bound retain `[ ]` with exact failure context.

@@ -14,6 +14,8 @@ Activate only on an explicit `ulw-research`, `/ulw-research`, `$ulw-research`, `
 
 Use the [host authority boundary](../ulw-loop/references/omp-contract.md) for model guidance, native modes and permissions. Supported command-bridge invocations connect research to native `workflowz` unless the user supplied a native keyword; semantic skill selection alone does not prove that mode is active. This skill owns research evidence and deliverables.
 
+Data comes first: every factual conclusion must trace to a page or file actually read, or a tool/command result actually observed, before it is asserted. This includes claim candidates, DEAD END decisions, convergence calls and judgments that a topic is settled. Memory supplies a LEAD to investigate, never independent evidence. Distinguish observed evidence from inference and state what the evidence establishes; code shape or plausibility alone does not prove runtime behavior.
+
 ## Research brief and durable evidence
 
 Use `doc/ulw-research/YYYYMMDD-HHMMSS/` as `$SESSION_DIR`; its basename is the local start timestamp consumed by the report tools, so do not rename it. Set `$SKILL_DIR` to the absolute directory containing this installed `SKILL.md`, not the working directory. Maintain the following records as findings arrive, not as an end-of-run reconstruction. One synthesis owner reconciles the claim store; collection returns evidence candidates rather than competing journal edits.
@@ -42,6 +44,8 @@ When an enclosing loop or execution plan already owns continuation, link the res
 
 Cover each meaningful axis and source territory; scale breadth to the question rather than a worker/query quota. Resolve ambiguous products, people, codenames and versions against a canonical first-party identity before using them as premises.
 
+Record the observations behind conclusions in `observation-manifest.md` and link them from the existing claim graph, expansion log or wave record as appropriate. Label inferences and retain their supporting observations and limits. An existing observation remains usable within its recorded scope unless new evidence or changed inputs invalidate it; do not reopen every checked source or repeat passed checks merely to collect another return.
+
 - Retrieve the material behind an important search hit; snippets are discovery, not evidence. Prefer primary standards, filings, datasets, papers, first-party docs and implementation evidence. Vary query terms, operators, dates and opposing framings. Use English and relevant local-language sources where they improve coverage; write the report in the user's requested language.
 - Code findings carry paths and line anchors; repository findings carry commit-pinned permalinks. Behavior/performance findings identify the actual runtime, platform, versions and configuration, not just documentation intent.
 - Distinguish live sources from snapshots. Cite an archive's snapshot timestamp; do not describe it as the current page. Mark proxy-derived content as untrusted and corroborate it through an independent route. Rendered-page or social evidence retains its provenance; inaccessible evidence remains a gap.
@@ -52,18 +56,18 @@ Collection returns preserve these textual markers (inside the report when an exi
 
 ```text
 ## CLAIMS
-- CLAIM: <assertion> - RISK: high|normal - SOURCES: <domains> - COUNTER: <refutation search result> - PRIMARY: <source or none>
+- CLAIM: <assertion> - RISK: high|normal - SOURCES: <domains> - COUNTER: <refutation search result> - PRIMARY: <source or none> - OBSERVED: <read URL | file:line | command and observed result>
 
 ## EXPAND
 - LEAD: <unchecked discovery> - WHY: <answer impact> - ANGLE: <next search>
-- DEAD END: <lead exhausted, with reason>
+- DEAD END: <lead exhausted, with reason> - PROBED: <searches/reads/commands and observed results>
 ```
 
-With no new leads, retain `## EXPAND` followed by `none - <reason>`. Deduplicate against the whole expansion log. A lead already being investigated stays with its recorded owner. An explicitly combined mass workflow can supply bounded handoffs such as `waves/<run-key>/<node-id>.md`; its collection structure does not bypass the claim graph.
+With no new leads, retain `## EXPAND` followed by `none - <reason> - PROBED: <searches/reads/commands and observed results>`. A remembered assertion without observation belongs under LEAD. A missing tail or missing observation evidence leaves the affected claim or lane incomplete. Obtain the missing evidence through the actual host's result retrieval and steering contracts, or collect it directly within scope; if unavailable, record the gap and leave it unresolved. Deduplicate against the whole expansion log. A lead already being investigated stays with its recorded owner. An explicitly combined mass workflow can supply bounded handoffs such as `waves/<run-key>/<node-id>.md`; its collection structure does not bypass the claim graph.
 
 ## Expansion, excursions and convergence
 
-Journal each return, reconcile claims and observations, investigate new relevant leads, then record what the wave opened, closed or changed. Multi-faceted research needs at least two expansion waves before claiming convergence. Convergence means either all leads were investigated/closed and supported claims survived critique, or three consecutive waves produced no new actionable leads. At five expansion waves, record remaining leads and an explicit non-converged status; continuation beyond that requires the user's extension. Do not report a stopped or capability-limited search as full saturation.
+Journal each return, reconcile claims and observations, investigate new relevant leads, then record what the wave opened, closed or changed. Multi-faceted research needs at least two expansion waves before claiming convergence. Convergence means either all leads were investigated/closed and supported claims survived critique, or three consecutive waves produced no new actionable leads. Link convergence and settled judgments to the recorded observations and PROBED results that establish those conditions; missing evidence leaves the lane incomplete. At five expansion waves, record remaining leads and an explicit non-converged status; continuation beyond that requires the user's extension. Do not report a stopped or capability-limited search as full saturation.
 
 An excursion needs one named ENTER trigger: contradiction of a locked claim, potential to change the answer/recommendation, an uncovered source territory, or quoted user steering. State its probe allowance first. Allow at most one nested sub-excursion; a deeper question becomes a recorded axis or an out-of-scope gap. EXIT when the trigger resolves, two probes leave the parent answer unchanged, claim status stops changing, or the allowance is spent. Fold the result back into the parent claim/axis and record its answer impact. Three consecutive excursions with no impact end excursions for this run.
 
@@ -89,4 +93,4 @@ Every factual claim carries inline `[S1]` or `[Source 1]` citations to the ledge
 
 Use [deliverable-phase.md](references/deliverable-phase.md) for resumable report state, formats, design-spec, report gates, bounded repair and the outcome manifest. Use [report-visualization.md](references/report-visualization.md) only for material visuals or requested reproductions, and [latex-report.md](references/latex-report.md) only for LaTeX. Text reports do not need decorative visuals or unrelated formats. The requested report remains due alongside any promised demo/reproduction.
 
-Research completion requires covered axes; explicit lead/convergence and exception status; reconciled claim/observation/debate records; a cited answer with unresolved claims disclosed; and every promised deliverable resolved in `outcome.json`. Record only gates actually performed. Run `outcome verify`, `outcome finish`, then `outcome briefing` as documented, and include the printed source/domain, elapsed-time, deliverable, gate and residual-defect briefing with the report. Do not infer claim validity or gate success from manifest verification alone.
+Research completion requires covered axes; observation evidence behind every factual conclusion, including lead closure and convergence/settled judgments; explicit lead/convergence and exception status; reconciled claim/observation/debate records; a cited answer with unresolved claims disclosed; and every promised deliverable resolved in `outcome.json`. Record only gates actually performed. Run `outcome verify`, `outcome finish`, then `outcome briefing` as documented, and include the printed source/domain, elapsed-time, deliverable, gate and residual-defect briefing with the report. Do not infer claim validity or gate success from manifest verification alone.

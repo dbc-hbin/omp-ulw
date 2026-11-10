@@ -2,6 +2,25 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-11 Native 브라우저 스킬 재이식
+
+- `browser` 스킬을 `/web-browser`로 호출해 OMP 자체 `/browser` 모드 명령을 보존하고, 탭·연결 소유권, relay·CDP·native backend, ref·프레임·좌표, JSON·route·HAR·trace, 사람 인계와 탭에 묶인 vault 상태 참조를 추가합니다. OmOWright 작업 지침을 OMP Eval prelude로 옮기며 별도 런타임이나 필수 릴레이를 가정하지 않습니다.
+- `/ultimate-browsing`에서 업스트림 reader 참조 21개의 출처 검증·아카이브·공개 API·소셜·한국 플랫폼·미디어·피드·개발·채용·선택 외부 reader 지식을 모두 대응합니다. 정적 접근은 native `read`·`web_search`가 소유하고 별도 추출 엔진·쿠키 내보내기·서비스 자동 설치는 포함하지 않습니다.
+- debugging·visual-qa·frontend·review·execute·loop·ULW·visualize의 브라우저 지침을 구체적인 native API에 연결합니다. 캡처 범위·권한·거부 확정·실제 인증 상태 조건을 보존합니다. 기기 변경의 재로드, 반환된 캡처 경로와 backend별 한계를 명시합니다.
+- 원본 라이선스와 전체 대응표를 보존합니다. cooperation token·사람 호출 배너·프레임 병합 ref·고정 stealth identity·OCR/CAPTCHA helper는 가짜 native 메서드 대신 지원 차이로 기록합니다.
+
+출처: [OMO 42d5746e 브라우저 관련 스킬](https://github.com/code-yeongyu/oh-my-openagent/tree/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills), [OMP 18.18.6 브라우저 계약](https://github.com/can1357/oh-my-pi/blob/v18.18.6/packages/coding-agent/src/prompts/tools/browser.md).
+
+### 2026-11-11 Fable 5.2와 관찰 근거 중심 스킬 이식
+
+- 33개 프리셋 번들을 Senpi `f75b592c51239c4baf30e3f5cb4d200f088205b1`에 고정합니다. 임시 Fable 5.5를 Fable / Mythos 5.2 전용 코어와 라우팅으로 교체하고, 갱신기에서 폐기된 launch 모듈의 import 예외를 제거합니다. 임의 외부 의존성은 계속 거부합니다.
+- OMP의 blocking 질문·권한·거부 확정·자식 역할·도구 계약을 보존합니다. Fable 5.2의 새 장애물 처리는 원인 진단과 제한된 복구로 보정하고, 필요한 승인은 장애물이 드러나는 시점에 해결합니다.
+- 기존 research journal과 mass-ulw 인계에 주장별 `OBSERVED`, DEAD END와 수렴 판단의 `PROBED` 근거를 유지합니다. 기억은 조사 단서로 취급하고 추론을 구분하며, 유효한 기존 근거나 통과한 검사를 일괄 재실행하지 않습니다.
+- 벤치마크·A/B·holdout·LLM 평가의 독립성을 감사하는 읽기 전용 `eval-integrity` 스킬과 `/eval-integrity` 명령을 추가합니다. 도구 접근·native mode·승인은 OMP가 소유합니다.
+- 번들에는 Haiku 5.5의 native 검색 조건 수정도 포함됩니다. OMP의 검색 안내는 계속 실제 활성 `web_search` 도구에서 결정하며, Senpi의 native 검색 확장이나 브라우저 런타임은 추가하지 않습니다.
+
+출처: [Fable 5.2 코어](https://github.com/code-yeongyu/senpi/commit/9b13230fd26315ea96c42a1d351a894905e5e853), [Haiku 검색 조건](https://github.com/code-yeongyu/senpi/commit/9ada5ad17e4646070012df063d15d235717da26d), [리서치 관찰 근거](https://github.com/code-yeongyu/oh-my-openagent/commit/14265efca5dfe162419e568bd140ff26a98e0b9d), [data-first 계약](https://github.com/code-yeongyu/oh-my-openagent/commit/41308e3f6877ba252f9687256705e025b33b4920), [eval-integrity](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills/eval-integrity/SKILL.md).
+
 ### 2026-11-09 Frontend 외부 참조 생성 전환
 
 - OMO의 원본 관리 방식을 따라 frontend 외부 참조 본문의 직접 추적을 네 고정 Git 서브모듈과 명시적 로컬 생성 명령으로 대체합니다. 기존 런타임 경로와 OMP용 안내문은 유지하고 생성 파일은 Git에서 제외합니다.

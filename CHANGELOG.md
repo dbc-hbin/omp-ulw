@@ -2,6 +2,25 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-11 Native browser skill re-port
+
+- Add the `browser` skill via `/web-browser`, preserving OMP's builtin `/browser` mode command, with complete native references for tab/connection ownership, relay/CDP/native backends, refs/frames/coordinates, passive JSON, routes, HAR/tracing, human takeover and tab-bound vault state. Port OmOWright workflow knowledge to OMP's Eval prelude without bundling its runtime or assuming a relay is required.
+- Add `/ultimate-browsing` with all 21 upstream reader reference territories mapped into source-validation, archive, public API, social/Korean platform, media, feed, developer/career and optional external-reader guides. Native `read`/`web_search` own static access; no extractor engine, cookie export or automatic service installation is included.
+- Reconnect debugging, visual-qa, frontend, review, execution, loop, ULW and visualization workflows to concrete native browser contracts. Preserve scoped capture matrices, authority, denial-final behavior and real authenticated-state requirements. Device changes can reload; captures use actual returned paths and backend limitations remain explicit.
+- Preserve source-license notices and coverage maps. Unsupported cooperation tokens, human banners, merged cross-frame refs, pinned stealth identities and OCR/CAPTCHA helpers are documented as gaps rather than fake native methods.
+
+Source: [OMO browser and related skills at 42d5746e](https://github.com/code-yeongyu/oh-my-openagent/tree/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills), [OMP 18.18.6 browser contracts](https://github.com/can1357/oh-my-pi/blob/v18.18.6/packages/coding-agent/src/prompts/tools/browser.md).
+
+### 2026-11-11 Fable 5.2 and evidence-focused skill ports
+
+- Pin the 33-preset bundle to Senpi `f75b592c51239c4baf30e3f5cb4d200f088205b1`. Replace the provisional Fable 5.5 profile with the dedicated Fable / Mythos 5.2 core and routing. Remove the retired launch-module import exception from the updater; arbitrary external dependencies remain rejected.
+- Preserve OMP's blocking question, permission, refusal, child-role and tool contracts. Adapt Fable 5.2's new obstacle handling to diagnosed, bounded recovery and resolve required authorization when the blocker arises.
+- Carry `OBSERVED` evidence for research claims and `PROBED` evidence for dead ends and convergence through the existing research journal and mass-ulw handoffs. Memory supplies investigation leads; inference remains labeled. Reuse valid evidence without mandatory source reopening or rerunning settled checks.
+- Add the read-only `eval-integrity` skill and `/eval-integrity` command for benchmark, A/B, holdout and LLM-judge independence audits. Keep tool access, native modes and approval rules with OMP.
+- The bundled Haiku 5.5 source includes upstream's native-search gate fix. OMP continues to derive search guidance from its active `web_search` tool; Senpi's native-search extension and browser runtime are not introduced.
+
+Sources: [Fable 5.2 core](https://github.com/code-yeongyu/senpi/commit/9b13230fd26315ea96c42a1d351a894905e5e853), [Haiku search gate](https://github.com/code-yeongyu/senpi/commit/9ada5ad17e4646070012df063d15d235717da26d), [research observations](https://github.com/code-yeongyu/oh-my-openagent/commit/14265efca5dfe162419e568bd140ff26a98e0b9d), [data-first contracts](https://github.com/code-yeongyu/oh-my-openagent/commit/41308e3f6877ba252f9687256705e025b33b4920), [eval-integrity](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills/eval-integrity/SKILL.md).
+
 ### 2026-11-09 Generated frontend reference sources
 
 - Replace tracked third-party frontend reference bodies with four pinned Git submodules and an explicit local materialization command, following OMO's source policy. Existing runtime paths and OMP-owned guides remain intact; generated files are ignored by Git.

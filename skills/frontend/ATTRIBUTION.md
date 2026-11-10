@@ -304,6 +304,14 @@ the layout verification matrix and `tests/pattern-runtime.spec.mjs` of StyleGall
 - Code licensed under the MIT License (Copyright (c) 2026 IYEN); documentation under
   CC BY 4.0.
 
+## OMP port modifications (2026-11-11)
+
+The frontend browser routing, runtime, computed-style reproduction and detect reference guidance
+are re-ported from OMO `42d5746e72bfcfb782db6b5182b70a3e9c55f1cc` to the native Eval browser skill.
+The materialized third-party source bodies and their pinned revisions are unchanged. Public versus
+authenticated state, current capabilities and actual screenshot/DOM/network evidence remain explicit;
+OmOWright loaders and BrowserSkill setup are not runtime dependencies.
+
 ## OMP port modifications (2026-11-09)
 
 The simple chart/table/diagram artifact exception in `frontend/SKILL.md` is adapted from

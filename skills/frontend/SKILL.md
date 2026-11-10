@@ -25,7 +25,7 @@ Consult [the OMP contract](skill://ulw-loop/references/omp-contract.md) only for
 
 This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
 
-Read `references/runtime.md` before browser, image generation or audit setup. Generated concepts use the actual `generate_image` schema, never provider-specific flags. Load `references/design/component-catalogs.md` when interaction/ambience anchors have no fit or a project registry/tone calls for it. All embedded third-party files are reference material, not callable skills or agent types.
+Read `references/runtime.md` before browser, image generation or audit setup. Interactive web work loads `skill://browser` for the native Eval prelude under active host routing; static URLs use `read`, native surfaces use `skill://cua-driver`. Generated concepts use the actual `generate_image` schema, never provider-specific flags. Load `references/design/component-catalogs.md` when interaction/ambience anchors have no fit or a project registry/tone calls for it. All embedded third-party files are reference material, not callable skills or agent types.
 
 ## Phase 0 — Route (before any UI work)
 
@@ -76,7 +76,7 @@ branches before UI code changes:
    - **Live site or URL reference** (the user names a site to clone or gives a URL): load `references/design/clone-from-url.md`. Drive a real browser and extract the runtime truth via `getComputedStyle` — tokens, layout geometry, default/hover/focus/active states, transitions and keyframes, and downloaded assets — into `DESIGN.md`, then clone-code reusable primitives against that contract.
    Final QA for both runs `/visual-qa` in reference-fidelity mode: compare the actual UI against the reference pixel-by-pixel and verify the code is an extensible design-system implementation, not a screenshot-matched one-off.
 2. **Greenfield or explicit high-craft/design-system setup:** when the user gives no concrete visual reference, design research is a build step with named deliverables. For ordinary greenfield UI, use the smallest useful direction and existing project conventions; do not force every research lane. Fire every research lane IN PARALLEL before `DESIGN.md` is written only when the brief asks for high craft or a design system:
-   - **Embedded references:** use `references/design/_INDEX.md` to shortlist 2-3 plausible Layer B references, then read exactly one Layer A style skill and one Layer B reference in full — every line, no partial reads (they are 200-500 lines; a sliced read produces the flattened token set this gate exists to prevent). Log the shortlist, the pick, and why. Use external design research through the exposed browser tools only when the curated set has no fit; add `ui-ux-db` lookups for palette/type/domain questions.
+   - **Embedded references:** use `references/design/_INDEX.md` to shortlist 2-3 plausible Layer B references, then read exactly one Layer A style skill and one Layer B reference in full — every line, no partial reads (they are 200-500 lines; a sliced read produces the flattened token set this gate exists to prevent). Log the shortlist, the pick, and why. Use external design research through `skill://browser` and native Eval only when the curated set has no fit and interaction/rendering is needed; static sources use `read`. Add `ui-ux-db` lookups for palette/type/domain questions.
    - **Lazyweb real-product screens:** READ `references/design/lazyweb.md` FIRST and run its recipe verbatim — do not improvise curl calls against lazyweb.com; the recipe mints its own anonymous token. Log the queries run, how many screens you actually VIEWED, and the layout grammar harvested — never pixel copies.
    - **StyleGallery spatial patterns:** read `references/design/stylegallery.md` and fetch the pattern whose primary spatial problem matches the screen. Log the pattern adopted and the element that owns the scroll.
    - **Image concept drafts:** for an explicit image/reference or high-craft request, generate 2-3 image concept drafts, each seeded with the loaded Layer A + Layer B tokens (palette, type, material); pick the strongest and treat the chosen draft as the reference-fidelity contract. Otherwise infer from existing UI or the brief.
@@ -187,8 +187,8 @@ Apply Phase 0 scope to these shortcuts: `perfection/README.md` loads for explici
 
 | Situation | Load |
 |---|---|
-| Brand/style not among the 70 in `references/design/`, or the user says "Open Design" | external design research through the exposed browser tools — inspect an external source through the actual browser and record provenance |
-| Driving a browser for the Design QA phase | `skill://visual-qa` with exposed browser tools (web) or `skill://cua-driver` (native) |
+| Brand/style not among the 70 in `references/design/`, or the user says "Open Design" | external design research with `read` for static sources or `skill://browser` for native Eval interaction/rendering under host routing; record provenance |
+| Driving a browser for the Design QA phase | `skill://visual-qa` plus `skill://browser` (native Eval web route), or `skill://cua-driver` (native surfaces or a legitimate selected fallback) |
 | Pure TypeScript/logic work with zero visual surface | Follow the project's coding guidance; load only relevant skills actually listed by OMP. |
 
 ## Activation

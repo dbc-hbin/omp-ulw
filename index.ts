@@ -8,7 +8,8 @@
  * Changelog: retain ULW activation, specialised workflow state and continuation;
  * model profiles own working methods; native tools, permissions and modes remain authoritative.
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
- * Additional commands: /debugging, /review-work, /visual-qa, /visualize,
+ * Additional commands: /web-browser, /ultimate-browsing,
+ * /debugging, /review-work, /eval-integrity, /visual-qa, /visualize,
  * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
  * /reflection, /init-deep, /ast-grep, /lsp-setup and /refactor. These do not
  * implicitly arm ULW.
