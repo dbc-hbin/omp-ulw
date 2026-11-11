@@ -35,6 +35,20 @@ check, not an exclusive lease. Stop and reassess when the user changes the page 
 is using it. Keep one automation owner per tab and do not delegate simultaneous writers. Do not
 change automation permissions or install an extension to work around an explicit denial.
 
+## Authorized evidence attachments
+
+Publishing screenshots or reports is an external write and needs authorization for that destination
+and content. Use the target application's ordinary attachment UI in the authorized real session,
+with the actual permitted file input/upload helper, then verify the resulting attachment and URL.
+For requested GitHub PR evidence, use GitHub user attachments; do not silently substitute a release,
+external image host or committed temporary image. Redact sensitive captures before upload.
+
+Do not extract CSRF tokens, cookies, upload-policy fields or signed storage credentials from page
+JavaScript to reconstruct private upload endpoints. A CLI API token alone does not establish the
+required signed-in web session. If that session or attachment capability is unavailable, retain
+the local evidence paths and report the exact prerequisite. Reading this recipe does not authorize
+posting, editing a PR body or changing an account.
+
 ## JavaScript dialogs
 
 Native default behavior accepts alerts and beforeunload prompts; confirms and prompts remain

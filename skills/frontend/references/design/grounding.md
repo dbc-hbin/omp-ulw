@@ -8,6 +8,8 @@ The output is `DESIGN.md` section 9 (`design-system-architecture.md` gives the t
 
 Pick the authoritative sources for the platform and the domain: the platform's guidelines (Apple Human Interface Guidelines, Material 3, Fluent 2), WCAG 2.2, and the project's own `DESIGN.md`. Read every page. If a source is too large for one context (the Apple HIG runs to hundreds of pages), split it across parallel readers through native `task` workers (the `mass-ulw` skill for a large graph). Each reader returns the principles from its pages with their URLs. A skimmed or sampled source counts as unread.
 
+Use `read` for static guideline pages and `web_search` to discover missing URLs. A reader whose required source content needs rendering, interaction or authorized account access must receive `skill://browser` explicitly; blocked/incomplete, archived or platform-specific sources require `skill://ultimate-browsing` and its applicable references. Include exact page coverage, permitted access/actions, required capability and citations in the child brief; do not assume parent policy or browser state is inherited. Missing pages remain unread evidence, not permission to expand access or substitute a summary.
+
 ## 2. Universal principles
 
 Drop the platform idioms: named materials, system icon sets, platform control chrome, and vendor elevation and motion names. Keep what holds for any interface: hierarchy, feedback, consistency, error prevention and recovery, input effort, density, legibility, and accessibility. Tie each principle to a persona and a journey step. Name who uses the product and what they are trying to get done. Then name the step where the principle decides the experience: first visit, daily use, recovery from an error, or a return after time away.

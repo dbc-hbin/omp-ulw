@@ -43,6 +43,8 @@ Comparison evidence belongs in the existing research report, not a new mandatory
 
 ## HTML handoff
 
+Read [browser](../../browser/SKILL.md) for the native Eval route and [browser setup](../../visual-qa/references/browser-setup.md) for the applicable capture/media states, including on direct research skill invocation. Browser-dependent delegated figure/reproduction work follows the browser skill's [assignment contract](../../browser/SKILL.md#delegated-page-work), with source/state and capture evidence returned to the research owner.
+
 When HTML is selected, open and inspect the actual report, not only its embedded demo, and provide a clickable artifact link to that same file. Leave it available in the browser or a retained report tab when supported. If display is unavailable, link the file and disclose the limitation without claiming a preview. This does not convert requested chat/Markdown reports to HTML.
 
 ## Gate compatibility

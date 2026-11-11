@@ -9,6 +9,17 @@ Screen layout has one viewport and infinite scroll. Paged media has a fixed page
 
 Load this when the deliverable is a PDF report, a print stylesheet, a `chrome --headless --print-to-pdf` pipeline, a WeasyPrint render, or any HTML meant to land on paper.
 
+For OMP browser printing, read `skill://browser` and use the actual report in an authorized task-owned Chromium tab. The direct `tab.pdf` helper forwards only its documented path, format, landscape, scale, background, margin and page-range options; it does not forward `preferCSSPageSize` or header/footer templates. When the CSS page box or templates are required, use raw Puppeteer inside native `tab.run`, with `printTab` the actual handle and `actualPdfPath` the task-owned output:
+
+```js
+const pdfPath = await printTab.run(async ({ page }, destination) => {
+  await page.pdf({ path: destination, preferCSSPageSize: true, printBackground: true });
+  return destination;
+}, { args: [actualPdfPath] });
+```
+
+Derive any header/footer options from the actual print contract. Tern supports only the direct helper's path option and cannot establish these Chromium settings. An existing project print pipeline retains its own renderer; do not install another browser runtime or launch against a live user profile from this reference. Inspect the resulting PDF's actual page dimensions and every rendered page as described below.
+
 ## 1. The page box comes first
 
 Declare the page before styling anything inside it. `@page { size: A4; margin: 2cm; }` sets the sheet and the content area; every measurement downstream is relative to what survives those margins.

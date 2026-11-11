@@ -25,7 +25,7 @@ Consult [the OMP contract](skill://ulw-loop/references/omp-contract.md) only for
 
 This conditional OMP-contract loading and same-session reuse policy applies throughout this workflow, including all referenced documents, and supersedes their unconditional OMP-contract read directives. Operation-specific reference requirements remain binding.
 
-Read `references/runtime.md` before browser, image generation or audit setup. Interactive web work loads `skill://browser` for the native Eval prelude under active host routing; static URLs use `read`, native surfaces use `skill://cua-driver`. Generated concepts use the actual `generate_image` schema, never provider-specific flags. Load `references/design/component-catalogs.md` when interaction/ambience anchors have no fit or a project registry/tone calls for it. All embedded third-party files are reference material, not callable skills or agent types.
+Read `references/runtime.md` before browser, image generation or audit setup, including delegation of those operations. Interactive web work loads `skill://browser` for the native Eval prelude under active host routing; static URLs use `read`, native surfaces use `skill://cua-driver`. Generated concepts use the actual `generate_image` schema, never provider-specific flags. Load `references/design/component-catalogs.md` when interaction/ambience anchors have no fit or a project registry/tone calls for it. All embedded third-party files are reference material, not callable skills or agent types.
 
 ## Phase 0 — Route (before any UI work)
 

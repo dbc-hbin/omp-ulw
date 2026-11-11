@@ -35,6 +35,8 @@ omp -e ./omp-ulw/index.ts
 
 `/web-browser` 加载 `browser` 技能，使用 OMP Eval 的原生 `browser` 对象处理交互页面、快照、框架、网络证据和截图，先读取 `xd://eval/browser`。OMP 自带的 `/browser` headless/visible 切换保持不变。`/ultimate-browsing` 通过 `read`、`web_search` 和同一浏览器处理不完整或受阻来源、平台 API、档案和媒体前提。保留宿主的浏览器路由与权限；普通托管浏览器不需要中继，真实 Chrome 会话可使用已授权的中继或 CDP。不安装 OmOWright、BrowserSkill daemon、Cookie 提取器或额外爬虫；各技能的 attribution 保留来源覆盖表和许可证。
 
+研究与 mass-research 直接包含来源访问契约，适用于没有共享 ULW 指令的 `/skill:ulw-research` 和 `/mass-ulw research`。网页收集任务明确向有能力的子代理传递浏览器、受阻来源读取参考及状态和证据要求。动态参考页面与 HTML 报告探针使用同一原生浏览器；静态来源继续使用 `read`。
+
 ## 模型提示词
 
 - [`upstream/presets.js`](upstream/presets.js)：生成的上游模型预设和选择规则。

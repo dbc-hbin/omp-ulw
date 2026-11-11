@@ -48,6 +48,8 @@ node "$SKILL_DIR/scripts/report-tools.mjs" format-extract "https://example.com/r
 
 The extractor also writes `<out>.extract.json`. PDF extraction is unsupported; use the source HTML/Markdown or record the limitation. Its fixed sections are `Extracted from`, `Tokens`, `Typography`, `Layout`, `Structure`, `Figures`, `Citations`, `Open questions`. Resolve `TODO: ask` using the request/reference or explicitly recorded defaults. A clean analyst default uses one accent over neutrals, legible sans fonts including the report's language, readable margins and numbered sources with access dates. Korean HTML text uses `word-break: keep-all; overflow-wrap: anywhere`.
 
+`--from-url` performs a static fetch. If the reference requires JavaScript or interaction, read [browser](../../browser/SKILL.md), render it through the authorized native route, save `await sourceTab.evaluate(() => document.documentElement.outerHTML)` through the host's file tools, and pass that file to `format-extract`. This retains the document head and inline styles; `tab.html()` defaults to the body. External stylesheets are not followed by the extractor, so missing computed tokens remain a separate browser observation. For blocked/incomplete references use [ultimate-browsing](../../ultimate-browsing/SKILL.md), retaining provenance and any incomplete coverage. A login/challenge shell must not become the design spec.
+
 Machine readers recognize CSS custom-property colors under `Tokens`/`Palette`/`Colors` (including fenced declarations) and `Lineage: inline|section` under `Citations`:
 
 - `inline` (default): unit-bearing numbers carry `MEASURED`, `ASSUMED`, `DERIVED`, `data-lineage`, or a source citation in the same element.
@@ -75,6 +77,17 @@ node "$SKILL_DIR/scripts/report-tools.mjs" outcome render "$SESSION_DIR/renders/
 Choose `--visual-requirement auto|required|not_applicable|blocked_capability` from the report's material claims and actual capability, not to hide missing evidence. `auto` uses markup/prose heuristics and can over-classify lists or numbers; an explicit justified value is supported. Text-only delivery is valid. Gates inspect keep-all, palette, punctuation, headings, number lineage, citations, closing/sources sections, assets and figure semantics; [report-gates.md](report-gates.md) defines their codes.
 
 `layout-probe --json` prints a `.source` expression. Evaluate that expression in the actual rendered page and save its returned object as `boxes.json`; a screenshot, PDF or HTML snapshot is not probe JSON. Without that object the CLI reports layout `not_run`. Inspect actual pages for facts a box probe cannot establish: missing/illegible figures, broken pagination, clipped text and wrong source/render correspondence. [Reference compare](report-visualization.md#reference-compare--requested-visual-reproductions-only) applies only to requested reproductions.
+
+For HTML rendering and probe evaluation, read [browser](../../browser/SKILL.md) and the applicable [capture recipe](../../visual-qa/references/browser-setup.md). Open the actual report URL/file in a task-owned native tab and wait for its real ready state. With `reportTab` that handle, `probe` the parsed CLI JSON and `layoutPath` the actual output path:
+
+```js
+const boxes = await reportTab.evaluate(probe.source);
+await Bun.write(layoutPath, JSON.stringify(boxes, null, 2));
+const reportImage = await reportTab.screenshot({ format: "png" });
+console.log(reportImage, await reportTab.errors());
+```
+
+Inspect the returned image and semantic report content at the desktop/mobile states relevant to the promised HTML, using separate desktop tabs after native mobile presets. These browser checks apply when this reference is reached through direct skill invocation too. The layout object alone does not establish visual correctness, and a browser screenshot does not replace the saved probe object. Release owned handles after evidence, unless a final report tab was explicitly retained for the user.
 
 Gate names are exactly `static`, `layout`, `visual`, `proofread`; stored statuses are `pass`, `fail`, `not_run`. The `check` command exits `1` and reports top-level `fail` only for blockers; major/minor defects still require inspection and an explicit repair/residual decision. `outcome gate` records a status; it does not run the check. `outcome verify` verifies deliverable rows, not claim validity or gate success.
 

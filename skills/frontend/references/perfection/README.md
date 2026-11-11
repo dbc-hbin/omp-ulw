@@ -12,8 +12,8 @@ The `lighthouse` CLI runs `chrome-headless-shell` with default settings. That is
 The correct path:
 
 1. Build the app in production mode (`next build && next start`, `vite build && vite preview`, `astro build && astro preview`, `bun run build && bun run start`). **NEVER** measure a dev server.
-2. Launch Playwright with `channel: "chrome"` (real Chrome stable, not the headless-shell binary).
-3. Run Lighthouse against the Playwright-controlled page via `playwright-lighthouse` OR via `chrome-launcher` + the `lighthouse` Node API, attaching to the Playwright CDP endpoint so cookies, auth state, and warmed caches mirror what a real returning user sees.
+2. Read [the native runtime](../runtime.md) and `skill://browser`, then use the authorized real-Chrome route for the required page/account state. Inspect the actual backend and browser version; a managed Chromium capture alone does not establish a Chrome-stable audit or an authenticated session.
+3. Use the project's existing Lighthouse Node API runner and its supported connection/configuration parameters. Reuse the task-owned native browser's CDP endpoint only if that runner supports it; do not assume a relay/native-webview endpoint supports Lighthouse or that a Puppeteer page can be passed to a Playwright API. Keep cookies and account state in the authorized browser.
 4. Use the **mobile** preset (4x CPU throttle, Fast 3G) for the primary number, AND the **desktop** preset for the secondary number. Report both.
 
 If the project audit dependencies are missing, record the missing packages; the host has no Playwright skill.
@@ -76,38 +76,19 @@ A page that scores Lighthouse 100 but uses 14 undeclared hex codes and 8 magic s
 If the project ships React, Lighthouse alone does NOT see render-layer issues by component. You MUST also run:
 
 - **`react-doctor`** (static): cheapest. `npx react-doctor@latest --json` before any browser audit. Treat perf-category findings as audit failures.
-- **`react-scan/lite`** (runtime, headless): injected via `page.addInitScript` in the Playwright run. Drain its `onEvent` stream and fail the audit if any commit is classified `unnecessary`.
+- **`react-scan/lite`** (runtime): load the project's actual browser bundle before React mounts through native `init_scripts` or `addInitScript`, under the browser contract. Drain its installed version's event stream and evaluate the recorded render evidence.
 
-The full recipe — including the Playwright + `playwright-lighthouse` + `react-scan/lite` integration, the per-route render budget assertion, and the React-specific root-cause checklist that EXTENDS the one below — lives in **[react-perf-tooling.md](react-perf-tooling.md)**. Read it before any React audit.
+The native browser integration, project-runner prerequisites, per-route render evidence and React-specific root-cause checklist live in **[react-perf-tooling.md](react-perf-tooling.md)**. Read it before any React audit.
 
 Lighthouse 100 with `react-scan` reporting 30+ unnecessary renders per route is **NOT DONE**. Both gates must clear: synthetic score AND render quality. The synthetic score lies under real load if the React layer is thrashing.
 
-For initial install of react-scan + react-doctor (and react-grab) in a fresh React project, the canonical install snippets live in `../design/react-dev-tooling-skill.md`. Use them if the project doesn't yet have the tools wired.
+For an authorized project setup, installation recipes live in `../design/react-dev-tooling-skill.md`. Reading this audit reference does not authorize dependency installation. Missing tools remain explicit audit prerequisites.
 
 ## AUDIT WORKFLOW
 
-Use the project's existing real-Chrome Lighthouse Node API audit runner with production URL, mobile and desktop profiles, and JSON reports. The upstream Python CLI is not ported: it assumes a private Playwright websocket transport and globally installs npm packages. Missing runner/dependencies are reported as unverified audit coverage. The following is project test-runner guidance only, not an OMP tool API:
+Use the project's existing real-Chrome Lighthouse Node API audit runner with the actual production URL, requested mobile/desktop profiles and JSON reports. Inspect its imports, version and connection parameters before running it. The upstream Python CLI and standalone Playwright launcher are not OMP interfaces and are not installed by this workflow.
 
-```ts
-// scripts/audit.ts
-import { chromium } from "playwright";
-import { playAudit } from "playwright-lighthouse";
-
-const browser = await chromium.launch({ channel: "chrome" });
-const context = await browser.newContext();
-const page = await context.newPage();
-await page.goto("http://localhost:3000/<route>");
-
-await playAudit({
-  page,
-  port: 9222,
-  thresholds: { performance: 100, accessibility: 100, "best-practices": 100, seo: 100 },
-  reports: { formats: { html: true, json: true }, name: "lighthouse-<route>" },
-  config: { extends: "lighthouse:default", settings: { formFactor: "mobile" } },
-});
-
-await browser.close();
-```
+Native page interaction, captures, runtime evidence and cleanup follow `skill://browser`. An existing project Playwright audit runner can retain its own supported contract when explicitly selected, but its page objects and launch options are not native browser helpers. Never guess a debugging port or start a second browser to hide an unavailable authenticated route. Missing runner, bundle or connection support is unverified audit coverage, separate from successful browser screenshots.
 
 For an explicit audit, run the requested routes and profiles (normally mobile and desktop) and report each category. Bound repeat runs to 3-5 per profile, or the user's stated iteration limit; stop when the bound is reached and record residual failures.
 

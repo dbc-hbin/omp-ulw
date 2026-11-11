@@ -18,6 +18,10 @@ Identify affected users or consumers, the requested ideal state (`IS-n`), and th
 
 Research discoverable facts before asking. For each remaining fork, distinguish an evidence-backed ordinary default from an owner decision: a material product contract, external constraint, irreversible consequence or unapproved spend cannot be silently chosen. State the recommendation, its reason and what changes with the answer. Do not manufacture questions about constraints already settled by the request or repository.
 
+For external evidence, use `web_search` for discovery and `read` for known static sources. Read `skill://browser` when the fact requires rendering, interaction or an authorized account view; read `skill://ultimate-browsing` for blocked/incomplete sources, archives or platform-specific reading. These conditional reads also apply on direct native skill activation; they do not select an execution workflow.
+
+When delegating such evidence gathering, include the required skill/reference paths in the child's brief, its exact source question, allowed reads/actions, required browser capability and authorized public/account state, ownership of any tab, and the citations or captures to return. Parent policy and Eval handles are not inherited capability. Preserve read-only planning and native child permissions; unavailable required access remains an evidence gap.
+
 Record `intent: clear|unclear` and follow the matching reference:
 
 - [CLEAR](references/intent-clear.md): the outcome is known; ask only surviving owner decisions. An explicit request to be interviewed takes this path.

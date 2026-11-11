@@ -38,6 +38,11 @@ real observation. Direct selectors support CSS, Puppeteer `aria/`, `text/`, `xpa
 OMP `label/`, `placeholder/`, `testid/`, `alt/`, `title/`, `role/<role>[name="..."]`. Playwright
 `locator`, `getByRole`, `:has-text()` and `:visible` are not interchangeable APIs.
 
+The direct facade's element proxy is not the same as an inner worker lookup. Inside `tab.run`,
+obtain an ID-based element with `const element = await tab.id(observedId)`, then
+`await element.click()`; the inner `id` lookup is asynchronous. Observe and resolve that ID in
+the same run. Direct outer calls can still use `await tab.id(observedId).click()`.
+
 Use `text`, `html`, `value`, `attr`, `count`, `box`, `styles`, `isVisible`, `isEnabled` and
 `isChecked` for precise assertions. `text()` and `html()` default to the page body. Frames require
 `tab.frame(selectorOrNameOrUrl)`; see [interaction.md](interaction.md).
@@ -80,7 +85,10 @@ headers, CPU and network-throttling overrides; cmux has its own restrictions.
 `screenshot({ selector?, fullPage?, format?, quality?, annotate?, silent? })` returns a saved path.
 `format` is png or jpeg; JPEG alone accepts quality. It does not take an output path. A tracked
 screenshot with ifChanged/threshold can return an object and save nothing when unchanged. Use the
-returned path and inspect it. `pdf({ path?, ... })` accepts a path; Tern accepts only that option.
+returned path and inspect it. `pdf` accepts `path`, `format`, `landscape`, `scale`, `printBackground`,
+`margin` and `pageRanges`; Tern accepts only `path`. CSS page-size preference and header/footer
+templates are not forwarded by that helper. Required Chromium print options can use raw
+`page.pdf` inside `tab.run`; see [paged media](../../frontend/references/design/print-paged-media.md).
 A page screenshot is not desktop/browser chrome evidence. The capture report describes conversion
 from displayed image coordinates to CSS pixels; use it before `clickAt`.
 

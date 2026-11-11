@@ -64,6 +64,8 @@ onboarding were not ported.
 
 `/web-browser`는 `browser` 스킬과 `xd://eval/browser`를 읽고 OMP Eval의 native `browser` 객체로 관찰·입력·클릭·프레임·네트워크·캡처를 수행합니다. OMP 자체 `/browser`의 headless·visible 전환은 그대로 유지합니다. `/ultimate-browsing`은 불완전하거나 차단된 출처, 공식 플랫폼 API, 아카이브·미디어 경로를 `read`·`web_search`와 같은 브라우저로 처리합니다. 호스트의 브라우저 우선순위·권한은 유지하며, 일반 관리형 브라우저에는 릴레이가 필요하지 않습니다. 기존 Chrome 세션에 연결할 때만 승인된 릴레이·CDP 경로를 선택합니다. OmOWright 런타임·BrowserSkill daemon·쿠키 추출기·별도 크롤러는 설치하지 않으며, 각 스킬의 attribution에서 원본 전체 대응표와 라이선스를 확인할 수 있습니다.
 
+리서치와 mass-research는 출처 접근 계약을 직접 포함하므로, 공통 ULW 지침이 없는 `/skill:ulw-research`와 `/mass-ulw research`에도 적용됩니다. 웹 수집 작업에는 브라우저·차단 출처 스킬 경로와 필요한 상태·권한·증거를 명시해 실제 도구를 가진 작업자에게 전달합니다. 동적 참조 페이지와 HTML 보고서의 layout probe도 같은 native 브라우저를 사용하며, 정적 자료는 계속 `read`로 읽습니다.
+
 ## 모델별 프롬프트 위치
 
 - [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 Claude Fable / Mythos 5.2 전용 코어를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 임시 Fable 5.5 항목은 제거됐으며, 프리셋 등록은 기본 모델 추천을 의미하지 않습니다.

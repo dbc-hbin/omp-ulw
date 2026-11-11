@@ -43,6 +43,8 @@ Define verification coverage in the graph before execution, including a final ve
 
 When the actual requested work uses [ulw-research](../../ulw-research/SKILL.md), that skill owns the journal, claim graph, EXPAND leads, convergence and report delivery gates. Mass-ulw owns only the phase graph and handoffs; do not duplicate the research journal or add a second goal.
 
+Web harvest, expansion and verification assignments carry the research skill's [source-access contract](../../ulw-research/SKILL.md#collection-and-evidence-independence), not an assumption that the lead's loaded browser guidance reaches a node. Name `read`/`web_search` for static retrieval/discovery, [browser](../../browser/SKILL.md#delegated-page-work) for required rendered/interactive/account evidence, and [ultimate-browsing](../../ultimate-browsing/SKILL.md) for blocked, incomplete or platform-specific sources. Include the relevant skill paths, actual tool/backend prerequisites, authorization/state requirements and expected evidence in each applicable brief. A node without the required capability stays blocked or hands that observation to a capable owner; its snippet or public page cannot stand in for the required browser/account evidence.
+
 Enumerate the topic's meaningful source territories and competing explanations without an angle quota. A predictable per-angle collection chain is:
 
 ```text

@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-11 브라우저 워크플로 연동 전수조사
+
+- 공통 ULW 지침이 활성화되지 않는 native 스킬 호출까지 포함해, research와 mass-research에 정적·동적·인증·차단 출처 접근 계약을 직접 연결합니다.
+- 수집·확장 작업자에게 browser·ultimate-browsing 참조, 실제 도구 조건, 승인된 상태와 필요한 증거를 명시해 전달합니다. 스킬이나 브라우저 핸들이 부모에게서 상속된다고 가정하지 않습니다.
+- 동적 참조 추출, HTML 보고서 layout probe 평가와 캡처를 native 브라우저 계약에 연결합니다. 문서 head 스타일, 필요한 캡처 범위, 출처 기록과 지원 한계를 보존합니다.
+- core Atlas·ULW 변형과 첨부 절차를 포함한 브라우저 관련 업스트림 문서 69개를 대조합니다. 직접 계획·토론·실행·루프, frontend 근거 수집, 대시보드 확인, native PDF 인쇄와 기존 프로젝트 성능 감사 경로를 보완합니다. 내부 CSRF·업로드 정책 조작 대신 승인된 일반 첨부 UI를 사용하며 외부 게시를 자동 실행하지 않습니다.
+
+출처: [OMO 42d5746e 리서치 수집](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills/ulw-research/references/research-collection.md), [Senpi 리서치 작업 지시](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/omo-senpi/skills/ulw-research/references/research-collection.md). 명령·스킬 연결은 OMP 18.18.7에서 확인하며, 기존 브라우저 API의 버전별 근거는 attribution을 유지합니다.
+
 ### 2026-11-11 Native 브라우저 스킬 재이식
 
 - `browser` 스킬을 `/web-browser`로 호출해 OMP 자체 `/browser` 모드 명령을 보존하고, 탭·연결 소유권, relay·CDP·native backend, ref·프레임·좌표, JSON·route·HAR·trace, 사람 인계와 탭에 묶인 vault 상태 참조를 추가합니다. OmOWright 작업 지침을 OMP Eval prelude로 옮기며 별도 런타임이나 필수 릴레이를 가정하지 않습니다.

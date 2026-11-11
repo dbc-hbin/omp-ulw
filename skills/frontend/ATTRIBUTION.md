@@ -312,6 +312,13 @@ The materialized third-party source bodies and their pinned revisions are unchan
 authenticated state, current capabilities and actual screenshot/DOM/network evidence remain explicit;
 OmOWright loaders and BrowserSkill setup are not runtime dependencies.
 
+The integration audit additionally connects planning/grounding workers, native HTML-to-PDF output
+and explicit performance audits. `perfection/README.md` and `react-perf-tooling.md` no longer present
+a standalone Playwright launcher, guessed debugging port or assumed React event schema as the OMP
+browser path. Existing project Lighthouse/instrumentation APIs remain prerequisites, and the actual
+browser bundle must initialize before the app. These are OMP adaptations of the same pinned OMO
+instruction sources, not changes to materialized third-party code or dependencies.
+
 ## OMP port modifications (2026-11-09)
 
 The simple chart/table/diagram artifact exception in `frontend/SKILL.md` is adapted from

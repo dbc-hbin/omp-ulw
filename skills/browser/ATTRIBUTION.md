@@ -22,11 +22,35 @@ by the original documentation do not replace the license for that documentation.
 | `references/recipes/1password.md` | Native target adoption, tab-bound state preservation and narrowly authorized reading |
 | `scripts/*`, runtime staging and package ignores | Intentionally omitted: loaders, doctor/onboarding, built-in OmO grant adapter and BrowserSkill daemon are not OMP interfaces |
 
-The browser-related sections of upstream `packages/prompts-core/prompts/ultrawork/{codex,default,gemini,gpt}.md`
+The browser-related sections of upstream `packages/prompts-core/prompts/ultrawork/{codex,default,gemini,glm,gpt}.md`
 are represented by the shared native browser guidance and the existing local ULW/workflow pointers.
 They do not add another model-specific execution policy. Debugging, frontend, review-work,
 ulw-execute, ultrawork, ulw-loop, visual-qa and visualize retain their own deliverables while routing
 page work through this skill; native desktop work keeps its installed GUI route.
+
+## Workflow integration audit (2026-11-11)
+
+The audit classified 69 browser-bearing instruction documents at the same OMO pin: 46 shared-skill
+documents, 9 Senpi skill documents and 14 core prompt variants (27 entrypoints and 42 references).
+This is the browser-integration inventory; the complete 21-reader reference map remains in
+`ultimate-browsing/ATTRIBUTION.md`. Native command/skill loading was exercised with OMP 18.18.7.
+
+| Source territory | Native integration and deliberate adaptation |
+| --- | --- |
+| `ulw-research` entry, collection, delivery and report references in shared/Senpi skills | Research's own source-access contract, browser/blocked-reader child briefs, rendered HTML extraction, native layout evaluation and scoped report captures; direct skill and mass research do not depend on shared ULW activation |
+| `mass-ulw/references/planning.md` research composition | Explicit source/capability/state/evidence requirements in harvest, expansion and verification handoffs |
+| Shared/Senpi execution, loop, debugging and review browser criteria | Native browser evidence and explicit worker references, respecting child roles and verification limits |
+| Frontend clone, grounding, audit, React instrumentation and print references | Native page operations and PDF output; existing installed project audit runners retain their actual APIs; no standalone Playwright runtime, guessed port or assumed React event schema |
+| Visual QA, visualization and data/dashboard evidence | Existing scoped capture contracts and source-filter/provenance checks; no compulsory full matrix for unrelated edits |
+| Core `atlas/*` QA hints and `ultrawork/*` variants | Native browser/review guidance and explicit delegated briefs; no `/playwright` alias, new Atlas role or competing execution policy |
+| Shared `git-master/SKILL.md` attachment instructions | Authorized ordinary GitHub attachment UI in `references/human-handoff.md`; no CSRF/cookie extraction, private upload endpoint reconstruction or automatic publishing; no new git workflow command |
+
+Planning and hyperplan entrypoints also carry the conditional source-access contract so their
+own native skill invocations and fresh perspective workers can resolve required web evidence.
+Static URLs still use `read`; research's upstream browser-for-every-source rule, worker quotas and
+legacy team/load-skills APIs are not copied. Browser instructions do not implicitly activate ULW.
+Original snapshot/import CLI commands are not invented where the local report tools do not expose
+them; observed HTML and provenance are saved through native file tools instead.
 
 OMP has no equivalent guarantee for BrowserSkill's one-use cooperation context, prompted borrow and
 human banner, OmOWright's merged cross-frame refs and step trace package, CloakBrowser's pinned

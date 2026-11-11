@@ -31,6 +31,8 @@ Reuse already-captured real-surface proof only when it covers the FINAL content.
 | Library/SDK | Import and exercise the real public API; result transcript/state |
 | Data/migration/config/generated artifact | Read/diff resulting actual artifact and validate through its real consumer |
 
+Generated HTML reports, charts and decks also use the Web proof row: open the actual artifact and inspect its rendered page, rather than treating a source read or successful generation as visual proof.
+
 Cover happy path, changed path, relevant boundary/error/adversarial cases and cleanup/teardown. Web visual changes need desktop/mobile captures; paginated output needs every rendered page. Never clone a signed-in profile or wipe user browser state. If a renderer, auth, hardware or remote operation is unavailable, the row is UNPROVEN with the exact blocker; a curl response is not UI proof.
 
 Create a root-owned QA matrix with criterion, scenario/action, expected, raw observed, PASS/FAIL/UNPROVEN/N/A, artifact path, invocation, content identity and cleanup receipt. Artifact paths must exist and be nonempty; include screenshots plus semantic assertions, not success prose. N/A requires a goal-specific reason; required blocked rows cannot become N/A. Store requested evidence privately when it contains auth/customer data.

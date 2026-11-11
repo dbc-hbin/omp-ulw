@@ -1,6 +1,6 @@
 # React Perf Tooling for Lighthouse 100
 
-You are auditing or optimizing a React app for Lighthouse 100. Two tools belong in this workflow alongside Playwright + lighthouse — they catch the React-specific perf issues that Lighthouse counts but doesn't diagnose by component:
+You are auditing or optimizing a React app for Lighthouse 100. The native browser route in [runtime.md](../runtime.md) and `skill://browser` owns page interaction and evidence. The project's installed Lighthouse runner owns its metrics. Two development tools can identify React-specific issues that Lighthouse does not diagnose by component:
 
 | Tool | Surface | What it gives you |
 |---|---|---|
@@ -9,67 +9,21 @@ You are auditing or optimizing a React app for Lighthouse 100. Two tools belong 
 
 Use both. They are complementary: `react-scan` tells you *what's slow right now*; `react-doctor` tells you *what's structurally wrong*. Both are dev-only and free.
 
-If the project does not yet have react-scan and react-doctor wired into its dev environment, read `../design/react-dev-tooling-skill.md` first and install them — they should be on by default for every React project this skill audits.
+Inspect the project's installed versions, instrumentation and event schema first. For an authorized setup, read `../design/react-dev-tooling-skill.md`; missing packages or browser bundles remain audit prerequisites, not permission to install unrelated tooling automatically.
 
 ## Lighthouse run + react-scan/lite
 
-`playwright-lighthouse` already drives a real Chrome. Inject `react-scan/lite` BEFORE React mounts via `page.addInitScript`. Then drain its `onEvent` stream during the run and assert on render budgets at the end.
+Load `react-scan/lite` before React mounts using an existing browser-ready project bundle and the installed package's actual initialization API. A bare `import("react-scan/lite")` in a page is not Node package resolution. Inspect the bundle's readiness signal, event sink and classification fields; do not invent an event schema or count an empty/uninitialized sink as a clean render result.
 
-```ts
-// scripts/audit-with-react-scan.ts
-import { chromium } from "playwright";
-import { playAudit } from "playwright-lighthouse";
+For a task-owned Chromium tab, native `browser.open({ name, url, app, init_scripts: [observedBundlePath] })` can install the observed document-start source before navigation. The variables come from the actual project and authorized connection; read `xd://eval/browser` for the active signature. Readiness and event collection still require the project's instrumentation contract. An asynchronous initializer must establish that instrumentation is ready before React mounts; document-start scheduling alone does not prove that ordering.
 
-const browser = await chromium.launch({ channel: "chrome" });
-const context = await browser.newContext();
+Drive the required route through the native browser and read its real event evidence using `tab.evaluate` or raw Puppeteer inside `tab.run`. Use the installed Lighthouse runner's supported connection to the authorized Chrome session; obtain its actual endpoint rather than guessing a port. A runner that accepts Playwright pages cannot take the native Puppeteer page without an explicitly supported adapter. Missing integration or events stay unverified; do not launch another runtime, copy login state or fabricate zero renders.
 
-// Inject react-scan/lite BEFORE the app boots
-await context.addInitScript(() => {
-  // @ts-ignore — pulled from the project's node_modules or a self-hosted bundle
-  import("react-scan/lite").then(({ instrument }) => {
-    (window as any).__renderEvents = [];
-    instrument({
-      onEvent: (event: any) => {
-        if (event.kind === "commit") (window as any).__renderEvents.push(event);
-      },
-      recordChangeDescriptions: true,
-      includeFiberSource: true,
-      includeFiberIdentity: true,
-    });
-  });
-});
-
-const page = await context.newPage();
-await page.goto("http://localhost:3000/<route>");
-
-await playAudit({
-  page,
-  port: 9222,
-  thresholds: { performance: 100, accessibility: 100, "best-practices": 100, seo: 100 },
-  reports: { formats: { html: true, json: true }, name: "lighthouse-<route>" },
-  config: { extends: "lighthouse:default", settings: { formFactor: "mobile" } },
-});
-
-// Pull render events and assert on render quality
-const events = await page.evaluate(() => (window as any).__renderEvents);
-const unnecessary = events.filter((e: any) =>
-  e.tree?.some((node: any) => node.changeDescription?.kind === "unnecessary"),
-);
-
-if (unnecessary.length > 0) {
-  console.error(`FAIL: ${unnecessary.length} unnecessary renders detected during audit`);
-  for (const e of unnecessary.slice(0, 10)) console.error("  -", JSON.stringify(e, null, 2));
-  process.exit(1);
-}
-
-await browser.close();
-```
-
-This is the canonical integration for an explicitly requested React performance audit. Run the profiles requested by that audit (normally mobile + desktop); target 100/100/100/100 and zero unnecessary renders within the audit's stated iteration bound.
+Run the requested profiles (normally mobile + desktop), preserve measurement overhead and report the synthetic scores alongside actual component evidence within the stated iteration bound. Release only the tab, init scripts or listeners this task owns.
 
 ## react-doctor — static perf gate
 
-Before the Playwright run, fail fast on structural issues. The scan is fast and doesn't need a browser, so put it earlier in the pipeline.
+Before the browser audit, run the project's installed static scanner. It needs no browser, so put it earlier in the pipeline. The commands below describe the package CLI; use the project's actual installed/pinned invocation and obtain any required installation authorization before running an `@latest` command.
 
 ```bash
 npx react-doctor@latest --json > .react-doctor-report.json
@@ -97,8 +51,8 @@ Run them in this order, stop at the first failure:
 
 1. **`react-doctor`** — cheapest. Catches missing memoization, broken list keys, unstable callback refs, expensive children that re-render unnecessarily. Fix everything it reports BEFORE running Lighthouse — half the perf score wins live here.
 2. **`react-scan` interactive in dev** — load the page in real Chrome with `npx react-scan@latest init` already wired (see the dev-tooling reference). Walk the LCP route, the most-clicked CTA, and any animation-heavy view. The toolbar shows render counts; the overlay highlights unnecessary renders in gray. Fix until clean.
-3. **`react-scan/lite` in the Lighthouse run** — once interactive is clean, run the Playwright audit above. This catches anything that only shows under throttling or only on first paint.
-4. **Playwright + Lighthouse** — standard run from `README.md` audit workflow. Score 100 + zero unnecessary renders from step 3 = done.
+3. **`react-scan/lite` in the Lighthouse run** — once interactive is clean, use the native browser instrumentation and supported project audit runner above. This catches issues observed only under throttling or on first paint.
+4. **Lighthouse project runner** — use the real-Chrome workflow in `README.md`. Report its scores and the independently observed render evidence; unavailable measurements remain unverified.
 
 ## React-specific perf root causes (extends `README.md` ROOT-CAUSE CHECKLIST)
 
@@ -116,7 +70,7 @@ These are the failures `react-scan` and `react-doctor` surface that base Lightho
 
 ## Anti-patterns specific to this workflow
 
-- **Forgetting `page.addInitScript` (using `page.evaluate` instead).** `evaluate` runs AFTER React mounts; you'll miss every initial-render event. Use `addInitScript`.
+- **Instrumenting only after React mounts.** A later `evaluate` misses initial-render events. Use a verified document-start bundle and readiness contract; asynchronous setup can otherwise lose the same events.
 - **`react-scan` non-lite during a Lighthouse run.** The full UI (toolbar, canvas overlay) adds overhead and skews the score. Use `react-scan/lite` ONLY for measurement; the full version is for interactive dev.
 - **Reporting Lighthouse 100 with `react-scan` showing 30+ unnecessary renders per route.** The score is meaningless if the React layer is thrashing — INP and CLS will degrade under real load even if the synthetic run passed. Both gates must clear.
 - **Treating `trackUnnecessaryRenders` as free.** It has measurable overhead; in a Lighthouse run it can drag the perf score by 2-3 points. Use it for interactive diagnosis, not for the audit run.

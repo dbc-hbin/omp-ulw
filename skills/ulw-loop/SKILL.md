@@ -19,6 +19,8 @@ instead of replacing or silently adopting it. Keep this session and the lead-own
 ledger when delegating implementation, tests, fixes or QA execution through native
 `task`; delegation does not transfer loop state ownership.
 
+For delegated browser criteria, include `skill://browser` and `skill://visual-qa/references/browser-setup.md` explicitly in the child brief, with the criterion's scoped matrix, allowed actions, required Eval/browser capability, authorized public/account state, tab ownership and evidence/cleanup requirements. Parent policy and Eval handles are not inherited capability; preserve child verification limits and return missing access as blocked evidence. Source-reading assignments use `read` for static URLs and `web_search` for discovery; include `skill://ultimate-browsing` when blocked/incomplete sources, archives or platform-specific reading are needed.
+
 The run lives under `doc/ulw-loop/<session-id>/` with `brief.md`, `goals.json` and `ledger.jsonl`. The lead alone writes state. Preserve completed records; unrelated work gets a separate identified run.
 
 Acquire the existing `in_progress` goal, otherwise a pending goal whose dependencies are complete. Record criterion results with actual artifacts, capture fingerprints and cleanup receipts. Non-final checkpoints require essential criteria; final completion requires every criterion plus `quality-gate.json`. The [checkpoint and steering reference](references/full-workflow.md) specifies transitions and final verifier inputs.

@@ -37,6 +37,11 @@ question — decoration dilutes the answer.
   table, the system's own dashboard or a raw count). Name that source beside the chart,
   state whether it agrees, and quantify any difference. If a second source is unavailable,
   disclose that limitation and leave the cross-check unverified; never invent agreement.
+  For a dashboard source, prefer an official static endpoint through `read`; use
+  `web_search` for discovery. Read `skill://browser` when the figure requires a rendered
+  dashboard, interaction or an authorized account view, and `skill://ultimate-browsing`
+  for blocked/incomplete or platform/archive sources. Record the actual filters, period,
+  units and observed value; an inaccessible dashboard leaves this cross-check unverified.
 
 ## Quality bar — every chart
 

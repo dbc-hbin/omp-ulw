@@ -35,6 +35,8 @@ Additional skills include `debugging`, `programming`, `review-work`, `eval-integ
 
 `/web-browser` loads the `browser` skill for OMP's native Eval browser: interactive pages, snapshots, frames, network evidence and captures. OMP's own `/browser` headless/visible command remains intact. Read `xd://eval/browser` first. `/ultimate-browsing` covers incomplete/blocked sources, official platform endpoints, archives and media prerequisites using `read`, `web_search` and the same browser. Host browser routing and permissions remain authoritative. A relay is optional for real Chrome sessions; public managed-browser work does not require one. No OmOWright runtime, BrowserSkill daemon, cookie extractor or crawler is installed by these skills. Their attribution files map the upstream source coverage and retain the source license.
 
+Research and mass-research carry their source-access contracts directly, including native `/skill:ulw-research` and `/mass-ulw research` invocations without the shared ULW policy. Web collection briefs explicitly pass the applicable browser/blocked-reader references and state/evidence requirements to capable workers. Rendered references and HTML report probes use the same native browser; static sources continue to use `read`.
+
 ## Model prompts
 
 - [`upstream/presets.js`](upstream/presets.js): generated upstream model presets and selection rules.

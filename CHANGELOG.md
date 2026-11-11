@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-11 Browser workflow integration audit
+
+- Put static, rendered, authenticated and blocked-source reading contracts directly in research and mass-research, including native skill invocations that do not activate the shared ULW policy.
+- Pass applicable browser/ultimate-browsing references, real capabilities, authorized state and evidence requirements explicitly to collection/expansion workers instead of assuming inherited skills or browser handles.
+- Connect rendered reference extraction, HTML report layout-probe evaluation and report captures to the native browser contract. Preserve document-head styles, scoped captures, provenance and exact unsupported capabilities.
+- Audit 69 browser-bearing upstream instruction documents, including core Atlas/ULW prompt variants and attachment guidance. Complete direct planning/debate/execution/loop, frontend grounding, dashboard checks, native PDF printing and existing-project performance-audit routing. Ordinary authorized attachment UI replaces private CSRF/upload-policy reconstruction; no external publishing is automatic.
+
+Sources: [OMO research collection at 42d5746e](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills/ulw-research/references/research-collection.md), [Senpi research briefs](https://github.com/code-yeongyu/oh-my-openagent/blob/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/omo-senpi/skills/ulw-research/references/research-collection.md). Native command/skill integration checked with OMP 18.18.7; existing browser API coverage remains versioned in its attribution.
+
 ### 2026-11-11 Native browser skill re-port
 
 - Add the `browser` skill via `/web-browser`, preserving OMP's builtin `/browser` mode command, with complete native references for tab/connection ownership, relay/CDP/native backends, refs/frames/coordinates, passive JSON, routes, HAR/tracing, human takeover and tab-bound vault state. Port OmOWright workflow knowledge to OMP's Eval prelude without bundling its runtime or assuming a relay is required.

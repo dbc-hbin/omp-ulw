@@ -2,7 +2,7 @@
 //
 // buildProbeSource() returns ONE async IIFE expression (the engine's evaluate awaits it): it first
 // forces lazy images to load eagerly and awaits their decode (bounded), so natural sizes are real. The orchestrator evaluates it in the rendered
-// report through the browser skill's owned headless engine and writes the result to boxes.json;
+// report through the native Eval browser under host routing and writes the result to boxes.json;
 // gates-layout.mjs reads that file. This module never launches a browser.
 //
 // Selector paths use the SAME rule as html-lite.selectorPath (a unique safe #id anchors the path,
