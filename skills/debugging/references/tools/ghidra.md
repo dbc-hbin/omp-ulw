@@ -1,6 +1,6 @@
 # Ghidra — Decompile Binaries Into Readable C
 
-Use this specialist only when its capability exists and answers the current hypothesis. Probe its installed executable/version before commands; read [OMP DAP](dap.md) for structured debugging and [setup](../methodology/00-setup.md) for bounds/ownership. Long commands use native async bash. GUI operations require skill://cua-driver.
+Use this specialist only when its capability exists and answers the current hypothesis. Probe its installed executable/version before commands; read [OMP DAP](dap.md) for structured debugging and [setup](../methodology/00-setup.md) for bounds/ownership. Long commands use native async bash. GUI operations require skill://computer-use.
 
 
 **https://github.com/NationalSecurityAgency/ghidra**

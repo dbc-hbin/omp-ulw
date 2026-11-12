@@ -174,7 +174,7 @@ try {
     if (!entry.isDirectory()) continue;
     assert(new RegExp(`^\\s*- ${entry.name}(?: \\(|:)`, "m").test(catalog), `package skill must be advertised: ${entry.name}`);
   }
-  for (const name of ["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
+  for (const name of ["browser", "computer-use", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
     const command = name === "browser" ? "web-browser" : name;
     const [prompt] = await run([`/${command} exercise installed routing`]);
     const body = JSON.stringify(requests.at(-1));

@@ -1,6 +1,6 @@
 # Browser capture on OMP
 
-Read `skill://browser` and its lifecycle/commands references, then use the native `browser` prelude in Eval when active. Follow host routing, approvals and denial-final rules; an installed browser skill's explicit-tool exception still applies. Use `read` for static URLs and `skill://cua-driver` for native surfaces or a legitimate user-selected fallback. Do not install a second runtime or automatically enable/install the optional relay.
+Read `skill://browser` and its lifecycle/commands references, then use the native `browser` prelude in Eval when active. Follow host routing, approvals and denial-final rules; an installed browser skill's explicit-tool exception still applies. Use `read` for static URLs and `skill://computer-use` for native surfaces or a legitimate user-selected fallback. Do not install a second runtime or automatically enable/install the optional relay.
 
 Public QA can select `browser.open({name:"visual-qa",url:appUrl,app:"chromium"})` when permitted. `app: "chromium"` selects managed Chromium; record the actual backend. Managed Chromium is project-shared, not a guaranteed clean profile. Authenticated rows require an authorized real-session relay/CDP route from the lifecycle reference; never copy a live profile, extract cookies or erase user state. An unavailable authenticated route blocks that row, even if the public page renders.
 
@@ -57,7 +57,7 @@ Collect `await qa.console()`, `await qa.errors()` and `await qa.requests({filter
 
 ## Native or unsupported browser
 
-Read `skill://cua-driver`; target actual pid/window_id, refresh `get_window_state`, act with fresh element tokens, and verify actual state with a screenshot. Use `set_window_frame` and geometry readback for desktop widths; window frame is not web viewport emulation. Native chrome belongs in app/terminal proof; web evidence must be page-only, through browser screenshots or a validated content crop. Do not claim touch/DPR/theme emulation from window resizing.
+Read `skill://computer-use` and the live `xd://eval/computer` contract. Resolve an exact native window with `computer.window`, observe through `win.ax()` or `win.observe()`, act through returned elements or that window's screenshot coordinates, and verify the requested state. Record `win.bounds` and the actual screenshot dimensions. OMP 18.19 does not document a window-frame setter; use supported app/PTY sizing controls or report a required geometry capability gap rather than inventing one. Window bounds are not web viewport emulation. Native chrome belongs in app/terminal proof; web evidence must be page-only, through browser screenshots or a validated content crop. Do not claim touch/DPR/theme emulation from native window geometry.
 
 ## Delivery and cleanup
 

@@ -1,6 +1,6 @@
 # Browser QA - native Eval browser
 
-Read `skill://browser` for routing and `skill://browser/references/network.md` for evidence. Use `read` for static URLs. A UI bug requires a rendered browser; curl cannot prove cookies, service workers, client-side JS or responsive layout. The `browser` prelude exists only with active Eval/browser settings; it is not an AgentTool. Follow active host routing (including an installed browser skill's explicit-tool exception), approvals and denial-final rules. Use `skill://cua-driver` for native surfaces or a legitimate user-selected fallback.
+Read `skill://browser` for routing and `skill://browser/references/network.md` for evidence. Use `read` for static URLs. A UI bug requires a rendered browser; curl cannot prove cookies, service workers, client-side JS or responsive layout. The `browser` prelude exists only with active Eval/browser settings; it is not an AgentTool. Follow active host routing (including an installed browser skill's explicit-tool exception), approvals and denial-final rules. Use `skill://computer-use` for native surfaces or a legitimate user-selected fallback.
 
 ## Choose the state the bug requires
 

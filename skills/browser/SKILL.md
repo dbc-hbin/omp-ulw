@@ -15,7 +15,7 @@ second browser runtime to substitute for it.
 
 Honor the user's chosen browser and host skill routing. An installed Aside-first rule still applies
 unless the user selects OMP or that rule permits a fallback. Native desktop chrome and unsupported
-app surfaces use the installed `cua-driver` skill, with its own permissions. This skill does not
+app surfaces use the shipped `computer-use` skill under OMP's native permissions. This skill does not
 change tools, approval requirements, project rules or native modes.
 
 ## Choose the connection from the required state

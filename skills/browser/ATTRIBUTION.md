@@ -26,7 +26,8 @@ The browser-related sections of upstream `packages/prompts-core/prompts/ultrawor
 are represented by the shared native browser guidance and the existing local ULW/workflow pointers.
 They do not add another model-specific execution policy. Debugging, frontend, review-work,
 ulw-execute, ultrawork, ulw-loop, visual-qa and visualize retain their own deliverables while routing
-page work through this skill; native desktop work keeps its installed GUI route.
+page work through this skill; native desktop work uses the shipped `computer-use`
+skill and OMP's native Eval `computer` prelude.
 
 ## Workflow integration audit (2026-11-11)
 

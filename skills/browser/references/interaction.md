@@ -79,6 +79,6 @@ verify the returned downloaded path. Do not enumerate unrelated local files or t
 
 A Chrome extension popup or browser chrome is not necessarily a normal inspectable page. Use
 `browser.targets` only for targets the native API actually exposes; a missing popup target is a
-capability gap. Native UI can use the installed `cua-driver` route with its own authorization and
+capability gap. Native UI uses `computer-use` under host authorization, with
 fresh window state. Do not fabricate `chrome-extension://` URLs, force security settings or replace
 an explicit user cancellation with another transport.

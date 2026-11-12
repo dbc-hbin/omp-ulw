@@ -166,7 +166,8 @@ describe("Native ULW session behavior", () => {
   });
 
   test("new skill commands emit installed pointers without arming ULW or leaking into children", async () => {
-    for (const name of ["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep"]) {
+    expect(new Host().commands.has("computer")).toBe(false);
+    for (const name of ["browser", "computer-use", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep"]) {
       const host = new Host();
       expect(host.commands.has("browser")).toBe(false);
       const command = name === "browser" ? "web-browser" : name;

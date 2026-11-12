@@ -2,6 +2,15 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-12 Native computer workflow integration
+
+- Add `/computer-use` and `/skill:computer-use` for OMP's JavaScript/Python Eval `computer` prelude, preserving the native `/computer` operator command.
+- Route native apps, browser chrome, GUI debugging, review, ULW and visual evidence through the shipped skill. Replace legacy window-state/token/frame instructions with native AX, window screenshots, returned element handles and supported app/PTY sizing.
+- Keep availability, OS permissions, background delivery, foreground confirmation and interruption under OMP's live contract. The skill does not enable settings or install an external driver; source attribution and license terms are retained.
+- Verify both invocation paths against the real Quartz capabilities API, disabled-prelude behavior and complete native guidance/helper documentation preservation. Extend the existing command/discovery regressions.
+
+Sources: [OMO computer-use generator](https://github.com/code-yeongyu/oh-my-openagent/blob/10d8b1bc9193e1f7bc7a279b501d0102643801f7/packages/senpi-desktop-tool/src/skill.ts), [OMP 18.19 computer contract](https://github.com/can1357/oh-my-pi/blob/v18.19.0/packages/coding-agent/src/prompts/tools/computer.md).
+
 ### 2026-11-12 Task-scoped prewalk control
 
 - Adapt native prewalk plan, continue and checklist notices to the active model's methods and the user's scope, preserving approved plans and workflow progress instead of forcing a fresh plan or fixed todo count.
