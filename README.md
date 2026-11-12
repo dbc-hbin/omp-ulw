@@ -14,6 +14,8 @@ bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
 omp -e ./omp-ulw/index.ts
 ```
 
+Alternatively, `omp -e` accepts the package directory itself (`omp -e ./omp-ulw`), which loads the `omp.extensions` entry declared in `package.json`.
+
 In the interactive TUI, use `/ulw <task>`, `ulw <task>`, or `/goal ulw <task>` to activate ULW and a native goal. An existing goal is not replaced. RPC clients must create a native goal separately; `/goal` is a TUI command.
 
 Put the command or alias at the start of the input, after optional whitespace. Discussion such as `Explain ulw`, `Explain /ulw` or `What does /ulw-plan do?` stays inert. Existing paused and budget-limited goals also retain ownership.
@@ -91,6 +93,8 @@ bun tests/ulw-host-check.ts
 bun tests/ulw-goal-host-check.ts
 bun tests/child-preset-host-check.ts
 ```
+
+The RPC smoke uses a temporary HOME/workspace and a local provider without inheriting user credentials or workflow settings. It loads the package directory and checks discovery of its shipped skills.
 
 ## History and attribution
 

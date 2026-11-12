@@ -10,12 +10,12 @@ Use the host-selected browser for normal interaction. For authorized public-page
 const tab = await browser.open({
   name: "public-source",
   url: "https://example.com",
-  app: { relay: false, tern: false }
+  app: "chromium"
 });
 print(await tab.observe());
 ```
 
-These options skip only relay and Tern; configured CDP or cmux may still win before managed Chromium. Inspect the actual backend/session. Managed Chromium is shared by project and not guaranteed to be a fresh isolated profile. Do not clear its state indiscriminately. Native browser startup may install managed Chromium on first use according to the host contract; do not separately install runtimes or change host routing to evade an approval.
+`app: "chromium"` selects managed Chromium for this open; inspect the reported backend. Inspect the actual backend/session. Managed Chromium is shared by project and not guaranteed to be a fresh isolated profile. Do not clear its state indiscriminately. Native browser startup may install managed Chromium on first use according to the host contract; do not separately install runtimes or change host routing to evade an approval.
 
 For an authorized signed-in criterion, use an already available real-session relay/CDP route from the browser skill. Opening a new named relay tab can preserve the user's selected tab; borrowing a tab and navigating it requires authorization. Do not launch against, clone, clear or delete the user's live profile, and do not export cookies. If relay/authentication is unavailable, report that prerequisite; installing/enabling an extension is a separate authorized setup task, not an automatic fallback.
 

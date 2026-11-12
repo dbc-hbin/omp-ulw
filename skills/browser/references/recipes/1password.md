@@ -10,10 +10,10 @@ An unlocked web vault can hold essential state in that tab's sessionStorage. Ano
 profile may still require sign-in; cookies alone do not establish equivalent state. Navigating away,
 reloading or closing the original tab can destroy the unlocked session. Do none of those as recovery.
 
-For relay, discover the authorized page with `browser.targets({ app: { relay: true } })` and use
+For relay, discover the authorized page with `browser.targets({ app: "relay" })` and use
 its returned `target`. For CDP, read the approved endpoint's page metadata and select the observed
 page ID using [the CDP procedure](../lifecycle.md#existing-cdp-pages); `browser.targets` does not
-support CDP. Open a named handle with that same app connection and `app.target`; omit `url`.
+support CDP. Open a named handle with that same app connection and the top-level `target`; omit `url`.
 Do not guess tab IDs or infer permission from discovery.
 If no authenticated connection exists, report that prerequisite instead of creating a headless
 substitute or copying cookies/profile files.

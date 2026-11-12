@@ -6,24 +6,23 @@ task actually needs, inspect the backend returned by open and keep a short task-
 ## Managed and explicitly spawned browsers
 
 Without explicit app options, OMP may choose configured relay, configured CDP, Tern, cmux or managed
-Chromium. `app: { relay: false, tern: false }` skips those two automatic modes only. It does not
-override a configured CDP endpoint or cmux. `headed` changes visibility, not backend identity.
+Chromium. `app: "auto"` skips only the relay; `app: "own"` also skips a configured CDP endpoint, Tern and cmux. `headed` changes visibility, not backend identity.
 
 Managed Chromium installs on first use if needed and shares a project browser. A new name gives a
 new page, not proof of a new profile. Do not clear shared state to manufacture a clean test. When
 fresh profile isolation matters, use an observed, installed Chromium-family executable with
-`app.path` and a task-owned temporary `--user-data-dir` in `app.args`. Create that directory through
+its path as `app` and a task-owned temporary `--user-data-dir` in `argv`. Create that directory through
 the available file/process tools, record ownership and pass its actual path; never point it at the
 user's live profile. Apply permissions/install rules before adding software. A separately spawned
 application is not the same as attaching to the user's Chrome.
 
-`app.cdp_url` attaches to an explicitly selected, reachable CDP discovery endpoint. Do not restart
+A CDP endpoint URL given as `app` attaches to an explicitly selected, reachable CDP discovery endpoint. Do not restart
 a user's browser with debugging flags, change browser security settings or copy profiles as hidden
 setup. A remote browser is still that browser's real account and network context.
 
 ## Existing CDP pages
 
-`browser.targets` supports only relay and Tern; it rejects `app.cdp_url`. `browser.tabs()` lists
+`browser.targets` supports only relay and Tern; it rejects CDP endpoints. `browser.tabs()` lists
 OMP-managed handles, not every page in an attached browser.
 
 For an approved HTTP CDP discovery base, use `read` on its `/json/list` endpoint. Inspect the
@@ -33,7 +32,8 @@ private. Select the exact observed page ID, then attach through that same approv
 ```js
 const cdpTab = await browser.open({
   name: taskTabName,
-  app: { cdp_url: approvedCdpBase, target: selectedPageId },
+  app: approvedCdpBase,
+  target: selectedPageId,
 });
 console.log(await cdpTab.url());
 ```
@@ -51,7 +51,7 @@ Explicit OMP-native relay connection:
 ```js
 const relayTab = await browser.open({
   name: "authorized-account-task",
-  app: { relay: true },
+  app: "relay",
 });
 console.log(await relayTab.observe({ compact: true }));
 ```
@@ -61,11 +61,11 @@ the task's authorized URL. Existing login state may be available, but tab-bound 
 still require the original tab. Discover before adopting:
 
 ```js
-const targets = await browser.targets({ app: { relay: true }, timeout: 10 });
+const targets = await browser.targets({ app: "relay", timeout: 10 });
 console.log(targets.map(({ target, title, url }) => ({ target, title, url })));
 ```
 
-Use the exact selected result as `app.target` on a new managed name. Omit `url` while adopting so
+Use the exact selected result as the top-level `target` on a new managed name. Omit `url` while adopting so
 opening does not navigate that page. A target listing is not user consent to manipulate every tab.
 Do not print unrelated private tab details in reports. Borrowing is not BrowserSkill's prompted
 `tabBorrow` protocol; required authorization must already exist.
@@ -82,7 +82,7 @@ Use `omp browser-relay --help` for the installed version. With explicit install 
 user or an authorized GUI flow loads the printed directory in Chrome's extension manager. Do not
 use enterprise force-install policy, hidden profile edits or unrelated extension installers.
 
-The browser prelude starts the relay on demand. `app: { relay: true }` selects it per open, so a
+The browser prelude starts the relay on demand. `app: "relay"` selects it per open, so a
 persistent configuration change is unnecessary for one task. Changing `browser.relay` globally is a
 separate user preference; obtain authorization before saving it. A connection timeout is missing
 connectivity, not proof that the extension is installed, enabled or connected. Verify a real new
@@ -91,8 +91,7 @@ retry denied browser access.
 
 ## Tern and cmux
 
-Tern is native WKWebView in a visible picture-in-picture, not Chromium. `app.tern: true` requires
-it; `app.tern: false` skips it. Adopting a Tern block releases rather than closes the user's block.
+Tern is native WKWebView in a visible picture-in-picture, not Chromium. `app: "tern"` requires it; `app: "own"` skips it. Adopting a Tern block releases rather than closes the user's block.
 Tern fetch/XHR/navigation capture is useful, but it does not prove complete subresource traffic,
 Chromium trace/profiling, transformed-frame input, reduced-motion or full device fidelity. cmux is
 also a native-webview backend. Check each documented capability and retain an exact gap instead of

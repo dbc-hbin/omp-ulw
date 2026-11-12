@@ -4,9 +4,9 @@ Read `skill://browser` for routing and `skill://browser/references/network.md` f
 
 ## Choose the state the bug requires
 
-Public QA may use `browser.open({name:"submit-debug", url:appUrl, app:{relay:false,tern:false}})` when the host permits that route. Those flags skip relay and Tern, but configured CDP or cmux can still win before managed Chromium. Managed Chromium is project-shared, not a guaranteed fresh profile; record the actual backend and state. Do not clear shared data to manufacture isolation. Use the documented lifecycle reference when true isolation is required.
+Public QA may use `browser.open({name:"submit-debug", url:appUrl, app:"chromium"})` when the host permits that route. Managed Chromium is project-shared, not a guaranteed fresh profile; record the actual backend and state. Do not clear shared data to manufacture isolation. Use the documented lifecycle reference when true isolation is required.
 
-An authenticated criterion requires an authorized real-session relay or CDP connection. For an authorized relay use `browser.open({name:"submit-auth", app:{relay:true}})`; navigate only within the authorized task. `app.target` borrows an existing tab, so its navigation needs authorization too. No profile/cookie extraction, credential evaluation, or wiping user cookies/storage. An unavailable signed-in connection leaves the authenticated criterion blocked; managed-page success cannot prove it. Relay installation/enabling is optional and requires applicable authorization, never an automatic first step.
+An authenticated criterion requires an authorized real-session relay or CDP connection. For an authorized relay use `browser.open({name:"submit-auth", app:"relay"})`; navigate only within the authorized task. The top-level `target` borrows an existing tab, so its navigation needs authorization too. No profile/cookie extraction, credential evaluation, or wiping user cookies/storage. An unavailable signed-in connection leaves the authenticated criterion blocked; managed-page success cannot prove it. Relay installation/enabling is optional and requires applicable authorization, never an automatic first step.
 
 ## Reproduce and subscribe before clicking
 

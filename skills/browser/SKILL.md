@@ -24,17 +24,17 @@ change tools, approval requirements, project rules or native modes.
 | --- | --- |
 | Static text, an official API or an ordinary source URL | `read`; discover sources with `web_search` |
 | Public interactive page, rendering or headless QA | A named native tab; inspect the backend returned by `browser.open` |
-| The user's existing Chrome login | Explicit relay `app: { relay: true }`; open a dedicated tab when the login is not tab-bound |
+| The user's existing Chrome login | Explicit relay `app: "relay"`; open a dedicated tab when the login is not tab-bound |
 | An existing relay or Tern tab, including tab-bound application state | Inspect `browser.targets({ app })`, then adopt the exact returned `target`; omit `url` to avoid navigating it |
-| An existing CDP browser or Electron page | Read its authorized CDP discovery metadata, then use `app.cdp_url` and the selected page ID; see [lifecycle.md](references/lifecycle.md#existing-cdp-pages) |
-| An explicitly requested separate browser or Electron process | An observed executable with `app.path`; do not treat this as the user's existing session |
+| An existing CDP browser or Electron page | Read its authorized CDP discovery metadata, then use the CDP endpoint as `app` and the selected page ID as `target`; see [lifecycle.md](references/lifecycle.md#existing-cdp-pages) |
+| An explicitly requested separate browser or Electron process | An observed executable path as `app`, with `argv` for its arguments; do not treat this as the user's existing session |
 | Visible native Tern web content | The advertised Tern backend; respect its capability limits |
 | A blocked host, archive or platform-specific reader | [ultimate-browsing](../ultimate-browsing/SKILL.md) |
 
 A relay is optional. Managed Chromium handles public interaction without it. Default backend selection
 can choose configured relay/CDP, Tern or cmux; it does not guarantee a fresh profile. For a public
-probe that should skip relay and Tern, pass `app: { relay: false, tern: false }` and inspect the result:
-a configured CDP endpoint or cmux can still apply. Managed Chromium is project-shared. For a criterion
+probe that should use managed Chromium, pass `app: "chromium"` and inspect the reported backend.
+Managed Chromium is project-shared. For a criterion
 requiring truly fresh profile state, use a separately authorized, task-owned browser profile as
 explained in [lifecycle.md](references/lifecycle.md), not a claim of isolation from a new tab name.
 
@@ -52,7 +52,7 @@ choose an actual task URL rather than treating the example as the user's target.
 const tab = await browser.open({
   name: "public-inspection",
   url: "https://example.com",
-  app: { relay: false, tern: false },
+  app: "chromium",
 });
 console.log(await tab.observe({ compact: true }));
 ```

@@ -233,10 +233,10 @@ function analyzeFile(filePath: string, sourceFile: tsTypes.SourceFile): Violatio
         if (parent && ts.isAsExpression(parent)) {
           // already handled
         } else if (parent && (
-          ts.isParameter(parent) ||
+          ts.isParameterDeclaration(parent) ||
           ts.isVariableDeclaration(parent) ||
           ts.isPropertyDeclaration(parent) ||
-          ts.isPropertySignature(parent)
+          ts.isPropertySignatureDeclaration(parent)
         )) {
           const p = pos(node)
           violations.push({ ruleId: "no-any-annotation", filePath, ...p, message: "`: any` annotation: use `unknown` and narrow" })

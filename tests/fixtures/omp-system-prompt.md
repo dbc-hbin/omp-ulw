@@ -43,20 +43,14 @@ Structural discovery uses `ast_grep`.
 Use the native `task` schema and returned agent ids.
 
 § Workflow
-# 1. Scope
+# 1. Before Editing
 Read relevant skills and rules first.
 
-# 2. Research Before Editing
-Read relevant sections before editing.
-
-# 3. Decompose
-Update todos with the next real tool call.
-
-# 4. Implement
-Prefer existing files.
-
-# 5. Verify
+# 2. Verify
 Exercise the changed path through its real surface.
+
+# 3. Cleanup
+Delete throwaway scripts.
 
 § Delivery
 <contract>

@@ -121,7 +121,7 @@ test("an already-owned profile cannot be nested by a second installation", () =>
 });
 
 test("model guidance owns behavioral sections while native capability and permission regions survive", () => {
-  const template = base.replace("Original workflow", "# 1. Scope\nNATIVE_SCOPE\n# 4. Implement\nPERMISSION_BOUNDARY\n# 5. Verify\nNATIVE_CHECKS\n# 6. Cleanup\nNATIVE_CLEANUP");
+  const template = base.replace("Original workflow", "# 1. Before Editing\nNATIVE_SCOPE\n# 4. Implement\nPERMISSION_BOUNDARY\n# 2. Verify\nNATIVE_CHECKS\n# 3. Cleanup\nNATIVE_CLEANUP");
   const prepared = replaceHostBehavior([template], "<omp-model-preset>MODEL_BEHAVIOR</omp-model-preset>");
   if (!prepared) throw new Error("Expected recognized host template");
   const source = prepared.blocks[0];
@@ -130,9 +130,11 @@ test("model guidance owns behavioral sections while native capability and permis
   expect(result.slice(0, result.indexOf("\n§ Tool Policy\n"))).toBe(source.slice(0, policyAt));
   expect(result.slice(result.indexOf("\n§ Delivery\n"))).toBe(source.slice(source.indexOf("\n§ Delivery\n")));
   // These headings are keys consumed by the host-section parser.
-  for (const section of ["# General\n", "# Delegation\n", "# 1. Scope\n", "# 5. Verify\n", "# 6. Cleanup\n"]) {
+  for (const section of ["# General\n", "# Delegation\n", "# 2. Verify\n", "# 3. Cleanup\n"]) {
     expect(result.includes(section)).toBe(false);
   }
+  // Pre-delivery permission text in Before Editing stays native; model guidance does not own it.
+  expect(result.includes("# 1. Before Editing\nNATIVE_SCOPE")).toBe(true);
   expect(result.includes("# Tool I/O\n")).toBe(true);
   expect(result.includes("# Specialized Tools\n")).toBe(true);
   expect(result.includes("# 4. Implement\nPERMISSION_BOUNDARY")).toBe(true);

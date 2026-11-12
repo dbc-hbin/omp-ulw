@@ -15,7 +15,7 @@ test("unsupported models preserve native policy and tools at turn start and afte
       name,
       description: name === "eval" ? "One cell per call;\nFor 2+ independent items, use a named `workpool()`; results auto-deliver."
         : name === "todo" ? "`todo` NEVER takes a turn of its own: emit it in the same response (parallel tool calls)"
-        : "Persistent shell: No `head`/`tail`/redirection;",
+        : "Persistent bash 5.3.\ncwd will reset after each turn, don't rely on cd; `pty` = interactive.",
       parameters: { type: "object", properties: { value: { type: "string" } } },
     },
   }));

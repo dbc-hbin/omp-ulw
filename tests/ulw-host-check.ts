@@ -1,6 +1,6 @@
 // Run with: bun tests/ulw-host-check.ts (requires the installed omp binary).
 import { strict as assert } from "node:assert";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { renderPreset } from "../presets";
@@ -49,16 +49,26 @@ const server = Bun.serve({
     ].join("\n\n"), { headers: { "content-type": "text/event-stream" } });
   },
 });
+const root = mkdtempSync(join(tmpdir(), "omp-ulw-host-"));
+const home = join(root, "home");
+const config = join(root, "config.yml");
+mkdirSync(home);
+writeFileSync(config, "compaction:\n  enabled: false\n");
 async function run(prompts: string[], flags: string[] = [], continuation?: "loop" | "execute" | "execute-blocked" | "execute-mixed" | "execute-native", provider?: string, model = "gpt-6.1-sol", loadSkills = false, tools?: string[], streamingBehavior?: "steer" | "followUp"): Promise<string[]> {
   const offset = requests.length;
   continuationState = undefined;
   scenarioRequests = 0;
-  const cwd = continuation ? mkdtempSync(join(tmpdir(), "omo-ulw-host-")) : process.cwd();
+  const cwd = mkdtempSync(join(root, "workspace-"));
   const child = Bun.spawn([
-    "omp", "--mode", "rpc", "--no-ui", "--no-extensions", "-e", resolve("index.ts"),
+    "omp", "--mode", "rpc", "--no-ui", "--no-extensions", "-e", resolve("."),
     "-e", resolve("tests/fixtures/ulw-provider.ts"), "--model", provider ? `${provider}/deepseek-v4-flash-omo-local-probe` : `omo-ulw-probe/${model}`,
-    "--cwd", cwd, ...(tools ? ["--tools", tools.join(",")] : loadSkills ? ["--tools", "read"] : ["--no-tools", "--no-skills"]), "--no-rules", "--no-title", "--no-session", "--no-lsp", ...flags,
-  ], { stdin: "pipe", stdout: "pipe", stderr: "pipe", env: { ...process.env, OMO_ULW_PROBE_BASE_URL: `http://127.0.0.1:${server.port}/v1`, OMO_ULW_PROBE_CONTINUATION: continuation ?? "", OMO_ULW_PROBE_PROVIDER: provider ?? "", OMO_ULW_PROBE_MODEL: model } });
+    "--cwd", cwd, "--config", config, "--no-prewalk",
+    ...(tools ? ["--tools", tools.join(",")] : loadSkills ? ["--tools", "read"] : ["--no-tools", "--no-skills"]), "--no-rules", "--no-title", "--no-session", "--no-lsp", ...flags,
+  ], { cwd, stdin: "pipe", stdout: "pipe", stderr: "pipe", env: {
+    PATH: process.env.PATH, LANG: process.env.LANG ?? "en_US.UTF-8", TMPDIR: process.env.TMPDIR ?? tmpdir(),
+    HOME: home, PI_CODING_AGENT_DIR: join(home, "agent"),
+    OMO_ULW_PROBE_BASE_URL: `http://127.0.0.1:${server.port}/v1`, OMO_ULW_PROBE_CONTINUATION: continuation ?? "", OMO_ULW_PROBE_PROVIDER: provider ?? "", OMO_ULW_PROBE_MODEL: model,
+  } });
   const stderr = new Response(child.stderr).text();
   let signal = Promise.withResolvers<void>();
   let expected = "ready";
@@ -92,14 +102,14 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
         }
         if (event.type === "ulw_probe_state" && "kind" in event && typeof event.kind === "string" && "path" in event && typeof event.path === "string") continuationState = { kind: event.kind, path: event.path };
         if (expected === "ready" && event.type === "ready") signal.resolve();
-        if (event.type === "response" && "id" in event && event.id === "ready" && "success" in event && event.success === false && typeof event.error === "string" && event.error.includes("transport limit")) {
+        if (event.type === "response" && "id" in event && event.id === "ready" && "success" in event && event.success === false && "error" in event && typeof event.error === "string" && event.error.includes("transport limit")) {
           signal.resolve();
           continue;
         }
         if (event.type === "response" && "success" in event && event.success === false) {
           failure = event;
           signal.reject(new Error(JSON.stringify(event)));
-        } else if ((expected === "ready" || expected === "configured") && "id" in event && event.id === expected) signal.resolve();
+        } else if (expected === "ready" && "id" in event && event.id === expected) signal.resolve();
         else if (expected === "agent_end" && event.type === "agent_end" && !("willContinue" in event && event.willContinue === true)) {
           if (scenarioRequests !== expectedRequests) {
             failure = new Error(`OMP settled with requests=${scenarioRequests}/${expectedRequests}; model=${model}; continuation=${continuation ?? "ordinary"}; prompts=${JSON.stringify(prompts)}`);
@@ -112,11 +122,6 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
   })();
   try {
     child.stdin.write(JSON.stringify({ type: "get_state", id: "ready" }) + "\n");
-    await signal.promise;
-    // Inherited compaction settings can suppress session_stop before the hook runs.
-    signal = Promise.withResolvers<void>();
-    expected = "configured";
-    child.stdin.write(JSON.stringify({ type: "set_auto_compaction", id: "configured", enabled: false }) + "\n");
     await signal.promise;
     for (const [index, prompt] of prompts.entries()) {
       signal = Promise.withResolvers<void>();
@@ -140,7 +145,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
     await output;
     const errors = await stderr;
     if (failure) console.error(errors);
-    if (continuation) rmSync(cwd, { recursive: true, force: true });
+    rmSync(cwd, { recursive: true, force: true });
   }
   return requests.slice(offset).map(body => {
     assert(typeof body === "object" && body !== null && "messages" in body && Array.isArray(body.messages));
@@ -160,12 +165,14 @@ try {
   }
   for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
-    const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] })!;
+    const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] });
+    assert(profile);
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
   }
   const [catalog] = await run(["inspect installed skill metadata"], [], undefined, undefined, "gpt-6.1-sol", true);
-  for (const name of ["design", "brand", "design-system", "ui-styling", "ui-ux-pro-max", "slides", "banner-design", "native-ui-design"]) {
-    assert(!catalog.includes(`skill://${name}`) && !catalog.includes(`<name>${name}</name>`) && !new RegExp(`^\\s*- ${name}(?: \\(|:)`, "m").test(catalog), `disabled design skill must not be advertised: ${name}`);
+  for (const entry of readdirSync(resolve("skills"), { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    assert(new RegExp(`^\\s*- ${entry.name}(?: \\(|:)`, "m").test(catalog), `package skill must be advertised: ${entry.name}`);
   }
   for (const name of ["browser", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
     const command = name === "browser" ? "web-browser" : name;
@@ -276,27 +283,32 @@ try {
   assert.equal(nativePlan.length, 3, "native plans must continue through approved task progress and settle after completion");
   for (const provider of ["deepseek", "omo-third-party-probe"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, provider);
-    const profile = renderPreset({ provider, id: "deepseek-v4-flash-omo-local-probe", name: "DeepSeek V4 Flash" }, { surface: "app", toolNames: [] })!;
+    const profile = renderPreset({ provider, id: "deepseek-v4-flash-omo-local-probe", name: "DeepSeek V4 Flash" }, { surface: "app", toolNames: [] });
+    assert(profile);
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), "actual provider request must contain the provider-specific shipped profile");
   }
   await run(["inspect the native task schema"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait"]);
   const taskRequest = requests.at(-1);
   assert(typeof taskRequest === "object" && taskRequest !== null && "tools" in taskRequest && Array.isArray(taskRequest.tools));
-  const taskBody = taskRequest as { tools: Array<{ function?: { name?: string; parameters?: Record<string, any> } }> };
-  const taskTool = taskBody.tools.find((tool: unknown) =>
+  const taskTool = taskRequest.tools.find((tool: unknown): tool is { function: { name: "task"; parameters?: unknown } } =>
     typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" &&
     tool.function !== null && "name" in tool.function && tool.function.name === "task",
   );
   assert(taskTool, "actual provider request must expose the native task tool");
-  const taskParameters = taskTool.function?.parameters;
+  const taskParameters = taskTool.function.parameters;
   assert(typeof taskParameters === "object" && taskParameters !== null && "properties" in taskParameters && typeof taskParameters.properties === "object" && taskParameters.properties !== null);
   assert("context" in taskParameters.properties && "tasks" in taskParameters.properties);
-  assert(Array.isArray(taskParameters.required) && taskParameters.required.includes("context") && taskParameters.required.includes("tasks"));
-  const taskItems = taskParameters.properties.tasks.items;
+  assert("required" in taskParameters && Array.isArray(taskParameters.required) && taskParameters.required.includes("context") && taskParameters.required.includes("tasks"));
+  const taskArray = taskParameters.properties.tasks;
+  assert(typeof taskArray === "object" && taskArray !== null && "items" in taskArray);
+  const taskItems = taskArray.items;
   assert(typeof taskItems === "object" && taskItems !== null && "properties" in taskItems && typeof taskItems.properties === "object" && taskItems.properties !== null);
   assert("task" in taskItems.properties && "solutionSpace" in taskItems.properties);
   for (const forbidden of ["category", "subagent_type", "prompt", "load_skills", "run_in_background"]) {
     assert(!(forbidden in taskParameters.properties), `native task schema must not expose legacy field: ${forbidden}`);
   }
-  console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: ["shared ULW policy across model families", "eight design skills excluded", "fourteen installed skill commands", "native skill body suppression", "native skill explicit ULW arguments", "native skill explicit planning arguments", "slash activation", "session follow-up", "quoted keyword suppression", "path reference suppression", "negated invocation suppression", "blockquote suppression", "relay suppression", "URL suppression", "mass pointer without base arming", "contrast clause activation", "disable flag", "all specialised command pointers", "no implicit native keyword activation", "explicit native keyword coexistence", "loop continuation", "execute final-gate continuation", "official DeepSeek profile", "third-party DeepSeek profile", "native task schema"], cleanup: "all owned OMP processes exited; QA directories removed; local provider stopped" }));
-} finally { await server.stop(true); }
+} finally {
+  await server.stop(true);
+  rmSync(root, { recursive: true, force: true });
+}
+console.log(JSON.stringify({ status: "PASS", requests: requests.length }));

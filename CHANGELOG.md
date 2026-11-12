@@ -2,6 +2,21 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-12 Isolated extension host smoke
+
+- Run the RPC smoke with an isolated HOME and workspace, a local-only provider and explicit package-directory loading. User prewalk settings previously injected a planning continuation into `/refactor`, causing an extra request and a false failure.
+- Check discovery of the shipped skill directories instead of a retired user-specific exclusion list. Remove the redundant compaction RPC handshake and stale scenario inventory; retain strict request-count and continuation checks.
+- Correct the shipped TypeScript 7 audit's parameter/property declaration predicates, and narrow RPC schema values without `any` or non-null assertions.
+
+### 2026-11-12 OMP 18.19 package and ownership update
+
+- Declare the extension as an OMP package (`package.json` `omp.extensions`). `omp -e ./omp-ulw` now loads the same entry as `omp -e ./omp-ulw/index.ts`; verified through `--plugin-dir` (ulw, ulw-plan, ulw-execute, ulw-loop, ulw-research, mass-ulw, web-browser and ultimate-browsing commands register).
+- Regenerate the model-preset bundle from Senpi `76c5bdd94e7c9123de75a57daca3b2bad892c03c`. The 33 model selection rules are unchanged; the code-ownership rule replaces the smallest-change rule in the generated prompts.
+- Align the `programming` skill with the OMO ownership rule (`changes/unreleased/13091.md`).
+- Follow OMP 18.19.0 contract changes: the default workflow headings are now `# 1. Before Editing`, `# 2. Verify`, and `# 3. Cleanup`; the critical-rule wording and the bash tool description changed; browser `app` options are string values (`"relay"`, `"chromium"`, `"own"`, a CDP URL, or an executable path) with `argv` and top-level `target`.
+
+Sources: [OMP 18.19.0](https://github.com/can1357/oh-my-pi/releases/tag/v18.19.0), [Senpi 76c5bdd9](https://github.com/code-yeongyu/senpi/tree/76c5bdd94e7c9123de75a57daca3b2bad892c03c), [OMO 87ab029c](https://github.com/code-yeongyu/oh-my-openagent/commit/87ab029c12b3a32bf9041f8b843f5f3f1453a795).
+
 ### 2026-11-11 Browser workflow integration audit
 
 - Put static, rendered, authenticated and blocked-source reading contracts directly in research and mass-research, including native skill invocations that do not activate the shared ULW policy.

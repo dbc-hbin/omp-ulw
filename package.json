@@ -1,0 +1,37 @@
+{
+  "name": "omp-ulw",
+  "version": "0.1.0",
+  "description": "Model-specific prompts and native ULW workflows for Oh My Pi",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dbc-hbin/omp-ulw.git"
+  },
+  "omp": {
+    "extensions": ["./index.ts"]
+  },
+  "files": [
+    "index.ts",
+    "host.ts",
+    "host-guidance.ts",
+    "payload.ts",
+    "presets.ts",
+    "ulw.ts",
+    "upstream/presets.js",
+    "upstream/presets.d.ts",
+    "prompts/",
+    "skills/",
+    "README*.md",
+    "CHANGELOG*.md"
+  ],
+  "scripts": {
+    "build": "bun upstream/materialize-frontend-refs.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "test:host": "bun tests/ulw-host-check.ts && bun tests/ulw-goal-host-check.ts && bun tests/child-preset-host-check.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "typescript": "^7.0.2"
+  }
+}

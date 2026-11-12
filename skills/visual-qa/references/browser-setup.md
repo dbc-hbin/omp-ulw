@@ -2,7 +2,7 @@
 
 Read `skill://browser` and its lifecycle/commands references, then use the native `browser` prelude in Eval when active. Follow host routing, approvals and denial-final rules; an installed browser skill's explicit-tool exception still applies. Use `read` for static URLs and `skill://cua-driver` for native surfaces or a legitimate user-selected fallback. Do not install a second runtime or automatically enable/install the optional relay.
 
-Public QA can select `browser.open({name:"visual-qa",url:appUrl,app:{relay:false,tern:false}})` when permitted. These flags skip relay/Tern, not configured CDP or cmux; record the actual backend. Managed Chromium is project-shared, not a guaranteed clean profile. Authenticated rows require an authorized real-session relay/CDP route from the lifecycle reference; never copy a live profile, extract cookies or erase user state. An unavailable authenticated route blocks that row, even if the public page renders.
+Public QA can select `browser.open({name:"visual-qa",url:appUrl,app:"chromium"})` when permitted. `app: "chromium"` selects managed Chromium; record the actual backend. Managed Chromium is project-shared, not a guaranteed clean profile. Authenticated rows require an authorized real-session relay/CDP route from the lifecycle reference; never copy a live profile, extract cookies or erase user state. An unavailable authenticated route blocks that row, even if the public page renders.
 
 ## Applicable web matrix
 
@@ -12,7 +12,7 @@ This JS Eval example uses raw Puppeteer controls through documented `tab.run`. `
 
 ```js
 // For each applicable row, after choosing its width/height/mobile/theme/motion:
-const qa = await browser.open({name:row.tabName,app:{relay:false,tern:false}});
+const qa = await browser.open({name:row.tabName,app:"chromium"});
 await qa.run(async ({page}, row) => {
   await page.setViewport({
     width:row.width, height:row.height, deviceScaleFactor:row.mobile ? 3 : 1,
