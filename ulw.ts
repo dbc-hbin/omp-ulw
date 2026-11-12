@@ -35,6 +35,7 @@ const notIntoIdentifier = String.raw`(?![-_](?!(?:loop|plan|research|execute|mas
 const invocationStart = String.raw`^\s*\/?`;
 const ulwInvocation = new RegExp(String.raw`${invocationStart}(?:ultrawork|ulw)\b${notIntoIdentifier}`, "i");
 const nativeGoalInvocation = new RegExp(String.raw`${invocationStart}(?:ultrawork|ulw)\b${segmentEnd}(?=[\s:.,!?]|$)`, "i");
+const nativeKeyword = /(?<![\p{L}\p{N}_./\\-])(?<!::)(?:ultrathink|orchestrate|workflowz|jevify)(?![\p{L}\p{N}_/\\-])(?!\.[\p{L}\p{N}_-])(?!\()/u;
 const workflows: Array<{ name: string; pattern: RegExp; nativeKeyword?: string }> = [
   { name: "mass-ulw", pattern: /\b(?:mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)\b/i, nativeKeyword: "workflowz" },
   { name: "ulw-plan", pattern: /\bulw[\s-]*plan\b/i, nativeKeyword: "ultrathink" },
@@ -71,6 +72,37 @@ export function visibleUlwText(text: string): string {
     .replace(/\b(?:do\s+not|don['\u2019]t|dont|never)\s+(?:load|use|run|invoke|start|trigger|arm|enable)\b[^.;:!?\n]*?(?=[.;:!?\n]|\s(?:but|then|instead|however)\b|\s[\u2014\u2013-]\s|$)/gi, value => value.replace(/[^\r\n]/g, "\0"));
 }
 
+/** Preserve workflow identity while excluding expanded skill reference prose. */
+export function ulwRequest(prompt: string): { text: string; workflow?: string; invocationLength: number } {
+  let text = prompt;
+  let workflow: string | undefined;
+  let invocationLength = 0;
+  const skill = /^\s*\[IMPORTANT:\s*User invoked the "([^"\r\n]+)" skill;/.exec(prompt);
+  if (skill) {
+    text = prompt.trimEnd().match(/\r?\n\[Skill directory: [^\r\n]+\]\r?\nResolve relative paths in this skill[^\r\n]*(?:\r?\nUser: ([\s\S]*))?$/)?.[1] ?? "";
+    workflow = skill[1];
+  } else {
+    const command = /^\s*\/skill:([\w-]+)(?:\s|$)/.exec(prompt);
+    if (command) {
+      text = prompt.slice(command[0].length);
+      workflow = command[1];
+    } else {
+      const visible = visibleUlwText(prompt);
+      const invocation = workflows.flatMap(candidate => {
+        const match = candidate.pattern.exec(visible);
+        return match ? [{ name: candidate.name, length: match[0].length }] : [];
+      }).sort((a, b) => b.length - a.length)[0];
+      workflow = invocation?.name;
+      invocationLength = invocation?.length ?? ulwInvocation.exec(visible)?.[0].length ?? 0;
+    }
+  }
+  const remaining = visibleUlwText(text.slice(invocationLength));
+  const start = remaining.length - remaining.trimStart().length;
+  const keyword = nativeKeyword.exec(remaining.slice(start));
+  if (keyword?.index === 0) invocationLength += start + keyword[0].length;
+  return { text, workflow, invocationLength };
+}
+
 export function registerUlw(pi: UlwApi): void {
   pi.registerFlag("omo-ultrawork-disabled", { description: "Disable automatic Native ULW arming", type: "boolean", default: false });
   pi.registerFlag("omo-ulw-workflows-disabled", { description: "Disable OMP workflow skill pointers", type: "boolean", default: false });
@@ -97,7 +129,7 @@ export function registerUlw(pi: UlwApi): void {
     const end = start + invocation.length;
     // A user-supplied native word, including a quoted or negated mention, owns
     // selection. Let OMP's matcher decide whether it actually activates.
-    if (/(?<![\p{L}\p{N}_./\\-])(?<!::)(?:ultrathink|orchestrate|workflowz|jevify)(?![\p{L}\p{N}_/\\-])(?!\.[\p{L}\p{N}_-])(?!\()/u.test(text.slice(end))) return { text };
+    if (nativeKeyword.test(text.slice(end))) return { text };
     // Put the trigger before arguments so an unclosed code fence cannot hide it.
     // OMP owns notices, tool/settings gates, deduplication and thinking effort.
     return { text: `${text.slice(0, end)} ${invocation.keyword}${text.slice(end)}` };
@@ -160,15 +192,7 @@ export function registerUlw(pi: UlwApi): void {
       const blocks = event.systemPrompt.filter(block => !/^<om[op]-ulw-policy>/.test(block));
       return blocks.length === event.systemPrompt.length ? undefined : { systemPrompt: blocks };
     }
-    let text = event.prompt;
-    // Native skill messages contain reference prose; only their trailing user arguments can activate workflows.
-    if (text.startsWith('[IMPORTANT: User invoked the "')) {
-      text = text.trimEnd().match(/\r?\n\[Skill directory: [^\r\n]+\]\r?\nResolve relative paths in this skill[^\r\n]*(?:\r?\nUser: ([\s\S]*))?$/)?.[1] ?? "";
-    }
-    if (text.startsWith("/skill:")) {
-      const argumentsAt = text.search(/\s/);
-      text = argumentsAt < 0 ? "" : text.slice(argumentsAt + 1);
-    }
+    let { text } = ulwRequest(event.prompt);
     text = text.replace(/^\s*\/goal\s+/i, "");
     text = visibleUlwText(text);
     // Initial CLI prompts may bypass the input event; child briefs never arm workflows.

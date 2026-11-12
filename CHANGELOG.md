@@ -2,6 +2,14 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-12 Task-scoped prewalk control
+
+- Adapt native prewalk plan, continue and checklist notices to the active model's methods and the user's scope, preserving approved plans and workflow progress instead of forcing a fresh plan or fixed todo count.
+- Temporarily suppress configured and automatic prewalk for explicit investigation, explanation, review, research and planning-only requests. Recognize English/Korean scope, leading workflow aliases and native skill expansions without inspecting reference prose or making a classifier call.
+- Preserve refactor intent and parse task arguments after inserted native keywords. Treat constraints on public interfaces or unrelated files as scoped implementation limits.
+- Restore only extension-owned runtime overrides for a later explicit implementation request or session transition. Preserve prior runtime values, operator changes and persisted settings; bind changes to the concrete session settings rather than OMP's global proxy.
+- Add deterministic intent/boundary regressions and a real OMP local-provider smoke covering planning-file writes, native skills, later handoff, model/ULW state, automatic judging and override ownership.
+
 ### 2026-11-12 Isolated extension host smoke
 
 - Run the RPC smoke with an isolated HOME and workspace, a local-only provider and explicit package-directory loading. User prewalk settings previously injected a planning continuation into `/refactor`, causing an extra request and a false failure.

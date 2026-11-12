@@ -244,3 +244,40 @@ test("print and json surfaces use app routing without terminal-only preambles", 
     expect(preset).not.toContain("I read this as [intent]");
   }
 });
+
+test("native prewalk rewriting preserves user and tool content and unsupported profiles", () => {
+  const handlers = new Map<string, Handler[]>();
+  ompUlw({
+    setLabel: () => {}, getActiveTools: () => [], getAllTools: () => [],
+    registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
+    getFlag: () => false, appendEntry: () => {},
+    on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
+  });
+  const ctx = {
+    cwd: ".", mode: "rpc", agent: { kind: "main" },
+    sessionManager: { getSessionId: () => "prewalk-context", getBranch: () => [] },
+    ui: { notify: () => {} }, model: { id: "gpt-6.1-sol", api: "openai-completions" },
+  };
+  const start = handlers.get("before_agent_start")?.[1];
+  const context = handlers.get("context")?.[0];
+  if (!start || !context) throw new Error("Expected model and context hooks");
+  const systemPrompt = [readFileSync(new URL("./tests/fixtures/omp-system-prompt.md", import.meta.url), "utf8")];
+  Reflect.apply(start, undefined, [{ systemPrompt }, ctx]);
+  const content = "STOP: In NEXT reply write complete plan. Use todo to capture 5–9 items.";
+  const user = { role: "user", content };
+  const tool = { role: "toolResult", content };
+  const custom = { role: "custom", customType: "user-note", content, display: false };
+  const native = { role: "custom", customType: "prewalk-plan", content, display: false };
+  const messages = [user, tool, custom, native];
+  const result: unknown = Reflect.apply(context, undefined, [{ messages }, ctx]);
+  if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages)) throw new Error("Expected rewritten native steering");
+  const rewritten: unknown = result.messages[3];
+  if (typeof rewritten !== "object" || rewritten === null || !("content" in rewritten) || typeof rewritten.content !== "string") throw new Error("Expected native steering text");
+  expect(result.messages.slice(0, 3)).toEqual([user, tool, custom]);
+  expect({ ...rewritten, content }).toEqual(native);
+  expect(rewritten.content).toContain("Reuse the approved plan");
+  expect(rewritten.content).not.toContain("5–9 items");
+  expect(native.content).toBe(content);
+  ctx.model.id = "unknown-model";
+  expect(Reflect.apply(context, undefined, [{ messages }, ctx])).toBeUndefined();
+});

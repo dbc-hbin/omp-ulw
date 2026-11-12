@@ -16,6 +16,8 @@
     "host-guidance.ts",
     "payload.ts",
     "presets.ts",
+    "prewalk.ts",
+    "omp-settings.d.ts",
     "ulw.ts",
     "upstream/presets.js",
     "upstream/presets.d.ts",
@@ -28,7 +30,7 @@
     "build": "bun upstream/materialize-frontend-refs.mjs",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "test:host": "bun tests/ulw-host-check.ts && bun tests/ulw-goal-host-check.ts && bun tests/child-preset-host-check.ts"
+    "test:host": "bun tests/ulw-host-check.ts && bun tests/ulw-goal-host-check.ts && bun tests/child-preset-host-check.ts && bun tests/prewalk-host-check.ts"
   },
   "devDependencies": {
     "@types/bun": "^1.4.4",

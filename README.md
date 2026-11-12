@@ -52,6 +52,10 @@ For supported profiles, model-specific guidance takes precedence over generic OM
 
 The 33 presets include the dedicated Claude Fable / Mythos 5.2 profile, replacing the provisional Fable 5.5 entry. Research and mass-research handoffs attach observed evidence to claims and probes to closed leads; remembered assertions remain leads until checked. Valid recorded evidence is reused without repeating settled checks.
 
+On OMP 18.19, native prewalk notices follow the selected model's working methods and preserve approved plans, todo and workflow state. Explicit investigation, explanation, review, research and planning-only requests temporarily suppress both configured and automatic prewalk in the current main session, without a classifier call or persistent settings write. English and Korean requests, workflow aliases and expanded native skills are recognized; quoted examples and ambiguous continuations retain the current scope.
+
+A later explicit implementation request restores only runtime overrides owned by this extension, including any prior runtime values. Settings changed by the operator take precedence. Session transitions and shutdown release owned overrides. Restoration rearms the configured target; OMP does not expose a pending one-off manual target for extensions to reconstruct. The extension uses OMP 18.19's exported session-settings lookup instead of the global `api.pi.settings` proxy.
+
 ## Frontend reference sources
 
 Third-party design references, UI/UX research data and designpowers reference bodies are generated from four pinned Git submodules under `upstream/skills/`. Their generated files are ignored by Git and retain the existing paths under `skills/frontend/references/`. OMP-specific guides and integration rules remain tracked.
@@ -92,9 +96,11 @@ bun test
 bun tests/ulw-host-check.ts
 bun tests/ulw-goal-host-check.ts
 bun tests/child-preset-host-check.ts
+bun tests/prewalk-host-check.ts
 ```
 
 The RPC smoke uses a temporary HOME/workspace and a local provider without inheriting user credentials or workflow settings. It loads the package directory and checks discovery of its shipped skills.
+The prewalk smoke checks actual plan writes, native skill/keyword expansion, refactor and scoped implementation requests, later handoff, auto-judge suppression, preset/ULW retention, runtime override ownership and unchanged persisted settings. Scripted local responses verify host control and transport rather than model obedience.
 
 ## History and attribution
 

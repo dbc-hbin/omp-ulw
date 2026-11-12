@@ -31,6 +31,8 @@ import { adaptOrchestrateNotice, projectHostGuidance } from "./host-guidance";
 import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
 import { renderPreset } from "./presets";
 import type { PresetModel, PresetOptions } from "./presets";
+import { adaptPrewalkNotice, registerPrewalk } from "./prewalk";
+import type { PrewalkApi } from "./prewalk";
 import { registerUlw, ulwDirective } from "./ulw";
 import type { UlwApi, UlwContext } from "./ulw";
 
@@ -48,7 +50,7 @@ interface ModelPromptApi {
   on(event: "before_provider_request", handler: (event: { payload: unknown }, ctx: PromptContext) => unknown): void;
 }
 
-type ExtensionApi = ModelPromptApi & UlwApi;
+type ExtensionApi = ModelPromptApi & UlwApi & PrewalkApi;
 
 function markPreset(prompt: string, subagent: boolean): string {
   const scope = subagent
@@ -105,8 +107,9 @@ export default function ompUlw(pi: ExtensionApi): void {
     if (originalHost === undefined || !ctx.model || !renderPreset(ctx.model, options)) return;
     let changed = false;
     const messages = event.messages.map(message => {
-      if (message.role !== "custom" || message.customType !== "orchestrate-notice" || typeof message.content !== "string") return message;
-      const content = adaptOrchestrateNotice(message.content);
+      if (message.role !== "custom" || typeof message.customType !== "string" || typeof message.content !== "string") return message;
+      const content = message.customType === "orchestrate-notice"
+        ? adaptOrchestrateNotice(message.content) : adaptPrewalkNotice(message.customType, message.content);
       if (content === message.content) return message;
       changed = true;
       return { ...message, content };
@@ -136,4 +139,5 @@ export default function ompUlw(pi: ExtensionApi): void {
       text => projectHostGuidance(text, host, modelGuidance), /^[\s\S]+$/);
     return modelGuidance ? rewriteToolGuidancePayload(projected, ctx.model.api) : projected;
   });
+  registerPrewalk(pi);
 }
