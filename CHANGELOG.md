@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-13 Eval multi-tool routing
+
+- Replace existing model execution prose with explicit concurrent `tool.*` batching for already-ready independent reads, searches, lookups and probes. Several small results remain a batching opportunity; lone calls without batching or processing benefit stay direct.
+- Distinguish `Promise.all` from serial awaits. Preserve partial results with `Promise.allSettled` when needed, inspect both rejected calls and returned tool errors, and recover failed work without replaying successful calls.
+- Retain model-specific evidence and visual checks, sequential mutations, authorization, judgment boundaries, shell state and native wait contracts. Apply the changes only with eval available; preserve unsupported-model fallback and the generated upstream bundle.
+- Extend the real OMP child smoke to exercise native tool reads in one eval cell, retaining both successful results and an isolated missing-file failure. Scripted provider responses verify host execution and transport, not model obedience.
+
 ### 2026-11-13 Duplicate-only prompt reduction
 
 - Remove the repeated settled-Sonic condition and ULW model/host ownership explanation while retaining those requirements in the same injected blocks.

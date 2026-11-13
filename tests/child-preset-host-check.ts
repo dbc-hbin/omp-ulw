@@ -96,13 +96,24 @@ const server = Bun.serve({
       if (role === "task" && seen.length === 1) {
         const evalSchema = body.tools?.find(tool => tool.function.name === "eval")?.function.parameters;
         assert(evalSchema?.properties?.code && evalSchema.properties.language, "mutable worker must expose native eval schema");
-        return stream({ name: "eval", id: "eval_arithmetic_79b1", args: { language: "js", code: "print(2 + 3)", title: "Child preset arithmetic" } });
+        return stream({ name: "eval", id: "eval_batch_79b1", args: {
+          language: "js",
+          code: [
+            'const paths = ["eval-batch-left.txt", "eval-batch-missing.txt", "eval-batch-right.txt"];',
+            "const settled = await Promise.allSettled(paths.map(path => tool.read({ path })));",
+            'print(JSON.stringify(settled.map((item, index) => ({ path: paths[index], status: item.status, result: item.status === "fulfilled" ? item.value : String(item.reason) }))));',
+          ].join("\n"),
+          title: "Child preset tool batch",
+        } });
       }
       if (role === "task") {
-        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === "eval_arithmetic_79b1");
+        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === "eval_batch_79b1");
         assert(result, "native eval result must return to child provider");
-        assert(/\b5\b/.test(JSON.stringify(result.content)), "native eval must return arithmetic result 5");
-        assert(!/Tool execution failed|isError.*true/.test(JSON.stringify(result)), "native eval must succeed");
+        const output = JSON.stringify(result.content);
+        for (const side of ["left", "right"]) {
+          assert(output.includes(`${assignment("task")}:${side}`), `native eval batch must retain the ${side} read result`);
+        }
+        assert(output.includes("rejected") || output.includes("hasError"), "native eval batch must expose the missing-file failure");
       }
       return stream(completion(role));
     } catch (error) {
@@ -121,6 +132,9 @@ try {
   const cwd = join(root, "workspace");
   mkdirSync(home);
   mkdirSync(cwd);
+  for (const side of ["left", "right"]) {
+    writeFileSync(join(cwd, `eval-batch-${side}.txt`), `${assignment("task")}:${side}\n`);
+  }
   const config = join(root, "config.yml");
   writeFileSync(config, [
     "task:", "  batch: true", "  isolation:", "    enabled: false", "  completionProbe: false",
@@ -228,7 +242,7 @@ try {
   });
   assert.equal(childRequests.get("task")!.length, 2, "worker must execute real eval and receive its result");
   console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: summaries,
-    assertions: ["native default worker, sonic and scout spawn", "complete shipped model profiles", "exact trailing-block preservation", "native role/assignment/completion retention", "parent ULW isolation", "unchanged active tools", "readonly scout restrictions", "native worker eval returns 5", "native async completion delivery"],
+    assertions: ["native default worker, sonic and scout spawn", "complete shipped model profiles", "exact trailing-block preservation", "native role/assignment/completion retention", "parent ULW isolation", "unchanged active tools", "readonly scout restrictions", "native worker eval retains batch successes and partial failure", "native async completion delivery"],
     limitations: ["Scripted local responses verify host transport, not model obedience", "Model refresh/fallback and custom-template rejection are covered by unit tests", "Seance is excluded because it isolates extensions"],
   }, null, 2));
 } finally {

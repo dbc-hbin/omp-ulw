@@ -31,6 +31,52 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       "Make routine judgment calls yourself. Ask when missing information materially changes the deliverable or required authorization is absent; resolve that blocker when it arises and finish independent authorized work where possible. Use ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",
     );
   }
+  if (options.toolNames.includes("eval")) {
+    const batchRouting = "Prefer ONE JavaScript `eval` cell for the current step's already-ready independent reads, searches, symbol lookups, and probes, even when each result is small. Start independent `tool.*` calls together with `await Promise.all([...])`; consecutive awaits in one cell are still serial. Use `Promise.allSettled([...])` when one failure must not hide other useful outcomes. Inspect both rejected calls and tool-reported errors in fulfilled values using each tool's result contract; expose every result/error by call identity. After partial success, recover failed work without replaying successful calls. Use live tool schemas and host authorization, reuse successful persistent setup, and never invent calls or parameters to fill a batch.";
+    const sequentialRouting = "Keep edits, side effects, deploys, approvals, waits, and state-dependent shell calls sequential, each observed before the next. Stop the cell when choosing the next call needs model judgment or unseen input; deterministic iteration never licenses speculation.";
+    const directRouting = "Call directly when a lone call needs no useful batching or processing, a result or model judgment must decide the next call, or an approval or native wait is needed.";
+    // Replace execution rules in place; keep each family's evidence and observation loops.
+    prompt = prompt
+      .replace(/Sort (?:each multi-call step first:|a multi-call step before you write it:)[^\n]+/, `${batchRouting} ${sequentialRouting}`)
+      .replace(
+        "Batch a step's independent reads, searches, symbol lookups, and probes in one `eval` js cell and inspect every result. Edits, side-effecting commands, approvals, waits, and calls whose input you have not seen run one at a time, each observed before the next.",
+        `${batchRouting} ${sequentialRouting}`,
+      )
+      .replace(/When a code-execution tool is available, batch [^\n]+?one action observed before the next\./, `${batchRouting} ${sequentialRouting}`)
+      .replace(/(?:Direct tool call only when:|Call a tool directly only when|Use a direct tool call when one call is enough)[^\n]+/, directRouting)
+      .replace(
+        "Skip the cell when it buys nothing: a lone call, an already-small result, a result you must read before choosing the next call, a judgment between steps, or an action that needs approval.",
+        directRouting,
+      )
+      .replace(
+        "Call tools directly instead when one call is enough, the output is already small, each result decides the next call, semantic judgment sits between calls, or the action needs approval - and after",
+        `${directRouting} After`,
+      )
+      .replaceAll("When `eval` is available, follow its Tool Guidelines for multi-call work.", "")
+      // A response-wide transport mandate competes with the eval cell's ready-call boundary.
+      .replace(/Before each response, (privately )?list what you need next, then request every item that does not depend on another's result in that one response; sequence only true dependencies, and never fill missing parameters with placeholders\./g, "Before each response, $1list what you need next; never fill missing parameters with placeholders.")
+      .replace("Put every independent read, search, and probe in one response; sequence only true dependencies; NEVER fill a parameter with a placeholder.", "NEVER fill a parameter with a placeholder.");
+    if (preset.name === "gemini-4-argon") {
+      prompt = prompt
+        .replace(/Writing code is your superpower\. A step is solved by writing one `eval` cell[^\n]+?through `parallel\(thunks\)`\./,
+          `Writing code is your superpower. ${batchRouting} Use deterministic control flow over known targets and already-specified decisions.`)
+        .replace("Sort the step before you write the cell: independent reads, searches, probes, and edits share one cell; a call whose input is a result you have not seen yet, a deploy, an approval, or a destructive command runs ONE ACTION AT A TIME, each observed before the next.", sequentialRouting)
+        .replace("A direct tool call is the exception, for a single call that settles the step or an action that needs approval; files are read, searched, and edited through the cell's tool calls, never through shell text processing or inline scripts inside a command.",
+          `${directRouting} Otherwise, files are read, searched, and edited through the cell's tool calls, never through shell text processing or inline scripts inside a command.`);
+    }
+    if (!prompt.includes(batchRouting)) {
+      // Older profiles need routing at their existing work/execution section, not a new policy appendix.
+      const routing = `${batchRouting} ${sequentialRouting} ${directRouting}`;
+      prompt = prompt
+        .replace("Independent calls (reads, searches, listings, diagnostics) -> one parallel wave; thin context ->", `${routing} Thin context ->`)
+        .replace("Fire independent tool calls as one parallel wave - reads, searches, listings, diagnostics - and bias toward breadth when context is thin:", `${routing} Bias toward breadth when context is thin:`)
+        .replace("Edits + result-dependent calls -> one at a time, each compared with intended state;", "Compare each action with intended state;")
+        .replace("Edits and result-dependent calls go one at a time, each compared with the state you meant to produce;", "Compare each action with the state you meant to produce;")
+        .replace("Exploration: fire independent reads, searches, and listings as one parallel wave; go sequential only when a call needs a previous result, and", `Exploration: ${routing} Also,`)
+        .replace("Fire independent tool calls - reads, searches, listings, diagnostics - in one parallel wave; sequence only when a call needs a value another produced.", routing)
+        .replace("## Role: CEO / Orchestrator\n\n", `## Role: CEO / Orchestrator\n\n${routing}\n\n`);
+    }
+  }
   prompt = prompt.replaceAll("`parallel(thunks)`", "`Promise.all` over independent `tool.*` calls")
     .replaceAll("the runtime's parallel helper", "Promise.all over independent tool calls in a JavaScript eval cell");
   if (!hasTodo) {
