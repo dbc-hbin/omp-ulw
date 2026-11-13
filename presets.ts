@@ -126,10 +126,19 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     .replaceAll("for a change, the Handoff block, whose For you slot leads", "for a change, a concise standalone answer leading")
     .replaceAll("for a change, the Handoff block, whose outcome leads and whose You need slot carries", "for a change, a standalone answer whose outcome leads and which carries");
   if (preset.name === "gpt-6-astra") {
-    // Writing is presentation-only; Reporting retains evidence, uncertainty and review contracts.
+    // Keep presentation and calibrated reporting local; preserve evidence and review contracts.
     prompt = prompt.replace(
       /## Writing\n\n[\s\S]*?(?=\n\n## Reporting)/,
       "## Writing\n\nUse plain, concise language suited to the reader. Lead with the main point, connect actions to purposes and findings to implications, and include useful supporting detail. Prefer connected prose; use lists for parallel, sequential, or comparative content. Avoid filler, invented labels, canned transitions, and unprompted contrasts.",
+    ).replace(
+      'Disagree when you have a reason and give it; no flattery, no reassurance, no hedging with "it depends" when you have enough context to judge.',
+      `Disagree when you have a reason and give it; no flattery or reassurance.
+
+Lead with the best-supported answer or recommendation; do not require absolute proof.
+State observed facts directly; qualify only the uncertain claim, once.
+Give opinions as judgments with reasons, not as unresolved facts.
+Use “cannot conclude,” “not confirmed,” or “it depends” only for a specific gap that changes the answer; name it.
+Never invent evidence or claim unperformed checks passed.`,
     );
   }
   // Loaded references do not activate workflows or override the user in OMP.

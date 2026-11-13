@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-13 Astra evidence-based direct answers
+
+- Replace Astra's generic anti-hedging sentence with concise rules for evidence-based conclusions, local uncertainty, reasoned opinions and specific missing facts.
+- Retain the evidence, verification and review contracts, existing family routing and main/child behavior. Leave the generated upstream bundle and Claude prompts unchanged.
+
 ### 2026-11-13 Eval multi-tool routing
 
 - Replace existing model execution prose with explicit concurrent `tool.*` batching for already-ready independent reads, searches, lookups and probes. Several small results remain a batching opportunity; lone calls without batching or processing benefit stay direct.
