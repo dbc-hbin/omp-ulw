@@ -7,8 +7,10 @@
  * host-owned specialist roles, assignments, tools and completion protocols.
  * Changelog: retain ULW activation, specialised workflow state and continuation;
  * model profiles own working methods; native tools, permissions and modes remain authoritative.
+ * Changelog: active profiles own duplicated todo-turn and eval sh completion rules;
+ * pinned native tool mechanics and unsupported-model guidance remain intact.
  * Invoke /ulw <task> or the specialised /ulw-* and /mass-ulw commands.
- * Additional commands: /web-browser, /computer-use, /ultimate-browsing,
+ * Additional commands: /web-browser, /computer-use, /ultimate-browsing, /coding-agent-sessions,
  * /debugging, /review-work, /eval-integrity, /visual-qa, /visualize,
  * /frontend, /data-scientist, /remove-ai-slops, /hyperplan, /memory-advisor,
  * /reflection, /init-deep, /ast-grep, /lsp-setup and /refactor. These do not
@@ -137,7 +139,7 @@ export default function ompUlw(pi: ExtensionApi): void {
     const refreshed = rewritePresetPayload(payload, ctx.model.api, replacement.prompt);
     const projected = rewritePresetPayload(refreshed, ctx.model.api,
       text => projectHostGuidance(text, host, modelGuidance), /^[\s\S]+$/);
-    return modelGuidance ? rewriteToolGuidancePayload(projected, ctx.model.api) : projected;
+    return modelGuidance ? rewriteToolGuidancePayload(projected, ctx.model.api, replacement.prompt) : projected;
   });
   registerPrewalk(pi);
 }

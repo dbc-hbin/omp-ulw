@@ -11,7 +11,8 @@ enabled. OMP's own `/browser` remains its headless/visible mode command and is n
 Read `xd://eval/browser` before the first browser operation in a session. Use the actual global
 `browser` inside JavaScript or Python `eval`; it is not a standalone tool, package import or MCP
 server. If the prelude is unavailable, report the missing eval/browser capability. Do not install a
-second browser runtime to substitute for it.
+second browser runtime to substitute for it. The live contract wins over this skill's pinned
+18.20 guidance: do not assume its diagnostic envelopes or timeout inheritance on an older host.
 
 Honor the user's chosen browser and host skill routing. An installed Aside-first rule still applies
 unless the user selects OMP or that rule permits a fallback. Native desktop chrome and unsupported
@@ -31,12 +32,14 @@ change tools, approval requirements, project rules or native modes.
 | Visible native Tern web content | The advertised Tern backend; respect its capability limits |
 | A blocked host, archive or platform-specific reader | [ultimate-browsing](../ultimate-browsing/SKILL.md) |
 
-A relay is optional. Managed Chromium handles public interaction without it. Default backend selection
-can choose configured relay/CDP, Tern or cmux; it does not guarantee a fresh profile. For a public
-probe that should use managed Chromium, pass `app: "chromium"` and inspect the reported backend.
-Managed Chromium is project-shared. For a criterion
-requiring truly fresh profile state, use a separately authorized, task-owned browser profile as
-explained in [lifecycle.md](references/lifecycle.md), not a claim of isolation from a new tab name.
+A relay is optional. Public interaction can use OMP's owned WebKit (ABKit) or managed Chromium.
+Default selection checks configured relay/CDP, Tern and cmux before the owned browser; it does not
+guarantee Chromium or a fresh profile. `app: "own"` skips those external connections and chooses
+owned WebKit when installed, otherwise Chromium; `app: "auto"` skips only the relay. For a public
+probe requiring Chromium capabilities, pass `app: "chromium"` and inspect the reported backend and
+any fallback. Managed Chromium is project-shared. For a criterion requiring truly fresh profile
+state, use a separately authorized, task-owned browser profile as explained in
+[lifecycle.md](references/lifecycle.md), not a claim of isolation from a new tab name.
 
 Never replace an authenticated criterion with a headless browser that has no relevant login. Never
 clone, export or clear a user's live profile, cookies or storage to obtain authentication. A new tab
@@ -68,6 +71,9 @@ worker call, including subscribing to a response before the click that triggers 
 `{ tab, page, browser, wait, assert }`; `page` is Puppeteer on Chromium backends. Functions cannot
 capture outer eval-cell variables: pass explicit `args`. A page `evaluate` executes in the page;
 `tab.run` executes in the worker with Bun/Node and tool access, not a security sandbox.
+Tern and owned WebKit expose only a Puppeteer-like subset; do not apply a raw Chromium recipe to
+them. On 18.20, direct helpers and a run without an explicit timeout inherit a longer Eval-cell
+timeout; read [commands.md](references/commands.md) and the live contract before relying on it.
 
 Use state waits with bounded deadlines, never fixed sleeps. Diagnose a failed selector from fresh
 state. Repeating the same failed action is not recovery; change the selector, frame or hypothesis
@@ -94,6 +100,12 @@ evidence. `tab.screenshot()` returns a saved path and emits an image. Read the s
 preview disagrees with current state. Record CSS viewport, DPR, device/touch settings, theme, URL and
 scenario; a screenshot's image pixels may differ from CSS coordinates. Emulation can reload the
 page, so apply it before setting up the scenario and re-observe afterward.
+
+On hosts advertising the 18.20 diagnostics contract, `console()` and `errors()` return
+`{ entries, nextSeq, dropped }`, not arrays. Collect `.entries` and retain cursors/drop metadata
+around the scenario using [network.md](references/network.md#cursor-based-console-and-error-evidence).
+Do not clear shared diagnostic history to isolate a test or treat missing retained entries as
+proof of a clean run.
 
 Close the exact task tab with `await tab.close()` when finished, including on failure. Closing a
 borrowed relay/CDP page releases it rather than closing the user's page. Do not use global close or

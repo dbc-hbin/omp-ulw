@@ -2,6 +2,42 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-13 Duplicate-only prompt reduction
+
+- Remove the repeated settled-Sonic condition and ULW model/host ownership explanation while retaining those requirements in the same injected blocks.
+- Deduplicate recognized native todo/sh explanations only against the actual current model profile. Keep the model rules, unique tool mechanics, custom descriptions and unsupported-model behavior.
+- Preserve Delivery, restored research/reasoning requirements, model budgets, response-language rules, child boundaries and main/child Terra routing.
+
+Native contracts: [todo](https://github.com/can1357/oh-my-pi/blob/v18.19.0/packages/coding-agent/src/prompts/tools/todo.md), [eval/sh](https://github.com/can1357/oh-my-pi/blob/v18.19.0/packages/coding-agent/src/prompts/tools/eval.md).
+
+### 2026-11-13 GPT-6.1 Terra main and child routing
+
+- Route GPT-6.1 Terra to `gpt-6-astra` in both main and child sessions, removing the child-only restriction and Sol indirection.
+- Preserve upstream-match precedence, provider/Fast/display-name aliases, version boundaries and the actual requested model/provider.
+- Extend existing routing, provider fallback and real-host profile checks to cover main-session Terra.
+
+### 2026-11-13 Delivery rollback and routing requirement restore
+
+- Roll back the Delivery deletion from the prompt-debloat entry below: native delivery rules are preserved verbatim, including live additions and changes. Only native pre-editing duplicates remain conditionally removed and restored.
+- Restore the external scout sentence (specify library/version, prefer official sources, require source links) and the reasoning-only brief: a goal, constraints, evidence, counterexamples, rejected alternatives and one actionable recommendation, not a prescribed conclusion.
+
+### 2026-11-13 Prompt responsibility debloat
+
+- Shorten task role routing while preserving specialist boundaries, reasoning decisions, evidence requirements and native task permissions.
+- Replace ULW's activation grammar/native-keyword explanation with host ownership and its browser-specific details with on-demand skill pointers. Preserve activation behavior, goal ownership, durable workflow state and continuation.
+- Remove remaining native pre-editing/delivery duplicates only when the active profile or preserved Runtime already covers them; restore native rules when coverage changes or the model falls back.
+- Compact generic routing preambles, handoff schedules and response-format prose without changing model-specific execution, rereading, verification tiers, tool budgets or the generated upstream bundle. Retain Kimi K2's explicit routing contract.
+- Keep permissions, refusal finality, project context, child Hand-off and native mode contracts intact. Preserve the preceding browser/computer/session-discovery imports.
+
+### 2026-11-13 Native contract refresh and cross-product session discovery
+
+- Update browser references for OMP 18.20 diagnostic envelopes, incremental log cursors and Eval timeout inheritance. Document owned WebKit selection and retain explicit Chromium requirements for backend-specific evidence.
+- Add macOS secure-input guidance without assuming older hosts expose the new capability fields. Preserve native permissions, user intervention and foreground-control boundaries.
+- Add `/coding-agent-sessions` and native skill discovery for the bundled Python 3.11+ multi-product session finder. Keep bounded search previews, platform/time/project filters and child-session scope; omit upstream transcript read/get commands and retain native `seance` for OMP consultation.
+- Keep source licenses and attribution. No native OMP upgrade, optional backend activation, DAG runtime or prompt debloating is included.
+
+Sources: [OMP 18.20 browser contract](https://github.com/can1357/oh-my-pi/blob/v18.20.0/packages/coding-agent/src/prompts/tools/browser.md), [OMP secure input](https://github.com/can1357/oh-my-pi/blob/v18.20.0/packages/coding-agent/src/prompts/tools/computer-secure-input.md), [OMO session finder at 793cb219](https://github.com/code-yeongyu/oh-my-openagent/tree/793cb219586ff517762221aba0671bcf2d63ab86/packages/shared-skills/skills/coding-agent-sessions).
+
 ### 2026-11-12 Native computer workflow integration
 
 - Add `/computer-use` and `/skill:computer-use` for OMP's JavaScript/Python Eval `computer` prelude, preserving the native `/computer` operator command.

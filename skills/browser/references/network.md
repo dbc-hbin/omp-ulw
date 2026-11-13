@@ -12,13 +12,23 @@ records with stable IDs, URLs, methods, status, timing and headers. Use a substr
 `filter`; `type` is a resource type or list. OMP 18.18.6's direct facade failed to restore a nested
 RegExp filter during this port's live check. For a required regex, construct and apply it inside
 `tab.run` rather than passing it in direct-helper options. Read only matching records and omit sensitive headers from
-shared output. The current Chromium log retains 200 records; this is bounded history, not a complete
-flight recorder for arbitrarily long browsing.
+shared output. The 18.18.6 Chromium check retained 200 request records; use the live host's limit.
+This is bounded history, not a complete flight recorder for arbitrarily long browsing.
 
-`tab.request(id)` reads a retained record and lazily obtains its response body. Text bodies are
-strings; binary bodies use `{ base64 }`. `contentType` and `bodyTruncated` describe the body. OMP
-18.18.6 caps returned bodies at 1 MiB, so a truncated payload cannot prove a complete dataset.
-Read records before they are evicted and keep only relevant, authorized evidence.
+On Chromium, `tab.request(id)` reads a retained record and lazily obtains its response body. Text
+bodies are strings; binary bodies use `{ base64 }`. `contentType` and `bodyTruncated` describe the
+body. The earlier OMP 18.18.6 implementation check found a 1 MiB return cap; follow the live limit,
+and never use a truncated payload to prove a complete dataset. Read records before eviction and
+keep only relevant, authorized evidence.
+
+Inspect the returned backend before choosing body evidence. Owned WebKit (ABKit) captures every
+resource load, with XHR labeled `fetch` and no timings, but captures no response bodies:
+`request(id)` has no `body`, and a response's `text()` throws. Tern captures fetch/XHR plus navigation
+responses, not images/scripts/styles; its request bodies cover only the current document. When
+authorized page-visible data is available, `evaluate` can read it on WebKit, but that is page data,
+not a captured wire response or a HAR body. Do not refetch a private endpoint as an automatic
+substitute. A requirement for captured response bodies needs a capable authorized connection,
+usually Chromium; never replace an authenticated session with an unrelated owned browser.
 
 ## Subscribe before the triggering action
 
@@ -26,8 +36,9 @@ An event waiter and the action must share one `tab.run`. An outer direct wait ca
 tab busy and prevent the click. Functions inside a run cannot capture outer variables; pass actual
 observed inputs through args when needed.
 
-For a task-owned test form with `button[type=submit]` that sends `/api/echo`, this captures the exact
-response and then separately verifies the rendered postcondition:
+For a task-owned Chromium test form with `button[type=submit]` that sends `/api/echo`, this captures
+the exact response and then separately verifies the rendered postcondition. The body-reading
+recipe is not promised by the Puppeteer-like Tern/WebKit subset:
 
 ```js
 const responseEvidence = await tab.run(async ({ tab }) => {
@@ -82,14 +93,65 @@ borrowed tab. `allowed_domains` can enforce supported host restrictions but is n
 Raw Puppeteer request listeners/interception inside a run are scoped to that run and cleaned up;
 `tab.route` persists until unroute or tab close. Passive capture is preferable when only reading
 traffic. Tern capture covers fetch/XHR and navigation responses; its routes support fetch/XHR only.
-Do not claim complete images/scripts/styles/WebSocket coverage on a native webview.
+Owned WebKit routes also support fetch/XHR only and wrap page-world APIs, making interception
+detectable. Do not confuse WebKit's all-resource passive capture with complete interception, or
+claim complete images/scripts/styles/WebSocket coverage on Tern.
+
+## Cursor-based console and error evidence
+
+Use this recipe only when the live host advertises the **18.20** contract:
+`console({ level?, since?, limit?, clear? })` and `errors({ since?, limit?, clear? })` each return
+`{ entries, nextSeq, dropped }`. It is an envelope, not an array. Read `.entries` in JavaScript or
+`["entries"]` in Python. `since` is a sequence cursor, not a timestamp or a request-log cursor.
+
+Record separate console/error cursors before navigation or the triggering action, without clearing
+history. After the actual scenario and its semantic wait, read the later entries:
+
+```js
+// Before the authorized scenario, on its already-open handle:
+const consoleBefore = await tab.console();
+const errorsBefore = await tab.errors();
+let consoleCursor = consoleBefore.nextSeq;
+let errorCursor = errorsBefore.nextSeq;
+
+// After the scenario and its expected-state wait:
+const consoleBatch = await tab.console({ since: consoleCursor });
+const errorBatch = await tab.errors({ since: errorCursor });
+console.log({
+  consoleEntries: consoleBatch.entries,
+  errorEntries: errorBatch.entries,
+  cursors: { console: consoleBatch.nextSeq, errors: errorBatch.nextSeq },
+  droppedBefore: { console: consoleBefore.dropped, errors: errorsBefore.dropped },
+  droppedAfter: { console: consoleBatch.dropped, errors: errorBatch.dropped },
+});
+consoleCursor = consoleBatch.nextSeq;
+errorCursor = errorBatch.nextSeq;
+```
+
+Pass each returned `nextSeq` as that stream's next `since` for subsequent checkpoints, rather than
+re-reading and duplicating the full history. If a `limit` splits a retained batch, continue from
+its cursor within the task's collection allowance. Preserve the starting cursors and drop metadata
+with the action/state journal. On the pinned native capture, `dropped` counts buffer-overflow
+evictions since the last clear, not the number of errors or a per-scenario loss count; compare
+baseline and final counts and report any coverage uncertainty. An empty `entries` array does not
+prove lossless coverage when history was dropped or the selected backend cannot capture the
+required source. `clear: true` and `clearConsole()` destroy shared diagnostic history, including
+the other diagnostic stream; do not use them to isolate a scenario on a shared/borrowed tab.
+
+Older hosts follow their live return shape and timeout contract; do not assume 18.20 envelopes,
+manufacture sequence cursors, add a wrapper or upgrade the host to make this recipe appear to work.
+For long evidence work on 18.20, direct helpers and `tab.run` without an explicit timeout inherit
+a longer Eval-cell timeout. Raise that cell budget where needed; wait timeouts remain milliseconds
+and an explicit run timeout is still explicit. See [commands.md](commands.md#tabs-and-execution).
 
 ## HAR, Chromium traces and step records
 
 These artifacts have different formats:
 
 - `await tab.harStart({ content: "none" })` starts a HAR recording. `none` avoids response bodies,
-  not all sensitive URLs/headers. Use `text` or `all` only when required and permitted.
+  not all sensitive URLs/headers. Use `text` or `all` only when required and permitted on a backend
+  that can capture the needed bodies. WebKit HAR has no response bodies regardless of that option;
+  Tern retains its partial traffic coverage. A HAR with entries is not proof of body completeness.
 - `await tab.harStop({ path: actualEvidencePath })` saves a HAR and returns its path. Supply a real,
   task-owned absolute or cwd-relative path; a long recording still depends on bounded retained
   requests. Confirm that the expected entries are present before claiming full coverage.
@@ -97,9 +159,10 @@ These artifacts have different formats:
   `await tab.traceStop({ path: actualTracePath })`, saves a Chromium performance trace. It is not
   OmOWright's `trace.jsonl` step log. Tracing is connection-level and can conflict with another
   trace on the same shared browser; do not stop a recording you did not start.
-- `console()` and `errors()` provide browser diagnostic entries. Screenshots and the action log
-  establish actual before/after page states. CPU profiles and video recording are separate optional
-  facilities, not required for every browser task.
+- On 18.20, `console()` and `errors()` provide diagnostic envelopes: retain their `entries`,
+  `nextSeq` and `dropped` as above. Screenshots and the action log establish actual before/after
+  page states. CPU profiles and video recording are separate optional facilities, not required for
+  every browser task.
 
 For reconstructable QA, record the action/expected state, actual response or source result, relevant
 console/error entries, before/after capture paths and tested runtime/backend. Stop each recording
@@ -107,8 +170,9 @@ that this task successfully started in a finally path; preserve a primary failur
 fails. Do not add trace wrappers merely to reproduce upstream's package format. Inspect the actual
 returned artifacts and redact secrets/private data before external sharing.
 
-Tern has no Chromium tracing/profiling. Missing wire or trace coverage stays an exact capability gap;
-server logs and semantic page state can supply other evidence without being relabeled as that trace.
+Tern and owned WebKit have no Chromium tracing/profiling. Missing wire or trace coverage stays an
+exact capability gap; server logs and semantic page state can supply other evidence without being
+relabeled as that trace.
 
 ## Cookies and sessions
 

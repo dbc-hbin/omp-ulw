@@ -4,15 +4,37 @@ Read `skill://browser` and its lifecycle/commands references, then use the nativ
 
 Public QA can select `browser.open({name:"visual-qa",url:appUrl,app:"chromium"})` when permitted. `app: "chromium"` selects managed Chromium; record the actual backend. Managed Chromium is project-shared, not a guaranteed clean profile. Authenticated rows require an authorized real-session relay/CDP route from the lifecycle reference; never copy a live profile, extract cookies or erase user state. An unavailable authenticated route blocks that row, even if the public page renders.
 
+Default or `app:"own"` selection is not synonymous with Chromium: native owned/headless WebKit
+(ABKit) already exists in 18.19. The default checks relay/CDP/Tern/cmux before the owned browser;
+`own` skips them and selects installed WebKit otherwise Chromium, while `auto` skips only the
+relay. Inspect the returned backend and fallback. Ordinary captures can use a capable permitted
+WebKit backend, but the raw Puppeteer matrix below, reduced-motion emulation, Chromium traces and
+captured HAR response bodies require the corresponding Chromium capabilities. WebKit theme
+emulation affects all its tabs, so separate names do not isolate parallel theme rows. Do not
+install/enable a backend or replace the required authenticated state to fill a capability gap.
+
+The live `xd://eval/browser` contract is authoritative. Cursor/envelope examples here use OMP
+18.20; an older host need not provide them. Follow that host's actual diagnostic return shape and
+report missing cursor evidence rather than inventing it. On 18.20, direct helpers and `run` without
+an explicit timeout inherit a longer Eval-cell timeout; raise the cell's `timeout` for long page
+work. Explicit run deadlines and millisecond `waitFor*` deadlines remain distinct.
+
 ## Applicable web matrix
 
 The calling skill owns scope: use 390/1440/1920, light/dark, top/end and motion variants only when its acceptance matrix requires them. A small unrelated UI fix does not acquire a full matrix from this recipe. Each required page/state gets matching source and actual captures where a reference exists.
 
-This JS Eval example uses raw Puppeteer controls through documented `tab.run`. `appUrl`, `readySelector` and the matrix rows come from the actual task. Derive a fresh task-owned `row.tabName` from the applicable row and retain only the requested final tabs. This raw-controls tab must never have received `tab.emulate` overrides: OMP reapplies stored overrides before every run. The explicit viewport sets both mobile and desktop flags:
+This JS Eval example uses raw Chromium Puppeteer controls through documented `tab.run`; confirm
+the reported backend before applying it. Its diagnostic cursor portion requires the live 18.20
+contract. `appUrl`, `readySelector` and the matrix rows come from the actual task. Derive a fresh
+task-owned `row.tabName` from the applicable row and retain only the requested final tabs. This
+raw-controls tab must never have received `tab.emulate` overrides: OMP reapplies stored overrides
+before every run. The explicit viewport sets both mobile and desktop flags:
 
 ```js
 // For each applicable row, after choosing its width/height/mobile/theme/motion:
 const qa = await browser.open({name:row.tabName,app:"chromium"});
+const consoleBefore = await qa.console();
+const errorsBefore = await qa.errors();
 await qa.run(async ({page}, row) => {
   await page.setViewport({
     width:row.width, height:row.height, deviceScaleFactor:row.mobile ? 3 : 1,
@@ -40,7 +62,14 @@ console.log(await qa.evaluate(async () => {
 }));
 const topPath = await qa.screenshot({format:"png"});
 console.log(topPath);
-console.log(await qa.console(), await qa.errors());
+const consoleBatch = await qa.console({since:consoleBefore.nextSeq});
+const errorBatch = await qa.errors({since:errorsBefore.nextSeq});
+console.log({
+  consoleEntries:consoleBatch.entries, errorEntries:errorBatch.entries,
+  cursors:{console:consoleBatch.nextSeq, errors:errorBatch.nextSeq},
+  droppedBefore:{console:consoleBefore.dropped, errors:errorsBefore.dropped},
+  droppedAfter:{console:consoleBatch.dropped, errors:errorBatch.dropped},
+});
 ```
 
 `row.mobile` above proves a mobile viewport/touch/DPR configuration, not an iPhone UA. For a coordinated device preset, use a separate task-owned mobile tab with `await mobileTab.emulate({device:"iPhone 14"})`; its native `emulate` also configures media. Do not mix native presets with the raw-controls matrix handle above. Device emulation merges settings and can reload the document: re-establish the scenario afterwards. There is no `device:null` reset; raw Puppeteer changes are overwritten by the stored preset on the next run. Use a separate task-owned desktop tab after a mobile preset. Chromium emulation is not an iPhone Safari test.
@@ -53,7 +82,26 @@ Record URL/page/state, CSS viewport, screenshot pixel dimensions, DPR, theme, to
 
 ## Console, network and action evidence
 
-Collect `await qa.console()`, `await qa.errors()` and `await qa.requests({filter:relevantUrlPattern})` around the changed scenario. Use `qa.request(id)` for needed captured bodies and record truncation. For a required HAR use `await qa.harStart({content:"text"})` before navigation/action and `await qa.harStop({path:harPath})` afterwards. `qa.traceStart({screenshots:true})` / `qa.traceStop({path:tracePath})` produce Chromium tracing evidence; retain the scenario/action journal separately. See `skill://browser/references/network.md` and the response-before-click example in `skill://debugging/references/tools/browser-qa.md`. Store auth-bearing evidence privately. Missing log/emulation/frame access on the selected backend is a named capability gap; a clean DOM snapshot cannot establish a clean console or screenshot.
+Collect scenario-scoped console/error entries and
+`await qa.requests({filter:relevantUrlPattern})` around the changed scenario. On the 18.20 contract,
+`console()`/`errors()` return `{entries,nextSeq,dropped}`, not arrays; use `.entries` (Python:
+`["entries"]`) and pass each stream's returned `nextSeq` as its next `since`. Retain starting/final
+cursors and dropped metadata in the manifest. `dropped` is bounded-buffer eviction history, not
+an error count; account for the baseline and report uncertain coverage instead of a clean-console
+PASS. Do not clear shared diagnostic history. Follow the cursor recipe in
+`skill://browser/references/network.md` for further checkpoints or limited batches.
+
+On a capable Chromium connection, use `qa.request(id)` for needed captured bodies and record
+truncation. For a required HAR with response bodies, start `await qa.harStart({content:"text"})`
+before navigation/action and stop with `await qa.harStop({path:harPath})` afterwards. WebKit logs
+all resource loads without timings or response bodies; Tern logs only fetch/XHR/navigation, so
+neither is a substitute for required full wire/body evidence. Reading authorized page data with
+`evaluate` is not a captured HAR body. `qa.traceStart({screenshots:true})` /
+`qa.traceStop({path:tracePath})` produce Chromium tracing evidence and are unsupported on Tern and
+WebKit. Retain the scenario/action journal separately. See the network reference and the
+response-before-click example in `skill://debugging/references/tools/browser-qa.md`. Store
+auth-bearing evidence privately. Missing log/emulation/frame access on the selected backend is a
+named capability gap; a clean DOM snapshot cannot establish a clean console or screenshot.
 
 ## Native or unsupported browser
 

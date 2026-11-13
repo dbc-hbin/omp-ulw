@@ -163,18 +163,23 @@ try {
     const [prompt] = await run(["/ulw validate the shared directive"], [], undefined, undefined, model);
     assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`));
   }
-  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon"]) {
+  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon", "gpt-6.1-terra"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
     const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] });
     assert(profile);
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
+    if (model === "gpt-6.1-terra") {
+      const request = requests.at(-1);
+      assert(typeof request === "object" && request !== null && "model" in request);
+      assert.equal(request.model, model, "Astra prompt routing must not change the requested Terra model");
+    }
   }
   const [catalog] = await run(["inspect installed skill metadata"], [], undefined, undefined, "gpt-6.1-sol", true);
   for (const entry of readdirSync(resolve("skills"), { withFileTypes: true })) {
     if (!entry.isDirectory()) continue;
     assert(new RegExp(`^\\s*- ${entry.name}(?: \\(|:)`, "m").test(catalog), `package skill must be advertised: ${entry.name}`);
   }
-  for (const name of ["browser", "computer-use", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
+  for (const name of ["browser", "computer-use", "ultimate-browsing", "coding-agent-sessions", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"]) {
     const command = name === "browser" ? "web-browser" : name;
     const [prompt] = await run([`/${command} exercise installed routing`]);
     const body = JSON.stringify(requests.at(-1));
@@ -287,9 +292,31 @@ try {
     assert(profile);
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), "actual provider request must contain the provider-specific shipped profile");
   }
-  await run(["inspect the native task schema"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait"]);
+  const [toolPrompt] = await run(["inspect the native task and helper contracts"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait", "todo", "eval", "bash"]);
   const taskRequest = requests.at(-1);
   assert(typeof taskRequest === "object" && taskRequest !== null && "tools" in taskRequest && Array.isArray(taskRequest.tools));
+  const toolDefinitions = taskRequest.tools;
+  const description = (name: string): string => {
+    const tool: unknown = toolDefinitions.find((entry: unknown) =>
+      typeof entry === "object" && entry !== null && "function" in entry && typeof entry.function === "object"
+      && entry.function !== null && "name" in entry.function && entry.function.name === name,
+    );
+    assert(typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object"
+      && tool.function !== null && "description" in tool.function && typeof tool.function.description === "string");
+    return tool.function.description;
+  };
+  const todoDescription = description("todo");
+  assert(toolPrompt.includes("Never make a todo-only turn: emit todo in the same response as the next real tool call."));
+  assert(!todoDescription.includes("`todo` NEVER takes a turn of its own:"));
+  assert(todoDescription.includes("`init` beside the first read or action"));
+  assert(todoDescription.includes("`done`/`start` beside the next action or check"));
+  assert(todoDescription.includes("Tasks identified by verbatim content"));
+  assert(todoDescription.includes("Before work, init for 3+ steps"));
+  const evalDescription = description("eval");
+  assert(toolPrompt.includes("It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool;"));
+  const shSignature = evalDescription.split("\n").find(line => line.includes("sh(command,") && line.includes("embedded bash engine"));
+  assert(shSignature && !shSignature.includes("runs to completion (never backgrounded)"));
+  assert(evalDescription.includes("stdout+stderr") && evalDescription.includes("ShellError"));
   const taskTool = taskRequest.tools.find((tool: unknown): tool is { function: { name: "task"; parameters?: unknown } } =>
     typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" &&
     tool.function !== null && "name" in tool.function && tool.function.name === "task",

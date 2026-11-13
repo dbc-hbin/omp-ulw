@@ -49,14 +49,14 @@ OMP 18.16의 별도 RPC `steer`·`follow_up` 요청은 native 키워드 처리�
 - **Code understanding:** `debugging`, `ast-grep`, `lsp-setup`, `refactor`, `programming`
 - **Review and product work:** `review-work`, `eval-integrity`, `remove-ai-slops`, `frontend`, `visual-qa`, `visualize`, `data-scientist`
 - **Browser and source access:** `browser`, `ultimate-browsing`
-- **Project and memory workflows:** `init-deep`, `reflection`, `memory-advisor`
+- **Project and memory workflows:** `init-deep`, `reflection`, `memory-advisor`, `coding-agent-sessions`
 
 The three newly ported code skills use the native `xd://ast_grep` and
 `xd://lsp` contracts. `programming` carries the per-language rules, the test
 authoring gate and junk-test classes, and the Bun scripts that `remove-ai-slops`
-calls (`check-test-junk.ts`, `mutation-proof.ts`). Session archaeology and git
-history operations remain host-level concerns or project rules rather than
-copied skill bundles. Persistent DAG records are lead-owned
+calls (`check-test-junk.ts`, `mutation-proof.ts`). Specific OMP session
+consultation and git history operations remain host-level concerns or project
+rules. Cross-product session discovery uses the on-demand finder. Persistent DAG records are lead-owned
 files, not a separate orchestration runtime. Tip catalogues and first-run
 onboarding were not ported.
 
@@ -64,9 +64,17 @@ onboarding were not ported.
 
 `/web-browser`는 `browser` 스킬과 `xd://eval/browser`를 읽고 OMP Eval의 native `browser` 객체로 관찰·입력·클릭·프레임·네트워크·캡처를 수행합니다. OMP 자체 `/browser`의 headless·visible 전환은 그대로 유지합니다. `/ultimate-browsing`은 불완전하거나 차단된 출처, 공식 플랫폼 API, 아카이브·미디어 경로를 `read`·`web_search`와 같은 브라우저로 처리합니다. 호스트의 브라우저 우선순위·권한은 유지하며, 일반 관리형 브라우저에는 릴레이가 필요하지 않습니다. 기존 Chrome 세션에 연결할 때만 승인된 릴레이·CDP 경로를 선택합니다. OmOWright 런타임·BrowserSkill daemon·쿠키 추출기·별도 크롤러는 설치하지 않으며, 각 스킬의 attribution에서 원본 전체 대응표와 라이선스를 확인할 수 있습니다.
 
+브라우저 참조에는 OMP 18.20의 로그 반환 형식·Eval timeout 상속과 WebKit·Chromium의 기능 차이를 반영합니다. 컴퓨터 스킬은 macOS secure input 중 입력은 전달돼도 Escape·사용자 타이핑 기반 중단 감지가 불가능할 수 있음을 다룹니다. 실제 호스트 계약이 우선하며 OMP 업그레이드나 선택 기능 활성화는 수행하지 않습니다.
+
+`/coding-agent-sessions`는 Python 3.11+ 기반 `list`·`find`·`search`로 여러 코딩 에이전트 제품의 로컬 세션을 찾습니다. 플랫폼·프로젝트·기간·복수 검색어로 범위를 좁히며, 검색 미리보기에도 개인정보가 포함될 수 있으므로 요청 범위 안에서만 조회·보고합니다. 특정 OMP 세션의 상세 상담은 `sourceSession`을 지정한 native `seance`를 사용합니다. 별도 대화 열람 명령·로그 색인·서비스는 추가하지 않으며 출처·라이선스는 `skills/coding-agent-sessions/ATTRIBUTION.md`에 보존합니다.
+
 리서치와 mass-research는 출처 접근 계약을 직접 포함하므로, 공통 ULW 지침이 없는 `/skill:ulw-research`와 `/mass-ulw research`에도 적용됩니다. 웹 수집 작업에는 브라우저·차단 출처 스킬 경로와 필요한 상태·권한·증거를 명시해 실제 도구를 가진 작업자에게 전달합니다. 동적 참조 페이지와 HTML 보고서의 layout probe도 같은 native 브라우저를 사용하며, 정적 자료는 계속 `read`로 읽습니다.
 
 ## 모델별 프롬프트 위치
+
+역할 라우팅과 보고 형식 설명을 축약하고, ULW의 명령 파싱은 호스트에 맡기며 브라우저·데스크톱 상세 계약은 필요할 때 읽습니다. 남아 있는 native 편집 전 중복 지침은 활성 프리셋이나 보존된 호스트 지침이 같은 규칙을 소유할 때만 제거하고, 모델 전환으로 해당 근거가 없어지면 복원합니다. native 전달(Delivery) 지침은 라이브 추가·변경을 포함해 원문 그대로 보존합니다. 모델별 재독해·검증 단계·도구 예산은 유지합니다.
+
+native todo/sh 설명의 중복은 현재 프리셋에 같은 요구가 있고 native 원문을 인식한 경우에만 제거합니다. 고유한 도구 동작과 커스텀 설명은 유지하며, 미지원 모델에서는 native 설명을 그대로 사용합니다.
 
 - [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 Claude Fable / Mythos 5.2 전용 코어를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 임시 Fable 5.5 항목은 제거됐으며, 프리셋 등록은 기본 모델 추천을 의미하지 않습니다.
 - [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
@@ -79,7 +87,7 @@ onboarding were not ported.
 
 서브에이전트는 부모의 프리셋을 복사하지 않고 **자신의 선택된 모델과 실제 활성 도구 목록**으로 프리셋을 생성합니다. 요청 직전에도 활성 도구 변경을 반영합니다. 지원 모델에서는 기본 역할을 교체하고 겹치는 일반 행동 지침을 제거하지만, 뒤에 붙는 자식 전문 역할·공유 context·할당 작업·반환 프로토콜은 보존합니다. 자식용 보정은 이 역할·권한·검증 제한이 일반 모델 지침보다 우선하도록 하며, 사용자 대상 시작 문구·진행 보고·todo를 부모처럼 수행하지 않게 합니다. 일반 worker와 sonic에 이미 노출된 `eval`은 모델 지침에 반영되지만, scout 등에 없는 도구를 새로 부여하지 않습니다.
 
-2026-10-27 임시 보정: 업스트림에서 아직 매칭하지 않는 `gpt-6.1-terra`는 **서브에이전트에서만** `gpt-6.1-sol`과 동일한 `gpt-6-astra` 프리셋을 사용합니다. provider 접두사·Fast 접미사·`gpt-6-1-terra`·`gpt-61-terra`·표시 이름 `GPT 6.1 Terra`도 인식합니다. 실제 요청 모델은 Terra로 유지하고, 메인 세션의 선택 규칙은 변경하지 않습니다. 업스트림이 해당 모델의 프리셋을 제공하면 그 선택이 우선합니다.
+업스트림에서 아직 매칭하지 않는 `gpt-6.1-terra`는 **메인과 서브에이전트 모두** `gpt-6-astra` 프리셋을 사용합니다. provider 접두사·Fast 접미사·`gpt-6-1-terra`·`gpt-61-terra`·표시 이름 `GPT 6.1 Terra`도 인식합니다. 프롬프트만 연결하며 실제 요청 모델과 provider는 Terra 설정을 유지합니다. 업스트림이 해당 모델의 프리셋을 제공하면 그 선택이 우선합니다.
 
 명시적 커스텀/인식 불가 시스템 템플릿은 그대로 유지하고, 미지원 모델은 기본 OMP 역할을 사용합니다. 자식에서 ULW를 자동 활성화하지 않습니다. `seance`처럼 OMP가 확장 자체를 격리하는 세션은 이 주입 경로의 대상이 아닙니다. provider 요청 훅을 우회하는 전송은 메인과 마찬가지로 턴 시작 시점의 프리셋만 보장합니다. 설치된 확장 변경은 새 OMP 세션을 시작해야 반영됩니다.
 

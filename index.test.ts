@@ -13,16 +13,25 @@ test("unsupported models preserve native policy and tools at turn start and afte
     type: "function",
     function: {
       name,
-      description: name === "eval" ? "One cell per call;\nFor 2+ independent items, use a named `workpool()`; results auto-deliver."
-        : name === "todo" ? "`todo` NEVER takes a turn of its own: emit it in the same response (parallel tool calls)"
+      description: name === "eval" ? [
+        "One cell per call; top-level state persists, including across compaction.",
+        "For 2+ independent items, use a named `workpool()`; results auto-deliver.",
+        "<prelude>", "```",
+        "sh(command, cwd?, timeout?); JS: await sh(…) or await sh`cmd ${arg}` — embedded bash engine, runs to completion (never backgrounded)",
+        "  returns stdout+stderr; non-zero exit raises ShellError (.exit_code/.exitCode, .output)",
+        "  JS interpolations are shell-quoted; starts in the session cwd unless cwd is given",
+        "```", "</prelude>",
+      ].join("\n")
+        : name === "todo" ? "`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call (parallel tool calls), `init` beside the first read or action, `done`/`start` beside the next action or check. A response whose only call is `todo` wastes a full model round trip.\nTasks identified by verbatim content, NEVER generated IDs (task-1)."
         : "Persistent bash 5.3.\ncwd will reset after each turn, don't rely on cd; `pty` = interactive.",
       parameters: { type: "object", properties: { value: { type: "string" } } },
     },
   }));
-  for (const initialModel of ["unknown-model", "gpt-6.1-sol"]) {
+  for (const initialModel of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra"]) {
     const handlers = new Map<string, Handler[]>();
+    let activeTools = ["eval", "todo", "bash"];
     ompUlw({
-      setLabel: () => {}, getActiveTools: () => ["eval", "todo", "bash"], getAllTools: () => nativeTools.map(tool => ({ name: tool.function.name })),
+      setLabel: () => {}, getActiveTools: () => activeTools, getAllTools: () => nativeTools.map(tool => ({ name: tool.function.name })),
       registerCommand: () => {}, sendUserMessage: () => {}, registerFlag: () => {},
       getFlag: () => false, appendEntry: () => {},
       on: (event: string, handler: Handler) => { handlers.set(event, [...(handlers.get(event) ?? []), handler]); },
@@ -42,7 +51,7 @@ test("unsupported models preserve native policy and tools at turn start and afte
     const request = handlers.get("before_provider_request")?.[0];
     if (!request) throw new Error("Expected provider request hook");
     const payload = { messages: [{ role: "system", content: blocks[0] }], tools: nativeTools };
-    for (const id of ["unknown-model", "gpt-6.1-sol", "unknown-model"]) {
+    for (const id of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "unknown-model"]) {
       ctx.model.id = id;
       const result: unknown = Reflect.apply(request, undefined, [{ payload }, ctx]);
       if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages) || !("tools" in result)) throw new Error("Expected provider payload");
@@ -53,9 +62,35 @@ test("unsupported models preserve native policy and tools at turn start and afte
         expect(result.tools).toEqual(nativeTools);
       } else {
         expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).not.toBe(nativeRegion);
-        expect(result.tools).not.toEqual(nativeTools);
+        expect(message.content).toMatch(/Never make a todo-only turn: (?:send|emit) todo in the same response as the next real tool call\./);
+        expect(message.content).toContain("Use `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding");
+        expect(result.tools).toEqual(nativeTools.map(tool => ({
+          ...tool,
+          function: {
+            ...tool.function,
+            description: tool.function.name === "eval"
+              ? tool.function.description.replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.").replace(", runs to completion (never backgrounded)", "")
+              : tool.function.name === "todo"
+                ? tool.function.description.replace("`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call (parallel tool calls), ", "").replace(" A response whose only call is `todo` wastes a full model round trip.", "")
+                : tool.function.description,
+          },
+        })));
       }
     }
+    // The current tool-dependent profile, not stale preset text or tool descriptions, owns coverage.
+    ctx.model.id = "gpt-6.1-terra";
+    activeTools = ["bash"];
+    const missingCoverage: unknown = Reflect.apply(request, undefined, [{ payload }, ctx]);
+    if (typeof missingCoverage !== "object" || missingCoverage === null || !("tools" in missingCoverage)) throw new Error("Expected provider tools");
+    expect(missingCoverage.tools).toEqual(nativeTools.map(tool => ({
+      ...tool,
+      function: {
+        ...tool.function,
+        description: tool.function.description
+          .replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.")
+          .replace(" (parallel tool calls)", ""),
+      },
+    })));
   }
 });
 
@@ -139,7 +174,7 @@ test("child profiles follow their model while preserving role, assignment, tools
     const result = handler({ prompt: "implement the assigned unit", systemPrompt: blocks } as never, ctx as never);
     if (typeof result === "object" && result !== null && "systemPrompt" in result && Array.isArray(result.systemPrompt)) blocks = result.systemPrompt as string[];
   }
-  const profile = renderPreset({ id: "gpt-6.1-sol" }, { surface: "app", toolNames: activeTools, subagent: true })!.prompt;
+  const profile = renderPreset({ id: "gpt-6-astra" }, { surface: "app", toolNames: activeTools, subagent: true })!.prompt;
   expect(blocks[0]).toContain(`<omp-model-preset>\n${profile}`);
   expect(blocks.slice(1)).toEqual(assignment.slice(1));
   expect(assignment[0]).toBe(base);
@@ -151,7 +186,7 @@ test("child profiles follow their model while preserving role, assignment, tools
   for (const id of ["claude-haiku-5.5", "gpt-6.1-terra-fast", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
     ctx.model.id = id;
     ctx.model.name = id;
-    const expected = renderPreset({ ...ctx.model, id: id.replace("terra", "sol") }, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
+    const expected = renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
     const payload = { messages: [...blocks.map(content => ({ role: "system", content })), user], tools };
     const updated = hook({ payload } as never, ctx as never) as typeof payload;
     expect(updated.messages[0].content).toContain(`<omp-model-preset>\n${expected}${scope}\n</omp-model-preset>`);

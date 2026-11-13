@@ -1,11 +1,142 @@
 import { describe, expect, test } from "bun:test";
 import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
 import { adaptResearchRouting } from "./host";
+import { adaptToolGuidance } from "./host-guidance";
+import { renderPreset } from "./presets";
 
 const oldPreset = "<omp-model-preset>old profile</omp-model-preset>";
 const newPreset = "<omp-model-preset>new profile $& $` $' $$</omp-model-preset>";
 const oldText = `Host instructions\n\n${oldPreset}\n\nProject rules`;
 const newText = `Host instructions\n\n${newPreset}\n\nProject rules`;
+
+// Pinned v18.19.0 todo.md and eval.md mechanics; model appendices remain their sole duplicate owner.
+const nativeTodo = [
+	"`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call (parallel tool calls), `init` beside the first read or action, `done`/`start` beside the next action or check. A response whose only call is `todo` wastes a full model round trip.",
+	"Tasks identified by verbatim content, NEVER generated IDs (task-1). Unique, stable task/phase names; lost text: view, NEVER guess.",
+	"`append` requires `items`; omitted `phase` uses the in-progress task's phase, else the first pending task's phase, else the last phase, else a new `Tasks` phase. Supply `phase` to target another phase; an empty name is invalid.",
+	"Before work, init for 3+ steps, requested task sets, or new instructions. MUST list EVERY user item separately (phased/numbered/bulleted/N); NEVER omit or remember leftovers.",
+	"After successful mutation: no active means earliest pending starts (phase order); multiple active means only earliest stays. Done out of order may rewind pointer but NEVER reopen completed. Mark done immediately; follow phase order.",
+].join("\n");
+const nativeShBlocks = [
+	[
+		"sh(command, cwd?, timeout?); JS: await sh(…) or await sh`cmd ${arg}` — embedded bash engine, runs to completion (never backgrounded)",
+		"  returns stdout+stderr; non-zero exit raises ShellError (.exit_code/.exitCode, .output)",
+		"  JS interpolations are shell-quoted; starts in the session cwd unless cwd is given",
+	].join("\n"),
+	[
+		"sh(command, cwd?, timeout?) — embedded bash engine, runs to completion (never backgrounded)",
+		"  returns stdout+stderr; non-zero exit raises ShellError (`.exit_code`, `.output`); starts in the session cwd unless `cwd` is given",
+	].join("\n"),
+	[
+		"await sh(command, { cwd?, timeout? })  await sh`cmd ${arg}` — embedded bash engine, runs to completion (never backgrounded)",
+		"  resolves to stdout+stderr; non-zero exit throws ShellError (`.exitCode`, `.output`)",
+		"  interpolations are shell-quoted; starts in the session cwd unless `cwd` is given",
+	].join("\n"),
+];
+const workpoolRule = "For 2+ independent items, use a named `workpool()`; results auto-deliver.";
+const shellRule = "Use `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool; do not assume variables or functions transfer between them.";
+const profile = renderPreset({ id: "gpt-6.1-terra" }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt;
+function nativeEval(sh: string): string {
+	return [
+		"One cell per call; top-level state persists, including across compaction.", workpoolRule,
+		"On error, retry only the failed step; earlier steps may have taken effect.",
+		"<prelude>", "`await` marks async helpers; the rest are sync.", "```",
+		"print(value, ...)  log(message)  phase(title)  env(key?, value?)",
+		"read(path, offset?, limit?)  write(path, content)  output(*ids, format?, query?, offset?, limit?)",
+		"wait(handles, timeout?=None, raise_errors?=True)", "await tool.<name>(args)", sh,
+		"```", "Session tool names: read, bash, todo.", "</prelude>",
+		"<namespaces>More globals → xd://eval/helpers</namespaces>",
+		"<critical>NEVER repeat successful setup. Kernel-loss notice means reload setup.</critical>",
+		"Long cells may auto-background and deliver later; the kernel stays busy.",
+		"`timeout: 0` disables the cell deadline, not the foreground wait.",
+	].join("\n");
+}
+
+test("native todo deduplication keeps every mechanism and requires complete active-profile coverage", () => {
+	const parallelAdapted = nativeTodo.replace(" (parallel tool calls)", "");
+	const expected = parallelAdapted
+		.replace("`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call, ", "")
+		.replace(" A response whose only call is `todo` wastes a full model round trip.", "");
+	expect(profile).toMatch(/Never make a todo-only turn: (?:send|emit) todo in the same response as the next real tool call\./);
+	for (const description of [nativeTodo, parallelAdapted]) {
+		expect(adaptToolGuidance("todo", description, profile)).toBe(expected);
+		for (const verb of ["send", "emit"]) {
+			expect(adaptToolGuidance("todo", description, `Never make a todo-only turn: ${verb} todo in the same response as the next real tool call.`)).toBe(expected);
+		}
+	}
+	for (const missing of ["", newPreset, "Never make a todo-only turn.", "Emit todo in the same response as the next real tool call."]) {
+		expect(adaptToolGuidance("todo", nativeTodo, missing)).toBe(parallelAdapted);
+	}
+	for (const custom of [
+		"Custom todo: " + nativeTodo,
+		nativeTodo.replace("as your next real tool call", "before the next real tool call"),
+		nativeTodo.replace("`init` beside the first read or action", "`init` before the first action"),
+		nativeTodo.replace("A response whose only call is `todo` wastes a full model round trip.", "A todo-only response is forbidden."),
+	]) {
+		expect(adaptToolGuidance("todo", custom, profile)).toBe(custom.startsWith("`todo`") ? custom.replace(" (parallel tool calls)", "") : custom);
+	}
+	expect(adaptToolGuidance("custom_todo", nativeTodo, profile)).toBe(nativeTodo);
+});
+
+test("native eval deduplication recognizes all sh contracts without changing helpers or cell lifecycle", () => {
+	expect(profile).toContain(shellRule);
+	for (const sh of nativeShBlocks) {
+		const description = nativeEval(sh);
+		const parallelAdapted = description.replace(workpoolRule, "`workpool()` results auto-deliver.");
+		const expected = parallelAdapted.replace(", runs to completion (never backgrounded)", "");
+		expect(adaptToolGuidance("eval", description, profile)).toBe(expected);
+		expect(adaptToolGuidance("eval", expected, profile)).toBe(expected);
+		for (const missing of ["", newPreset, profile.replace(shellRule, ""), profile.replace("without auto-backgrounding", ""), profile.replace("runs to completion", "is never backgrounded")]) {
+			expect(adaptToolGuidance("eval", description, missing)).toBe(parallelAdapted);
+		}
+		for (const custom of [
+			description.replace("One cell per call; top-level state persists, including across compaction.", "One cell per call; custom execution."),
+			description.replace("embedded bash engine", "external bash process"),
+			description.replace("runs to completion (never backgrounded)", "runs to completion; never backgrounded"),
+			description.replace("ShellError", "CustomError"),
+		]) {
+			expect(adaptToolGuidance("eval", custom, profile)).toBe(custom.replace(workpoolRule, "`workpool()` results auto-deliver."));
+		}
+		expect(adaptToolGuidance("eval", "Custom eval\n" + description, profile)).toBe("Custom eval\n" + description);
+		expect(adaptToolGuidance("custom_eval", description, profile)).toBe(description);
+	}
+});
+
+test("native duplicate rewriting preserves schemas and user text across provider tool paths", () => {
+	const description = nativeEval(nativeShBlocks[0]);
+	const schema = { type: "object", description: nativeTodo, properties: { command: { type: "string", description } } };
+	const definitions = [
+		{ name: "todo", description: nativeTodo, parameters: schema, strict: true },
+		{ name: "eval", description, parameters: schema, strict: true },
+		{ name: "custom_todo", description: nativeTodo, parameters: schema },
+	];
+	const changed = definitions.map(tool => ({ ...tool, description: adaptToolGuidance(tool.name, tool.description, profile) }));
+	const messages = [{ role: "system", content: profile }, { role: "user", content: profile + nativeTodo + description }, { role: "tool", content: nativeTodo + description }];
+	const shapes = [
+		{ api: "openai-responses", wrap: (tools: typeof definitions) => ({ tools: tools.map(tool => ({ type: "function", ...tool })) }) },
+		{ api: "openai-codex-responses", wrap: (tools: typeof definitions) => ({ tools: [{ type: "namespace", name: "functions", tools: tools.map(tool => ({ type: "function", ...tool })) }] }) },
+		{ api: "openai-completions", wrap: (tools: typeof definitions) => ({ tools: tools.map(tool => ({ type: "function", function: tool })) }) },
+		{ api: "anthropic-messages", wrap: (tools: typeof definitions) => ({ tools: tools.map(({ parameters, ...tool }) => ({ ...tool, input_schema: parameters, cache_control: { type: "ephemeral" } })) }) },
+		{ api: "google-generative-ai", wrap: (tools: typeof definitions) => ({ config: { tools: [{ functionDeclarations: tools }] } }) },
+		{ api: "google-vertex", wrap: (tools: typeof definitions) => ({ tools: [{ functionDeclarations: tools }] }) },
+		{ api: "google-gemini-cli", wrap: (tools: typeof definitions) => ({ request: { tools: [{ functionDeclarations: tools }] } }) },
+		{ api: "bedrock-converse-stream", wrap: (tools: typeof definitions) => ({ toolConfig: { tools: tools.map(toolSpec => ({ toolSpec })) } }) },
+		{ api: "bedrock-converse-stream", wrap: (tools: typeof definitions) => ({ commandInput: { toolConfig: { tools: tools.map(toolSpec => ({ toolSpec })) } } }) },
+	];
+	for (const { api, wrap } of shapes) {
+		const payload = { ...wrap(definitions), messages, metadata: { description: nativeTodo } };
+		const snapshot = structuredClone(payload);
+		const result = rewriteToolGuidancePayload(payload, api, profile);
+		expect(result).toEqual({ ...wrap(changed), messages, metadata: payload.metadata });
+		expect(payload).toEqual(snapshot);
+		expect(rewriteToolGuidancePayload(result, api, profile)).toBe(result);
+		// Arbitrary system/user content is never evidence of profile coverage.
+		const retained = definitions.map(tool => ({ ...tool, description: adaptToolGuidance(tool.name, tool.description, "") }));
+		expect(rewriteToolGuidancePayload(payload, api, "")).toEqual({ ...wrap(retained), messages, metadata: payload.metadata });
+	}
+	const unknown = { tools: definitions, messages };
+	expect(rewriteToolGuidancePayload(unknown, "unknown-api", profile)).toBe(unknown);
+});
 
 test("task routing adaptation preserves transport structure, schemas, unrelated tools and messages", () => {
 	const description = "Read-only research MUST use `scout` only when files unknown.";
@@ -29,15 +160,15 @@ test("task routing adaptation preserves transport structure, schemas, unrelated 
 	for (const { api, payload, expected } of shapes) {
 		const input = { ...payload, messages, metadata: { description } };
 		const snapshot = structuredClone(input);
-		const result = rewriteToolGuidancePayload(input, api);
+		const result = rewriteToolGuidancePayload(input, api, newPreset);
 		expect(result).toEqual({ ...expected, messages, metadata: { description } });
 		expect(input).toEqual(snapshot);
-		expect(rewriteToolGuidancePayload(result, api)).toBe(result);
+		expect(rewriteToolGuidancePayload(result, api, newPreset)).toBe(result);
 	}
 	const custom = { tools: [{ type: "function", function: { ...task, description: "User-authored task contract" } }] };
-	expect(rewriteToolGuidancePayload(custom, "openai-completions")).toBe(custom);
+	expect(rewriteToolGuidancePayload(custom, "openai-completions", newPreset)).toBe(custom);
 	const unknown = { tools: [task], messages };
-	expect(rewriteToolGuidancePayload(unknown, "unknown-api")).toBe(unknown);
+	expect(rewriteToolGuidancePayload(unknown, "unknown-api", newPreset)).toBe(unknown);
 });
 
 const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = [

@@ -2,6 +2,42 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-13 프롬프트 중복만 축소
+
+- Sonic 배정 조건과 ULW 모델·호스트 소유권 재설명을 제거하되, 같은 주입 블록의 기존 요구는 유지합니다.
+- native todo/sh 설명은 원문을 인식하고 실제 현재 프리셋에 동등한 요구가 있을 때만 중복을 제거합니다. 모델 규칙·고유한 도구 동작·커스텀 설명·미지원 모델 동작은 보존합니다.
+- Delivery, 복원한 조사·추론 조건, 모델 예산·응답 언어·child 경계와 메인·자식 Terra 연결은 유지합니다.
+
+native 계약: [todo](https://github.com/can1357/oh-my-pi/blob/v18.19.0/packages/coding-agent/src/prompts/tools/todo.md), [eval/sh](https://github.com/can1357/oh-my-pi/blob/v18.19.0/packages/coding-agent/src/prompts/tools/eval.md).
+
+### 2026-11-13 GPT-6.1 Terra 메인·자식 프리셋 연결
+
+- GPT-6.1 Terra를 메인과 자식 세션 모두에서 `gpt-6-astra`에 연결하고, 자식 전용 제한과 Sol 경유를 제거합니다.
+- 업스트림 매칭 우선순위, provider·Fast·표시 이름 별칭, 버전 경계와 실제 요청 모델·provider를 유지합니다.
+- 기존 라우팅·provider fallback·실제 호스트 프리셋 검증에 메인 Terra를 포함합니다.
+
+### 2026-11-13 전달 지침 롤백 및 라우팅 요구 복원
+
+- 아래 프롬프트 책임 중복 축소 항목의 Delivery 제거를 롤백합니다. native 전달 지침은 라이브 추가·변경을 포함해 원문 그대로 보존하며, 편집 전 중복 지침만 조건부로 제거·복원합니다.
+- external research의 scout 문장(라이브러리/버전 명시, 공식 출처 우선, 출처 링크 요구)과 추론 전용 과제의 요구(목표, 제약, 근거, 반례, 기각된 대안, 실행 가능한 권고 하나이며 규정된 결론이 아님)를 복원합니다.
+
+### 2026-11-13 프롬프트 책임 중복 축소
+
+- task 역할 라우팅을 축약하되 전문 역할 경계·미해결 판단·근거 요구와 native 도구 권한을 유지합니다.
+- ULW의 활성화 문법·키워드 매핑 설명은 호스트 책임으로 축소하고, 브라우저 상세는 필요할 때 읽는 스킬 참조로 바꿉니다. 실제 활성화·목표 소유권·저장된 상태·이어하기 동작은 유지합니다.
+- 남아 있는 native 편집 전·전달 지침은 활성 프리셋이나 보존된 Runtime이 같은 규칙을 소유할 때만 제거합니다. 모델 전환으로 해당 근거가 없어지거나 미지원 모델로 fallback하면 복원합니다.
+- 일반 도입부·handoff 주기·보고 형식 설명을 축약하고 모델별 실행·재독해·검증 단계·도구 예산과 upstream 생성 번들은 변경하지 않습니다. Kimi K2의 명시적 routing 계약은 유지합니다.
+- 권한·거절 확정·프로젝트 문맥·자식 Hand-off·native mode와 직전 브라우저·컴퓨터·세션 검색 도입을 보존합니다.
+
+### 2026-11-13 Native 계약 보정과 다중 제품 세션 검색
+
+- 브라우저 참조에 OMP 18.20의 진단 반환 형식·증분 로그 커서·Eval timeout 상속을 반영하고, WebKit 선택과 Chromium 전용 증거 수집의 차이를 명시합니다.
+- 이전 호스트에 새 capability 필드가 있다고 가정하지 않고 macOS secure input의 중단 감지 한계를 추가합니다. native 권한·사용자 개입·foreground 제어 경계는 유지합니다.
+- `/coding-agent-sessions`와 native 스킬 경로로 Python 3.11+ 다중 제품 세션 검색을 제공합니다. 제한된 검색 미리보기, 플랫폼·기간·프로젝트 필터와 하위 세션 범위는 유지하고 upstream read/get 명령은 제외합니다. 특정 OMP 세션의 상담은 native `seance`가 담당합니다.
+- 출처·라이선스를 보존합니다. OMP 업그레이드·선택 backend 활성화·DAG 런타임·프롬프트 디블로트는 포함하지 않습니다.
+
+출처: [OMP 18.20 브라우저 계약](https://github.com/can1357/oh-my-pi/blob/v18.20.0/packages/coding-agent/src/prompts/tools/browser.md), [OMP secure input](https://github.com/can1357/oh-my-pi/blob/v18.20.0/packages/coding-agent/src/prompts/tools/computer-secure-input.md), [OMO 793cb219 세션 검색](https://github.com/code-yeongyu/oh-my-openagent/tree/793cb219586ff517762221aba0671bcf2d63ab86/packages/shared-skills/skills/coding-agent-sessions).
+
 ### 2026-11-11 브라우저 워크플로 연동 전수조사
 
 - 공통 ULW 지침이 활성화되지 않는 native 스킬 호출까지 포함해, research와 mass-research에 정적·동적·인증·차단 출처 접근 계약을 직접 연결합니다.

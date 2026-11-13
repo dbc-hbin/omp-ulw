@@ -35,6 +35,10 @@ omp -e ./omp-ulw/index.ts
 
 `/web-browser` 加载 `browser` 技能，使用 OMP Eval 的原生 `browser` 对象处理交互页面、快照、框架、网络证据和截图，先读取 `xd://eval/browser`。OMP 自带的 `/browser` headless/visible 切换保持不变。`/ultimate-browsing` 通过 `read`、`web_search` 和同一浏览器处理不完整或受阻来源、平台 API、档案和媒体前提。保留宿主的浏览器路由与权限；普通托管浏览器不需要中继，真实 Chrome 会话可使用已授权的中继或 CDP。不安装 OmOWright、BrowserSkill daemon、Cookie 提取器或额外爬虫；各技能的 attribution 保留来源覆盖表和许可证。
 
+浏览器参考补充 OMP 18.20 的诊断返回结构、Eval 超时继承及 WebKit/Chromium 能力差异。桌面技能说明 macOS 安全输入开启时，输入仍可发送，但 Escape 和用户键入可能无法触发中断。以当前宿主契约为准，不自动升级 OMP 或启用可选后端。
+
+`/coding-agent-sessions` 使用随附的 Python 3.11+ 工具，通过 `list`、`find` 和 `search` 发现多个编码代理产品的本地会话。按平台、项目、时间及多个查询词缩小范围；预览可能含有私密信息，只查询和报告已授权范围。特定 OMP 会话的详细咨询仍使用带 `sourceSession` 的原生 `seance`，不添加独立的对话读取命令、日志索引或服务。来源和许可证保留在 `skills/coding-agent-sessions/ATTRIBUTION.md`。
+
 研究与 mass-research 直接包含来源访问契约，适用于没有共享 ULW 指令的 `/skill:ulw-research` 和 `/mass-ulw research`。网页收集任务明确向有能力的子代理传递浏览器、受阻来源读取参考及状态和证据要求。动态参考页面与 HTML 报告探针使用同一原生浏览器；静态来源继续使用 `read`。
 
 ## 模型提示词
@@ -48,7 +52,13 @@ omp -e ./omp-ulw/index.ts
 
 受支持模型的工作方式优先于通用 OMP 指令，重复的规划、重读、委派和验证要求会被移除。每次请求前刷新可用工具。子代理保留其专业角色、权限与完成协议。自定义或无法识别的系统模板保持不变；不受支持的模型及其回退保留 OMP 默认行为。更改已安装的扩展后，请重启 OMP。
 
+角色路由和回复格式说明已压缩；ULW 将调用解析交给宿主，浏览器和桌面契约按需读取。剩余的原生编辑前重复规则仅在当前模型或保留的宿主指令已覆盖时删除，覆盖条件变化时恢复；原生交付规则按原文保留，包括运行中的新增和修改。模型专属的重读、验证层级和工具预算保持不变。
+
+原生 todo/sh 说明中的重复仅在当前模型提示词明确包含等同要求且原生文本匹配时删除。独有的工具机制和自定义说明保持不变；不支持的模型保留原生说明。
+
 33 个预设包含 Claude Fable / Mythos 5.2 专用提示词，替代临时 Fable 5.5 条目。研究及 mass-research 的交接为每项结论保留观察证据，为关闭的线索记录探查过程；记忆中的断言在核实前仍是线索。有效的已记录证据可以复用，无需重复已通过的检查。
+
+GPT-6.1 Terra 在主会话和子代理中均使用 `gpt-6-astra`，支持 provider 前缀、Fast 后缀及显示名称。这里只改变提示词，实际请求的模型和 provider 保持不变；上游已有的匹配优先。
 
 ## 生成前端参考文件
 

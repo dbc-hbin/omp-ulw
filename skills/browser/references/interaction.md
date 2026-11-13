@@ -60,7 +60,7 @@ Chromium Puppeteer page/frame APIs inside `tab.run`.
 Do not use OmOWright's merged page-level `f1e3` refs or claim that the main-frame snapshot includes
 all cross-origin content. Record inaccessible/detached frames explicitly. Chromium semantic role
 queries and `pierce/` can reach supported open shadow roots; closed roots and native backends are
-not guaranteed. Tern cannot drive frames transformed by CSS scale/rotation.
+not guaranteed. Tern and owned WebKit cannot drive frames transformed by CSS scale/rotation.
 
 ## DOM work and scroll collection
 

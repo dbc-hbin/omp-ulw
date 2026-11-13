@@ -53,17 +53,20 @@ describe("faithful omo presets", () => {
     expect(renderPreset({ id: "opaque", name: "gpt-5.6" }, { surface: "app", toolNames })).toBeUndefined();
   });
 
-  test("temporary Terra child alias uses Sol without changing main or neighboring models", () => {
-    const options = { surface: "app" as const, toolNames };
-    const sol = renderPreset({ id: "gpt-6.1-sol" }, { ...options, subagent: true });
-    expect(sol?.name).toBe("gpt-6-astra");
-    for (const id of ["gpt-6.1-terra", "openai/gpt-6.1-terra-fast", "gpt-6-1-terra", "openai-gpt-61-terra"]) {
-      expect(renderPreset({ id }, { ...options, subagent: true })).toEqual(sol);
-      expect(renderPreset({ id }, options)).toBeUndefined();
-    }
-    expect(renderPreset({ id: "opaque", name: "GPT 6.1 Terra" }, { ...options, subagent: true })).toEqual(sol);
-    for (const id of ["gpt-6.1-terrarium", "gpt-6.10-terra", "gpt-6.2-terra", "gpt-6-terra"]) {
-      expect(renderPreset({ id }, { ...options, subagent: true })).toBeUndefined();
+  test("Terra aliases use Astra in main and child sessions without matching neighboring models", () => {
+    for (const surface of ["terminal", "app"] as const) {
+      for (const subagent of [false, true]) {
+        const options = { surface, toolNames, subagent };
+        const astra = renderPreset({ id: "gpt-6-astra" }, options);
+        expect(astra?.name).toBe("gpt-6-astra");
+        for (const id of ["gpt-6.1-terra", "openai/gpt-6.1-terra-fast", "openai-codex/gpt-6.1-terra", "gpt-6-1-terra", "openai-gpt-61-terra"]) {
+          expect(renderPreset({ id }, options)).toEqual(astra);
+        }
+        expect(renderPreset({ id: "opaque", name: "GPT 6.1 Terra" }, options)).toEqual(astra);
+        for (const id of ["gpt-6.1-terrarium", "gpt-6.10-terra", "gpt-6.2-terra", "gpt-6-terra"]) {
+          expect(renderPreset({ id }, options)).toBeUndefined();
+        }
+      }
     }
   });
 

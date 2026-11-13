@@ -21,7 +21,7 @@ For an authorized signed-in criterion, use an already available real-session rel
 
 ## Read, act and verify
 
-Use fresh `observe()`/`ariaSnapshot()` results to select actual elements. Re-observe after navigation/re-render; IDs/refs become stale. Wait for expected content rather than fixed sleeps. Read `tab.text()` for rendered content, and inspect `tab.errors()` for diagnostics. A browser screenshot proves only what it shows; inspect the returned image rather than trusting a successful capture or potentially stale inline preview.
+Use fresh `observe()`/`ariaSnapshot()` results to select actual elements. Re-observe after navigation/re-render; IDs/refs become stale. Wait for expected content rather than fixed sleeps. Read `tab.text()` for rendered content, and inspect the `.entries` and `dropped` fields of `await tab.errors()` for diagnostics and history gaps. A browser screenshot proves only what it shows; inspect the returned image rather than trusting a successful capture or potentially stale inline preview.
 
 ```js
 await tab.waitForText("Example Domain");

@@ -30,7 +30,9 @@ try {
   console.log(response);
   await tab.waitForText(expectedResult, {timeout:10000});
   console.log(await tab.observe());
-  console.log(await tab.console(), await tab.errors());
+  const logs = await tab.console();
+  const errors = await tab.errors();
+  console.log({console:logs.entries, errors:errors.entries, dropped:{console:logs.dropped, errors:errors.dropped}});
   console.log(await tab.requests({filter:"/api/submit", method:"POST"}));
   const pngPath = await tab.screenshot({format:"png"});
   console.log(pngPath);

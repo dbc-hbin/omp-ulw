@@ -39,6 +39,10 @@ Additional skills include `debugging`, `programming`, `review-work`, `eval-integ
 
 `/computer-use` loads the native desktop workflow through OMP's JavaScript/Python Eval `computer` global. Read `xd://eval/computer` for its current helper contract. Browser chrome, native apps, GUI debugging, review and visual evidence use this same skill, with AX or window screenshots, background input and native foreground confirmation. The prelude must be enabled by the host; the skill does not change settings or install a driver. OMP retains its `/computer` command and permission/stop controls. Sources and license notices are in `skills/computer-use/ATTRIBUTION.md`.
 
+The browser references follow OMP 18.20's diagnostic envelopes and Eval timeout inheritance, and distinguish owned WebKit from Chromium-only capabilities. The computer skill covers macOS secure input, where Escape and user-typing interruption can be unavailable even while input is delivered. The live host contract remains authoritative; these skills do not upgrade OMP or enable optional backends.
+
+`/coding-agent-sessions` discovers local sessions across coding-agent products with the bundled Python 3.11+ finder (`list`, `find`, `search`). Search by platform, project, time or several query lanes; matching snippets may contain private data, so keep searches and reports within the requested scope. Specific OMP session consultation remains native `seance` with `sourceSession`; no parallel transcript-reading command, history index or service is installed. Source and license notices are in `skills/coding-agent-sessions/ATTRIBUTION.md`.
+
 Research and mass-research carry their source-access contracts directly, including native `/skill:ulw-research` and `/mass-ulw research` invocations without the shared ULW policy. Web collection briefs explicitly pass the applicable browser/blocked-reader references and state/evidence requirements to capable workers. Rendered references and HTML report probes use the same native browser; static sources continue to use `read`.
 
 ## Model prompts
@@ -52,7 +56,13 @@ Research and mass-research carry their source-access contracts directly, includi
 
 For supported profiles, model-specific guidance takes precedence over generic OMP working style; duplicated native planning, rereading, delegation and verification rules are removed. Tool availability is refreshed before provider requests. Subagents retain their specialist role, permissions and completion protocol. Custom or unrecognized system templates are preserved; unsupported models retain native OMP behavior, including after fallback. Restart OMP after changing an installed extension.
 
+Role routing and response-format guidance are compact; ULW leaves invocation parsing to the host and links browser/desktop contracts on demand. Remaining native pre-editing duplicates are removed only when the active profile or preserved host instructions cover them, and restored when that coverage changes. Native delivery rules are preserved verbatim, including live additions and changes. Model-specific rereading, verification tiers and tool budgets remain intact.
+
+Native todo/sh explanation duplicates are removed only when the exact current preset supplies the same requirement and the native description is recognized. Unique tool mechanics and custom descriptions are preserved; unsupported models retain native descriptions.
+
 The 33 presets include the dedicated Claude Fable / Mythos 5.2 profile, replacing the provisional Fable 5.5 entry. Research and mass-research handoffs attach observed evidence to claims and probes to closed leads; remembered assertions remain leads until checked. Valid recorded evidence is reused without repeating settled checks.
+
+GPT-6.1 Terra uses `gpt-6-astra` in both main and child sessions, including provider-prefixed IDs, Fast suffixes and its display name. This changes only the prompt profile; the requested model and provider remain unchanged. An upstream match takes precedence.
 
 On OMP 18.19, native prewalk notices follow the selected model's working methods and preserve approved plans, todo and workflow state. Explicit investigation, explanation, review, research and planning-only requests temporarily suppress both configured and automatic prewalk in the current main session, without a classifier call or persistent settings write. English and Korean requests, workflow aliases and expanded native skills are recognized; quoted examples and ambiguous continuations retain the current scope.
 

@@ -42,7 +42,7 @@ const workflows: Array<{ name: string; pattern: RegExp; nativeKeyword?: string }
   { name: "ulw-loop", pattern: /\bulw[\s-]*loop\b/i, nativeKeyword: "orchestrate" },
   { name: "ulw-execute", pattern: /\bulw[\s-]*execute\b/i, nativeKeyword: "orchestrate" },
   { name: "ulw-research", pattern: /\b(?:ulw|mass[\s-]*ulw|ulw[\s-]*mass|mulw|meth)[\s-]*research\b/i, nativeKeyword: "workflowz" },
-  ...["browser", "computer-use", "ultimate-browsing", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"].map(name => ({
+  ...["browser", "computer-use", "ultimate-browsing", "coding-agent-sessions", "debugging", "review-work", "eval-integrity", "visual-qa", "visualize", "frontend", "data-scientist", "remove-ai-slops", "hyperplan", "memory-advisor", "reflection", "init-deep", "ast-grep", "lsp-setup", "refactor"].map(name => ({
     name, pattern: new RegExp(name + String.raw`(?=\s|$)`, "i"),
   })),
 ].map(workflow => ({ ...workflow, pattern: new RegExp(invocationStart + workflow.pattern.source + notIntoIdentifier + String.raw`(?=[\s:.,!?]|$)`, "i") }));

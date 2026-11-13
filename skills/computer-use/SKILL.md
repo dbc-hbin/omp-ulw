@@ -61,7 +61,9 @@ window contents. Other platforms follow the live contract's discovery rules.
 On `StaleRef`, observe again and resolve the intended control from current
 identity. A suggested replacement is a lead, not proof. On partial delivery or
 restoration errors, inspect before retrying because input may already have
-landed. Preserve the user's edits after `UserIntervened`.
+landed. On macOS or X11, `UserIntervened` means no further input was sent and
+the tool will not rerun it in takeover. Preserve the user's edits; read that
+window again before continuing rather than undoing or retyping over them.
 
 ## Background and foreground control
 
@@ -81,6 +83,20 @@ Obey the host's stop/interrupt signal. When OMP refuses further computer calls
 for the turn after user interruption, stop and report completed and remaining
 work. Report screen-lock or missing-permission conditions rather than retrying
 input or changing transport.
+
+### macOS secure input
+
+Follow the live contract and capability result: OMP 18.20 guidance does not
+guarantee `secureInput` or `secureInputApp` exists on 18.19 or other hosts.
+An absent field is not evidence that secure input is off. A native warning or
+`secureInput: true` means a password field or secure keyboard entry holds the
+keyboard; `secureInputApp`, when reported, identifies the holding app.
+Input still delivers, but macOS hides every key from OMP: `globalEscape: false`
+means physical Escape cannot stop takeover, and user typing cannot trigger
+`UserIntervened` to stop a call while secure input holds. Report this degraded
+stop protection before further takeover; do not rely on Escape or typing to
+stop it. Honor host interruption; never disable secure input, change security
+settings or bypass user intervention to proceed.
 
 ## Authority, evidence and cleanup
 

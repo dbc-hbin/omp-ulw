@@ -5,8 +5,19 @@ task actually needs, inspect the backend returned by open and keep a short task-
 
 ## Managed and explicitly spawned browsers
 
-Without explicit app options, OMP may choose configured relay, configured CDP, Tern, cmux or managed
-Chromium. `app: "auto"` skips only the relay; `app: "own"` also skips a configured CDP endpoint, Tern and cmux. `headed` changes visibility, not backend identity.
+The live contract determines selection. The native owned/headless WebKit (ABKit) backend was
+already introduced in 18.19; it is not an 18.20-only feature. With no `app`, selection is the first
+applicable route: enabled relay, configured `browser.cdpUrl`, Tern inside a Tern pane, cmux, then
+OMP's own browser. The owned default uses installed headless WebKit, downloading it first when no
+browser is installed, otherwise managed Chromium. `browser.webkit` or `PI_BROWSER_WEBKIT=0` can
+disable that default WebKit choice. These selection rules do not authorize installing engines,
+enabling the relay or changing persistent settings; follow the task's setup permissions.
+
+`app: "auto"` skips only the relay. `app: "own"` also skips configured CDP, Tern and cmux, choosing
+installed WebKit otherwise Chromium; it does not mean Chromium or an isolated profile.
+`app: "chromium"` explicitly selects managed Chromium. Inspect the open result's backend and any
+fallback before using a backend-specific recipe. `headed` requests visibility, not necessarily
+Chromium: WebKit has a viewer on macOS; elsewhere a visible owned browser uses Chromium.
 
 Managed Chromium installs on first use if needed and shares a project browser. A new name gives a
 new page, not proof of a new profile. Do not clear shared state to manufacture a clean test. When
@@ -19,6 +30,27 @@ application is not the same as attaching to the user's Chrome.
 A CDP endpoint URL given as `app` attaches to an explicitly selected, reachable CDP discovery endpoint. Do not restart
 a user's browser with debugging flags, change browser security settings or copy profiles as hidden
 setup. A remote browser is still that browser's real account and network context.
+
+## Owned WebKit (ABKit)
+
+This is OMP's own browser, not Tern's WKWebView picture-in-picture and not the user's Chrome login.
+The open result identifies `omp's headless WebKit browser` or `omp's WebKit browser (in a window)`.
+An owned WebKit engine that cannot start can fall back to Chromium; record that result instead of
+claiming WebKit coverage. `app: "webkit"` requires WebKit and can download a missing engine; it
+fails if that download fails or if `headed: true` requests a viewer the platform does not ship.
+Do not use this option as a hidden install or as a retry after a refusal.
+
+WebKit is off screen unless shown. Where its viewer exists, opening a live named tab with `headed`
+can show or hide it, and the user can interact with its window. It has no adoptable `target`; use
+the explicit relay/CDP/Tern procedure for existing authenticated state. A visible WebKit page is
+not proof of access to that state.
+
+Normal observation, input and diagnostic/network capture come from the engine. Page-world changes
+such as routes, some emulation, init scripts, React/vitals instrumentation and recording overlays
+can still be detectable; this is not a fingerprint, security or challenge-bypass guarantee. Respect
+the backend limits in [commands.md](commands.md) and [network.md](network.md), especially missing
+wire response bodies, Chromium tracing and reduced-motion emulation. Switch an authorized public
+scenario to Chromium only for an actual capability need, never to bypass denied access.
 
 ## Existing CDP pages
 

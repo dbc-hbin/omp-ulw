@@ -2,8 +2,10 @@
 
 This is an OMP-native rewrite of the browser workflow documentation in
 [OMO at 42d5746e72bfcfb782db6b5182b70a3e9c55f1cc](https://github.com/code-yeongyu/oh-my-openagent/tree/42d5746e72bfcfb782db6b5182b70a3e9c55f1cc/packages/shared-skills/skills/browser),
-checked against OMP 18.18.6 and the live `xd://eval/browser` contract. It ports instructions, not the
-OmOWright or BrowserSkill runtime. No library, browser binary, extension payload or loader is bundled.
+initially checked against OMP 18.18.6 and refreshed against the pinned native OMP 18.20.0 contract
+below. The live `xd://eval/browser` contract remains authoritative, including on older hosts.
+It ports instructions, not the OmOWright or BrowserSkill runtime. No library, browser binary,
+extension payload or loader is bundled.
 
 MODIFIED COPY: workflow text and examples are rewritten for native OMP. The source repository's
 Sustainable Use License terms are preserved in [LICENSE.md](LICENSE.md); notices for systems named
@@ -59,7 +61,29 @@ fingerprints or built-in OCR/CAPTCHA helpers. These are not represented by fake 
 references preserve their underlying state/consent/evidence goals using supported operations and
 identify real capability gaps.
 
-Native API sources, pinned to the inspected version:
+## Native contract refresh (2026-11-13)
+
+Pinned revision: **OMP v18.20.0**, commit
+[`c308970263ae13744ea15ab67302e3dac840e266`](https://github.com/can1357/oh-my-pi/tree/c308970263ae13744ea15ab67302e3dac840e266).
+
+- [Native browser helper/selection contract](https://github.com/can1357/oh-my-pi/blob/c308970263ae13744ea15ab67302e3dac840e266/packages/coding-agent/src/prompts/tools/browser.md):
+  `console`/`errors` envelopes, cursor-based evidence, longer Eval-cell timeout inheritance for
+  direct helpers and runs without an explicit timeout, owned WebKit (ABKit), default selection and
+  backend capability limits. WebKit/default-selection documentation corrects an omission of
+  behavior already available in 18.19; it is not represented as a new 18.20 feature.
+- [Bounded diagnostic capture](https://github.com/can1357/oh-my-pi/blob/c308970263ae13744ea15ab67302e3dac840e266/packages/coding-agent/src/tools/browser/console-capture.ts):
+  `entries`, `nextSeq`, cumulative overflow `dropped`, sequence filtering and shared-buffer clear
+  behavior used by the evidence recipe.
+
+The refresh updates this skill's references and `visual-qa/references/browser-setup.md` without
+copying the complete native helper reference, shipping a wrapper or changing installed OMP. The
+live 18.19 contract inspected during the refresh lacks the two new 18.20 diagnostic/timeout notes;
+this port does not claim those behaviors on that host. Installation, relay enabling, real-session
+authorization, ownership and denial-final rules remain unchanged. No browser was opened and no
+runtime or extension was installed/enabled as part of this documentation refresh.
+
+Historical implementation sources from the initial 18.18.6 check (version-specific observations
+remain labeled in the references; these links do not assert the current live implementation):
 
 - [Host/prelude facade](https://github.com/can1357/oh-my-pi/blob/v18.18.6/packages/coding-agent/src/tools/browser.ts)
 - [Worker methods and Puppeteer run contract](https://github.com/can1357/oh-my-pi/blob/v18.18.6/packages/coding-agent/src/tools/browser/tab-worker.ts)

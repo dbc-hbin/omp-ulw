@@ -84,7 +84,8 @@ For HTML rendering and probe evaluation, read [browser](../../browser/SKILL.md) 
 const boxes = await reportTab.evaluate(probe.source);
 await Bun.write(layoutPath, JSON.stringify(boxes, null, 2));
 const reportImage = await reportTab.screenshot({ format: "png" });
-console.log(reportImage, await reportTab.errors());
+const reportErrors = await reportTab.errors();
+console.log(reportImage, reportErrors.entries, { dropped: reportErrors.dropped });
 ```
 
 Inspect the returned image and semantic report content at the desktop/mobile states relevant to the promised HTML, using separate desktop tabs after native mobile presets. These browser checks apply when this reference is reached through direct skill invocation too. The layout object alone does not establish visual correctness, and a browser screenshot does not replace the saved probe object. Release owned handles after evidence, unless a final report tab was explicitly retained for the user.

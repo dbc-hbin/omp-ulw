@@ -80,35 +80,36 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: PromptReplacement
 	});
 }
 
-function rewriteToolDefinition(value: unknown): unknown {
+function rewriteToolDefinition(value: unknown, profile: string): unknown {
 	const object = payloadObject(value);
 	if (!object || typeof object.name !== "string" || !["task", "todo", "bash", "eval"].includes(object.name)) return value;
 	const name = object.name;
 	return rewriteField(object, "description", description =>
 		typeof description === "string"
-			? name === "task" ? adaptResearchRouting(description) : adaptToolGuidance(name, description)
+			? name === "task" ? adaptResearchRouting(description) : adaptToolGuidance(name, description, profile)
 			: description);
 }
 
 /** Change known native guidance only; schemas, execution and custom tools stay intact. */
-export function rewriteToolGuidancePayload(payload: unknown, api: string): unknown {
+export function rewriteToolGuidancePayload(payload: unknown, api: string, profile: string): unknown {
 	const object = payloadObject(payload);
 	if (!object) return payload;
+	const rewriteDefinition = (value: unknown): unknown => rewriteToolDefinition(value, profile);
 	const rewriteFunctions = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
 		if (!entry) return tool;
 		if (entry.type === "namespace" && entry.name === "functions") {
 			return rewriteField(entry, "tools", rewriteFunctions);
 		}
-		return entry.type === "function" ? rewriteToolDefinition(entry) : tool;
+		return entry.type === "function" ? rewriteDefinition(entry) : tool;
 	});
 	const rewriteChatTools = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
-		return entry?.type === "function" ? rewriteField(entry, "function", rewriteToolDefinition) : tool;
+		return entry?.type === "function" ? rewriteField(entry, "function", rewriteDefinition) : tool;
 	});
 	const rewriteGoogleTools = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
-		return entry ? rewriteField(entry, "functionDeclarations", declarations => rewriteArray(declarations, rewriteToolDefinition)) : tool;
+		return entry ? rewriteField(entry, "functionDeclarations", declarations => rewriteArray(declarations, rewriteDefinition)) : tool;
 	});
 	const rewriteBedrock = (value: unknown): unknown => {
 		const entry = payloadObject(value);
@@ -116,7 +117,7 @@ export function rewriteToolGuidancePayload(payload: unknown, api: string): unkno
 			const configObject = payloadObject(config);
 			return configObject ? rewriteField(configObject, "tools", tools => rewriteArray(tools, tool => {
 				const definition = payloadObject(tool);
-				return definition ? rewriteField(definition, "toolSpec", rewriteToolDefinition) : tool;
+				return definition ? rewriteField(definition, "toolSpec", rewriteDefinition) : tool;
 			})) : config;
 		}) : value;
 	};
@@ -131,7 +132,7 @@ export function rewriteToolGuidancePayload(payload: unknown, api: string): unkno
 		case "ollama-chat":
 			return rewriteField(object, "tools", rewriteChatTools);
 		case "anthropic-messages":
-			return rewriteField(object, "tools", tools => rewriteArray(tools, rewriteToolDefinition));
+			return rewriteField(object, "tools", tools => rewriteArray(tools, rewriteDefinition));
 		case "google-generative-ai":
 		case "google-vertex": {
 			const rewritten = rewriteField(object, "tools", rewriteGoogleTools);

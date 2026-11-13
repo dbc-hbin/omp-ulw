@@ -86,3 +86,58 @@ test("shipped TUI evidence CLI measures ANSI CJK widths and rejects invalid dime
     expect(malformed.exitCode).toBe(1);
   } finally { rmSync(directory, { recursive: true, force: true }); }
 });
+
+test("session discovery finds middle prompts across products and respects platform and child scope", () => {
+  const directory = mkdtempSync(join(tmpdir(), "omp-session-discovery-"));
+  const home = join(directory, "home");
+  const logs = join(directory, "logs");
+  const script = resolve("skills/coding-agent-sessions/scripts/find-agent-sessions.py");
+  const timestamp = "2026-06-01T00:00:00.000Z";
+  const prompts = ["start the task", "needle-middle-only", "finish the task"];
+  try {
+    mkdirSync(home);
+    const codex = (id: string, parent?: string) => [
+      { timestamp, type: "session_meta", payload: {
+        id, timestamp, cwd: "/repo/discovery", model_provider: "openai",
+        source: parent ? { subagent: { thread_spawn: { parent_thread_id: parent, depth: 1 } } } : "cli",
+      } },
+      ...prompts.map(text => ({ timestamp, type: "response_item", payload: {
+        type: "message", role: "user", content: [{ type: "input_text", text }],
+      } })),
+    ];
+    for (const [path, rows] of [
+      [join(logs, "sessions/rollout-codex-main.jsonl"), codex("codex-main")],
+      [join(logs, "sessions/rollout-codex-child.jsonl"), codex("codex-child", "codex-main")],
+      [join(logs, "projects/work/claude-main.jsonl"), prompts.map(content => ({
+        sessionId: "claude-main", type: "user", timestamp, cwd: "/repo/discovery", message: { role: "user", content },
+      }))],
+    ] as const) {
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, rows.map(row => JSON.stringify(row)).join("\n") + "\n");
+    }
+    writeFileSync(join(logs, "projects/work/incomplete.jsonl"), '{"type":');
+    const run = (...args: string[]) => Bun.spawnSync(["python3", "-B", script, ...args, "--root", logs], {
+      env: {
+        ...process.env, HOME: home, CODEX_HOME: join(home, ".codex"), CLAUDE_CONFIG_DIR: join(home, ".claude"),
+        OPENCODE_HOME: join(home, ".opencode"), APPDATA: join(home, "appdata"), XDG_DATA_HOME: join(home, ".local/share"),
+      },
+    });
+    const found = run("find", "needle-middle-only", "--platform", "codex", "--platform", "claude");
+    expect(found.exitCode).toBe(0);
+    const matches = JSON.parse(found.stdout.toString()).results;
+    expect(matches.map((item: { id: string }) => item.id).sort()).toEqual(["claude-main", "codex-main"]);
+    for (const match of matches) expect(match.match_reasons).toContainEqual(expect.objectContaining({
+      query: "needle-middle-only", field: "user_message", snippet: "needle-middle-only",
+    }));
+    const scoped = run("search", "--query", "needle-middle-only", "--platform", "codex");
+    expect(scoped.exitCode).toBe(0);
+    expect(JSON.parse(scoped.stdout.toString()).results.map((item: { id: string }) => item.id)).toEqual(["codex-main"]);
+    const children = run("find", "needle-middle-only", "--platform", "codex", "--include-subagents");
+    expect(children.exitCode).toBe(0);
+    expect(JSON.parse(children.stdout.toString()).results.map((item: { id: string }) => item.id).sort()).toEqual(["codex-child", "codex-main"]);
+    const consultation = run("read", "codex-main");
+    expect(consultation.exitCode).toBe(2);
+    expect(consultation.stdout.toString()).toBe("");
+    expect(existsSync(join(dirname(script), "agent_sessions/__pycache__"))).toBe(false);
+  } finally { rmSync(directory, { recursive: true, force: true }); }
+});
