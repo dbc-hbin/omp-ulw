@@ -80,10 +80,13 @@ function rewriteGitLabFlow(object: PayloadObject, replacement: PromptReplacement
 	});
 }
 
-function rewriteToolDefinition(value: unknown, profile: string): unknown {
+function rewriteToolDefinition(value: unknown, profile: string, api: string): unknown {
 	const object = payloadObject(value);
-	if (!object || typeof object.name !== "string" || !["task", "todo", "bash", "eval"].includes(object.name)) return value;
-	const name = object.name;
+	if (!object || typeof object.name !== "string") return value;
+	const name = api === "antigravity-cli"
+		? object.name === "invoke_subagent" ? "task" : object.name === "run_command" ? "bash" : object.name
+		: object.name;
+	if (!["task", "todo", "bash", "eval"].includes(name)) return value;
 	return rewriteField(object, "description", description =>
 		typeof description === "string"
 			? name === "task" ? adaptResearchRouting(description) : adaptToolGuidance(name, description, profile)
@@ -94,7 +97,7 @@ function rewriteToolDefinition(value: unknown, profile: string): unknown {
 export function rewriteToolGuidancePayload(payload: unknown, api: string, profile: string): unknown {
 	const object = payloadObject(payload);
 	if (!object) return payload;
-	const rewriteDefinition = (value: unknown): unknown => rewriteToolDefinition(value, profile);
+	const rewriteDefinition = (value: unknown): unknown => rewriteToolDefinition(value, profile, api);
 	const rewriteFunctions = (value: unknown): unknown => rewriteArray(value, tool => {
 		const entry = payloadObject(tool);
 		if (!entry) return tool;
@@ -142,6 +145,7 @@ export function rewriteToolGuidancePayload(payload: unknown, api: string, profil
 			});
 		}
 		case "google-gemini-cli":
+		case "antigravity-cli":
 			return rewriteField(object, "request", request => {
 				const entry = payloadObject(request);
 				return entry ? rewriteField(entry, "tools", rewriteGoogleTools) : request;
@@ -195,6 +199,7 @@ export function rewritePresetPayload(payload: unknown, api: string, replacement:
 			});
 		}
 		case "google-gemini-cli":
+		case "antigravity-cli":
 			return rewriteField(object, "request", request => {
 				const nested = payloadObject(request);
 				return nested ? rewriteGoogle(nested, replacement, region) : request;

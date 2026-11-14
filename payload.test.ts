@@ -120,6 +120,7 @@ test("native duplicate rewriting preserves schemas and user text across provider
 		{ api: "google-generative-ai", wrap: (tools: typeof definitions) => ({ config: { tools: [{ functionDeclarations: tools }] } }) },
 		{ api: "google-vertex", wrap: (tools: typeof definitions) => ({ tools: [{ functionDeclarations: tools }] }) },
 		{ api: "google-gemini-cli", wrap: (tools: typeof definitions) => ({ request: { tools: [{ functionDeclarations: tools }] } }) },
+		{ api: "antigravity-cli", wrap: (tools: typeof definitions) => ({ request: { tools: [{ functionDeclarations: tools }] } }) },
 		{ api: "bedrock-converse-stream", wrap: (tools: typeof definitions) => ({ toolConfig: { tools: tools.map(toolSpec => ({ toolSpec })) } }) },
 		{ api: "bedrock-converse-stream", wrap: (tools: typeof definitions) => ({ commandInput: { toolConfig: { tools: tools.map(toolSpec => ({ toolSpec })) } } }) },
 	];
@@ -154,6 +155,7 @@ test("task routing adaptation preserves transport structure, schemas, unrelated 
 		{ api: "google-generative-ai", payload: { config: { tools: [{ functionDeclarations: [task, other] }] } }, expected: { config: { tools: [{ functionDeclarations: [changed, other] }] } } },
 		{ api: "google-vertex", payload: { tools: [{ functionDeclarations: [task] }] }, expected: { tools: [{ functionDeclarations: [changed] }] } },
 		{ api: "google-gemini-cli", payload: { request: { tools: [{ functionDeclarations: [task] }] } }, expected: { request: { tools: [{ functionDeclarations: [changed] }] } } },
+		{ api: "antigravity-cli", payload: { request: { tools: [{ functionDeclarations: [task] }] } }, expected: { request: { tools: [{ functionDeclarations: [changed] }] } } },
 		{ api: "bedrock-converse-stream", payload: { toolConfig: { tools: [{ toolSpec: task }] } }, expected: { toolConfig: { tools: [{ toolSpec: changed }] } } },
 		{ api: "bedrock-converse-stream", payload: { commandInput: { toolConfig: { tools: [{ toolSpec: task }] } } }, expected: { commandInput: { toolConfig: { tools: [{ toolSpec: changed }] } } } },
 	];
@@ -169,6 +171,37 @@ test("task routing adaptation preserves transport structure, schemas, unrelated 
 	expect(rewriteToolGuidancePayload(custom, "openai-completions", newPreset)).toBe(custom);
 	const unknown = { tools: [task], messages };
 	expect(rewriteToolGuidancePayload(unknown, "unknown-api", newPreset)).toBe(unknown);
+});
+
+test("Antigravity aliases adapt task routing while preserving native bash guidance and custom content", () => {
+	const taskDescription = "Read-only research MUST use `scout` only when files unknown.";
+	const bashDescription = "Persistent bash 5.3.";
+	const schema = { type: "object", description: taskDescription, properties: { command: { type: "string", description: bashDescription } } };
+	const task = { name: "invoke_subagent", description: taskDescription, parameters: schema };
+	const bash = { name: "run_command", description: bashDescription, parameters: schema };
+	const customTask = { ...task, description: "User-authored subagent contract" };
+	const customBash = { ...bash, description: "User-authored command contract" };
+	const unknown = { name: "custom_tool", description: taskDescription, parameters: schema };
+	const payload = {
+		request: {
+			tools: [{ functionDeclarations: [task, bash, customTask, customBash, unknown] }],
+			contents: [{ role: "user", parts: [{ text: taskDescription + bashDescription }] }],
+		},
+		messages: [{ role: "user", content: taskDescription + bashDescription }],
+	};
+	const snapshot = structuredClone(payload);
+	const changedTask = { ...task, description: adaptResearchRouting(taskDescription) };
+	const changedBash = { ...bash, description: adaptToolGuidance("bash", bashDescription, profile) };
+	expect(changedTask.description).not.toBe(taskDescription);
+	expect(changedBash.description).toBe(bashDescription);
+	const result = rewriteToolGuidancePayload(payload, "antigravity-cli", profile);
+	expect(result).toEqual({
+		...payload,
+		request: { ...payload.request, tools: [{ functionDeclarations: [changedTask, changedBash, customTask, customBash, unknown] }] },
+	});
+	expect(payload).toEqual(snapshot);
+	expect(rewriteToolGuidancePayload(result, "antigravity-cli", profile)).toBe(result);
+	expect(rewriteToolGuidancePayload(payload, "google-gemini-cli", profile)).toBe(payload);
 });
 
 const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = [
@@ -274,11 +307,11 @@ const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = 
 			expected: { systemInstruction: { role: "system", parts: [{ text: "Host prefix" }, { text: newText }] }, generationConfig: { maxOutputTokens: 4096 } },
 		},
 	]),
-	{
-		api: "google-gemini-cli",
+	... ["google-gemini-cli", "antigravity-cli"].map(api => ({
+		api,
 		payload: { project: "project-1", model: "gemini-3-pro", request: { systemInstruction: { role: "user", parts: [{ text: oldText }] }, contents: [{ role: "user", parts: [{ text: oldPreset }] }], sessionId: "s1" }, requestId: "req-1" },
 		expected: { project: "project-1", model: "gemini-3-pro", request: { systemInstruction: { role: "user", parts: [{ text: newText }] }, contents: [{ role: "user", parts: [{ text: oldPreset }] }], sessionId: "s1" }, requestId: "req-1" },
-	},
+	})),
 	... [false, true].map(wrapped => {
 		const payload = { system: [{ text: oldText }, { cachePoint: { type: "default", ttl: "1h" } }], messages: [{ role: "user", content: [{ text: oldPreset }] }], inferenceConfig: { maxTokens: 8192 } };
 		const expected = { ...payload, system: [{ text: newText }, { cachePoint: { type: "default", ttl: "1h" } }] };

@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-14 Antigravity payload compatibility
+
+- Refresh presets and native tool guidance in Antigravity's Gemini CLI-shaped request, recognizing its task/bash aliases without changing outgoing names, schemas, custom descriptions or user content.
+
 ### 2026-11-14 Model-specific code-mode execution
 
 - Connect independent lookups, result filtering/aggregation/comparison and deterministic read-only sequences directly to eval, without adding a per-step routing decision or requiring every call to use code mode.
