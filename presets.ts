@@ -14,6 +14,14 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       provider: model.provider,
     }, { promptPreset: "auto" });
   }
+  // Carbon/Argon/Hydrogen: https://aistudio.google.com/docs/models#all-gemini-4-models
+  // Share Argon's profile by generation without overriding upstream matches.
+  if (!name) {
+    const gemini4 = /(^|[/@:._-])gemini[._-]?4(?=$|[/@:._-])/i;
+    if (gemini4.test(model.id.replace(/\s+/g, "-")) || (model.name !== undefined && gemini4.test(model.name.replace(/\s+/g, "-")))) {
+      name = "gemini-4-argon";
+    }
+  }
   if (!name) return undefined;
   // Upstream gates its question directive on its own tool name; transport is adapted below.
   const selectedTools = options.toolNames.map(tool => tool === "ask" ? "request_user_input" : tool);
@@ -25,6 +33,9 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const hasTodo = options.toolNames.includes("todo");
   const hasBash = options.toolNames.includes("bash");
   const hasWait = options.toolNames.includes("wait");
+  if (preset.name === "gemini-4-argon") {
+    prompt = prompt.replace("a coding agent running on Gemini 4 Argon.", "a coding agent running on Gemini 4.");
+  }
   if (preset.name === "claude-fable-5-2") {
     prompt = prompt.replace(
       "Make routine judgment calls yourself; ask only when different readings would lead to materially different work, and ask after doing everything that does not depend on the answer, through ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",

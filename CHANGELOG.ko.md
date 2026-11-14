@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-14 Gemini 4 계열 프롬프트 연결
+
+- Google의 현재 [Gemini 4 계열](https://aistudio.google.com/docs/models#all-gemini-4-models)인 Carbon·Argon·Hydrogen을 터미널·앱과 메인·자식 세션에서 기존 OMP 보정 `gemini-4-argon` 프롬프트에 연결합니다. ID·표시 이름·provider 접두사에서 세대를 매칭하며 Carbon·Hydrogen 전용 업스트림 프리셋을 추가하지 않습니다.
+- 기존 정체성 문장만 Gemini 4로 보정하고 Argon의 규칙·도구 제공 조건·업스트림 우선순위·다른 모델 경계를 유지합니다. upstream 생성 번들과 실제 요청 모델·provider는 변경하지 않습니다.
+
 ### 2026-11-14 모델별 코드모드 실행 지침
 
 - 독립 조회·결과 필터링·집계·비교·결정적인 읽기 전용 연결 작업을 eval 실행에 바로 연결합니다. 매 단계 실행 경로를 숙고하게 하거나 모든 호출에 코드모드를 강제하지 않습니다.

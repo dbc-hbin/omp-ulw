@@ -27,7 +27,7 @@ test("unsupported models preserve native policy and tools at turn start and afte
       parameters: { type: "object", properties: { value: { type: "string" } } },
     },
   }));
-  for (const initialModel of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra"]) {
+  for (const initialModel of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-4-carbon"]) {
     const handlers = new Map<string, Handler[]>();
     let activeTools = ["eval", "todo", "bash"];
     ompUlw({
@@ -51,7 +51,7 @@ test("unsupported models preserve native policy and tools at turn start and afte
     const request = handlers.get("before_provider_request")?.[0];
     if (!request) throw new Error("Expected provider request hook");
     const payload = { messages: [{ role: "system", content: blocks[0] }], tools: nativeTools };
-    for (const id of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "unknown-model"]) {
+    for (const id of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-4-carbon", "gemini-4-hydrogen-xhigh", "unknown-model"]) {
       ctx.model.id = id;
       const result: unknown = Reflect.apply(request, undefined, [{ payload }, ctx]);
       if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages) || !("tools" in result)) throw new Error("Expected provider payload");
@@ -183,7 +183,7 @@ test("child profiles follow their model while preserving role, assignment, tools
   const user = { role: "user", content: blocks[0] };
   const tools = [{ type: "function", function: { name: "read", parameters: { type: "object" } } }];
   const hook = handlers.get("before_provider_request")![0];
-  for (const id of ["claude-haiku-5.5", "gpt-6.1-terra-fast", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
+  for (const id of ["claude-haiku-5.5", "gpt-6.1-terra-fast", "gemini-4", "google/gemini-4-hydrogen", "gemini-4-hydrogen-xhigh", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
     ctx.model.id = id;
     ctx.model.name = id;
     const expected = renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));

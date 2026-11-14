@@ -42,8 +42,8 @@ describe("faithful omo presets", () => {
       ["claude-mythos-5.1", "claude-fable-5-1"], ["claude-opus-5.5", "claude-opus-5-5"],
       ["claude-haiku-5.5", "claude-haiku-5-5"], ["anthropic/claude-haiku-5-5", "claude-haiku-5-5"],
       ["claude-haiku-4-5", undefined],
-      ["gemini-4-argon", "gemini-4-argon"], ["google/gemini-4-argon-preview", "gemini-4-argon"],
-      ["gemini-4-argonaut", undefined], ["gemini-4", undefined],
+      ["gemini-4-carbon", "gemini-4-argon"], ["gemini-4-argon", "gemini-4-argon"],
+      ["gemini-4-hydrogen", "gemini-4-argon"], ["gemini-4", "gemini-4-argon"],
       ["deepseek-v4-flash-0731", "deepseek-v4-flash-0731"], ["deepseek-flash", "deepseek-v4-1-flash"],
       ["grok-4.70", undefined], ["glm-5.30", undefined], ["llama-4", undefined],
     ];
@@ -51,6 +51,57 @@ describe("faithful omo presets", () => {
     expect(renderPreset({ id: "opaque", name: "GPT 6.1 Luna" }, { surface: "app", toolNames })?.name).toBe("gpt-6-astra");
     expect(renderPreset({ id: "opaque", name: "Gemini 4 Argon" }, { surface: "app", toolNames })?.name).toBe("gemini-4-argon");
     expect(renderPreset({ id: "opaque", name: "gpt-5.6" }, { surface: "app", toolNames })).toBeUndefined();
+  });
+
+  test("Gemini 4 family shares the adapted Argon profile and capability gates across surfaces and sessions", () => {
+    // Official family: https://aistudio.google.com/docs/models#all-gemini-4-models
+    // Provider/separator variants below exercise adapter normalization, not extra catalog entries.
+    const familyModels = [
+      ...[
+        "gemini-4", "gemini-4-carbon", "gemini-4-argon", "gemini-4-hydrogen",
+        "google/gemini-4-carbon", "google/gemini-4-hydrogen", "gemini-4-argon-contributor",
+        "gemini-4-hydrogen-xhigh", "google:gemini-4-carbon", "google@gemini-4-hydrogen",
+        "google.gemini_4_carbon", "google-gemini4-hydrogen", "gemini.4.carbon", "GeMiNi 4 Hydrogen",
+      ].map(id => ({ id })),
+      { id: "gemini-4-carbon", provider: "google-antigravity" },
+      { id: "gemini-4-hydrogen", provider: "antigravity" },
+      ...["Gemini 4", "Gemini 4 Carbon", "Gemini 4 Argon", "Gemini 4 Hydrogen", "ANTIGRAVITY / GEMINI 4 CARBON"].map(name => ({ id: "opaque", name })),
+    ];
+    for (const surface of ["terminal", "app"] as const) {
+      for (const subagent of [false, true]) {
+        for (const activeTools of [toolNames, toolNames.filter(tool => tool !== "eval"), []]) {
+          const options = { surface, toolNames: activeTools, subagent };
+          const argon = renderPreset({ id: "gemini-4-argon" }, options);
+          expect(argon?.name).toBe("gemini-4-argon");
+          expect(argon?.prompt).toMatch(/\ba coding agent running on Gemini 4\./);
+          expect(argon?.prompt).not.toMatch(/\brunning on Gemini 4 Argon\b/);
+          if (activeTools.includes("eval")) {
+            expect(argon?.prompt).toMatch(/`tool\.\*` calls concurrently with `Promise\.allSettled`/);
+            expect(argon?.prompt).toMatch(/edits, side effects,[^\n]+sequential/i);
+            expect(argon?.prompt).toMatch(/standalone calls direct/);
+          } else {
+            expect(argon?.prompt).not.toMatch(/Promise\.allSettled|Writing code is your superpower|`tool\.\*`/);
+            expect(argon?.prompt).toMatch(/independent calls[^\n]+parallel wave/i);
+          }
+          expect(argon?.prompt.includes("## Search Grounding")).toBe(activeTools.includes("web_search"));
+          for (const model of familyModels) expect(renderPreset(model, options)).toEqual(argon);
+          for (const id of ["gemini-3-carbon", "gemini-3.1-hydrogen", "gemini-5-carbon", "gemini-40-carbon", "gemini-41-carbon", "gemini-4x", "gemini-4x-carbon", "notgemini-4-carbon", "google/notgemini-4-carbon"]) {
+            expect(renderPreset({ id }, options)).toBeUndefined();
+            expect(renderPreset({ id: "opaque", name: id.replaceAll("-", " ") }, options)).toBeUndefined();
+          }
+        }
+      }
+    }
+  });
+
+  test("Gemini family fallback preserves upstream and existing Terra selection precedence", () => {
+    const options = { surface: "terminal" as const, toolNames };
+    const astra = renderPreset({ id: "gpt-6-astra" }, options);
+    for (const model of [
+      { id: "gpt-6-astra", name: "Gemini 4 Carbon" },
+      { id: "gemini-4-carbon", name: "GPT 6.1 Luna" },
+      { id: "gemini-4-hydrogen", name: "GPT 6.1 Terra" },
+    ]) expect(renderPreset(model, options)).toEqual(astra);
   });
 
   test("Terra aliases use Astra in main and child sessions without matching neighboring models", () => {

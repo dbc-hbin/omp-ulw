@@ -89,6 +89,8 @@ native todo/sh 설명의 중복은 현재 프리셋에 같은 요구가 있고 n
 
 업스트림에서 아직 매칭하지 않는 `gpt-6.1-terra`는 **메인과 서브에이전트 모두** `gpt-6-astra` 프리셋을 사용합니다. provider 접두사·Fast 접미사·`gpt-6-1-terra`·`gpt-61-terra`·표시 이름 `GPT 6.1 Terra`도 인식합니다. 프롬프트만 연결하며 실제 요청 모델과 provider는 Terra 설정을 유지합니다. 업스트림이 해당 모델의 프리셋을 제공하면 그 선택이 우선합니다.
 
+Google의 현재 [Gemini 4 공식 목록](https://aistudio.google.com/docs/models#all-gemini-4-models)은 Carbon(`gemini-4-carbon`)·Argon(`gemini-4-argon`)·Hydrogen(`gemini-4-hydrogen`)입니다. 세 모델은 **터미널·앱과 메인·서브에이전트 모두** OMP에 맞게 보정한 기존 `gemini-4-argon` 프롬프트를 공유하며, Carbon·Hydrogen 전용 업스트림 프리셋을 새로 추가하는 것은 아닙니다. 로컬 세대 매칭은 ID·표시 이름, Antigravity 등의 provider 접두사와 기본 `gemini-4` 계열 식별자를 인식합니다. 정체성 문장은 계열 전체에 맞게 Gemini 4로 바꾸되 Argon의 규칙과 실제 도구 제공 조건은 유지합니다. 다른 세대는 변경하지 않고 업스트림 매칭을 우선하며, 실제 요청 모델·provider는 바꾸지 않습니다.
+
 명시적 커스텀/인식 불가 시스템 템플릿은 그대로 유지하고, 미지원 모델은 기본 OMP 역할을 사용합니다. 자식에서 ULW를 자동 활성화하지 않습니다. `seance`처럼 OMP가 확장 자체를 격리하는 세션은 이 주입 경로의 대상이 아닙니다. provider 요청 훅을 우회하는 전송은 메인과 마찬가지로 턴 시작 시점의 프리셋만 보장합니다. 설치된 확장 변경은 새 OMP 세션을 시작해야 반영됩니다.
 
 실제 주입되는 프롬프트와 워크플로 포인터는 `omp-` 태그를 사용합니다. 기존 세션 복원과 CLI 호환성을 위해 저장된 `omo-ultrawork:*` 키와 `--omo-ultrawork-disabled`, `--omo-ulw-workflows-disabled`, `--omo-ulw-continuation-disabled` 플래그는 유지하며, 이전 `omo-` 프롬프트 태그도 읽을 수 있습니다. `upstream/`의 원본 지침은 `presets.ts`를 거쳐 OMP 도구 계약으로 변환된 뒤 전달됩니다.
