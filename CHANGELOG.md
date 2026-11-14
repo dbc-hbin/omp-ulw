@@ -2,6 +2,12 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-14 Model-specific code-mode execution
+
+- Connect independent lookups, result filtering/aggregation/comparison and deterministic read-only sequences directly to eval, without adding a per-step routing decision or requiring every call to use code mode.
+- Keep model-family wording and roles grounded in the existing preset text, not measured model traits. Preserve direct standalone calls, model-judgment boundaries, sequential mutations, native tool contracts and eval availability.
+- Retain visible failures and recovery without replaying successful calls. Prompt rendering and local host checks establish delivery and execution, not an improvement in model adherence.
+
 ### 2026-11-13 Astra evidence-based direct answers
 
 - Replace Astra's generic anti-hedging sentence with concise rules for evidence-based conclusions, local uncertainty, reasoned opinions and specific missing facts.
