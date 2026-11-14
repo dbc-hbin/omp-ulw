@@ -1,6 +1,6 @@
 ---
 name: browser
-description: "Drive interactive pages through OMP's native eval browser prelude: forms, clicks, JavaScript-rendered content, screenshots, web QA, frames and network evidence. Use when native OMP browser work is requested or permitted by host routing; use read for static URLs and web_search for discovery."
+description: "Default to OMP's native eval browser prelude for interactive pages: forms, clicks, JavaScript-rendered content, screenshots, web QA, frames and network evidence. Use read for static URLs and web_search for discovery."
 ---
 
 # Browser on OMP
@@ -14,10 +14,10 @@ server. If the prelude is unavailable, report the missing eval/browser capabilit
 second browser runtime to substitute for it. The live contract wins over this skill's pinned
 18.20 guidance: do not assume its diagnostic envelopes or timeout inheritance on an older host.
 
-Honor the user's chosen browser and host skill routing. An installed Aside-first rule still applies
-unless the user selects OMP or that rule permits a fallback. Native desktop chrome and unsupported
-app surfaces use the shipped `computer-use` skill under OMP's native permissions. This skill does not
-change tools, approval requirements, project rules or native modes.
+Use OMP's native Eval `browser` by default for browser work; honor an explicit user choice of
+another tool. Native desktop chrome and unsupported app surfaces use the shipped `computer-use`
+skill under OMP's native permissions. This skill does not change tools, approval requirements,
+project rules or native modes.
 
 ## Choose the connection from the required state
 

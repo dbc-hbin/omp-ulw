@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-15 네이티브 브라우저 기본값
+
+- browser와 ultimate-browsing 스킬의 기본 경로를 OMP native Eval 브라우저로 명시하고 외부 브라우저 우선 지침을 제거합니다.
+- 사용자의 명시적 도구 선택, 정적 읽기·검색, 인증 경계와 native 권한은 유지합니다. 전역 스킬이나 브라우저 설정은 변경하지 않습니다.
+
 ### 2026-11-14 Gemini 4 계열 프롬프트 연결
 
 - Google의 현재 [Gemini 4 계열](https://aistudio.google.com/docs/models#all-gemini-4-models)인 Carbon·Argon·Hydrogen을 터미널·앱과 메인·자식 세션에서 기존 OMP 보정 `gemini-4-argon` 프롬프트에 연결합니다. ID·표시 이름·provider 접두사에서 세대를 매칭하며 Carbon·Hydrogen 전용 업스트림 프리셋을 추가하지 않습니다.

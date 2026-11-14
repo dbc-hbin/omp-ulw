@@ -2,6 +2,11 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-15 Native browser default
+
+- Make the browser and ultimate-browsing skills default to OMP's native Eval browser, removing external-browser priority instructions.
+- Preserve explicit user tool choices, static reads/searches, authentication boundaries and native permissions. No global skill or browser configuration is changed.
+
 ### 2026-11-14 Gemini 4 family prompt routing
 
 - Route Google's current [Gemini 4 family](https://aistudio.google.com/docs/models#all-gemini-4-models)—Carbon, Argon and Hydrogen—to the existing adapted `gemini-4-argon` prompt on terminal/app and main/child sessions. Match the generation through IDs/display names and provider prefixes, without adding bespoke upstream Carbon/Hydrogen presets.
