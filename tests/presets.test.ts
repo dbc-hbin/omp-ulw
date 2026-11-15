@@ -100,16 +100,29 @@ describe("faithful omo presets", () => {
     }
   });
 
-  test("non-GPT families retain their eval routing only when eval is available", () => {
-    for (const id of ["claude-opus-5.5", "kimi-k3", "gemini-4-argon", "grok-4.5"]) {
+  test("all supported profiles leave execution transport to common tool documentation", () => {
+    for (const name of presetNames.filter(name => name !== "gpt-5")) {
       for (const surface of ["terminal", "app"] as const) {
-        const withEval = renderPreset({ id }, { surface, toolNames })!.prompt;
-        expect(withEval).toMatch(/JavaScript `eval` cell/);
-        expect(withEval).toMatch(/`Promise\.allSettled`/);
-        expect(withEval).toMatch(/standalone calls direct/);
-        expect(withEval).toMatch(/`sh\(\)`/);
-        const withoutEval = renderPreset({ id }, { surface, toolNames: toolNames.filter(tool => tool !== "eval") })!.prompt;
-        expect(withoutEval).not.toMatch(/Promise\.allSettled|JavaScript `eval` cell|`sh\(\)`/);
+        for (const subagent of [false, true]) {
+          for (const activeTools of [toolNames, toolNames.filter(tool => tool !== "eval"), ["eval"], []]) {
+            const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames: activeTools, subagent });
+            expect(rendered?.name).toBe(name);
+            const prompt = rendered!.prompt;
+            expect(prompt).not.toMatch(/`eval`|Promise\.all(?:Settled)?|parallel\(thunks\)|code-execution tool|`tool\.\*`/i);
+            expect(prompt).not.toMatch(/(?:skip|use|running|write) the cell|cell strateg|standalone calls direct|direct tool call|call tools directly instead/i);
+            expect(prompt).not.toMatch(/superpower|default to js on Bun|`sh\(\)`|independent (?:tool )?calls[^\n.]*parallel wave/i);
+            expect(prompt).not.toMatch(/Before each response,[^\n.]+request every item|one (?:message|response) instead/i);
+            expect(prompt).not.toMatch(/Send a step's independent calls in one message/);
+            expect(prompt).toMatch(/edits[^\n.]+approvals[^\n.]+sequential/i);
+            expect(prompt).toContain("result-dependent calls sequential; inspect each before the next");
+            expect(prompt).toMatch(/specialized-tool routing, permissions, and job lifecycles/);
+            expect(prompt).toMatch(/call identities, failures, tool-reported errors, and missing or truncated results/);
+            expect(prompt).toMatch(/permission or approval denial/i);
+            if (activeTools.includes("bash")) {
+              expect(prompt).toContain("Sequence bash calls that depend on shell state");
+            }
+          }
+        }
       }
     }
   });
@@ -136,14 +149,10 @@ describe("faithful omo presets", () => {
           expect(argon?.name).toBe("gemini-4-argon");
           expect(argon?.prompt).toMatch(/\ba coding agent running on Gemini 4\./);
           expect(argon?.prompt).not.toMatch(/\brunning on Gemini 4 Argon\b/);
-          if (activeTools.includes("eval")) {
-            expect(argon?.prompt).toMatch(/`tool\.\*` calls concurrently with `Promise\.allSettled`/);
-            expect(argon?.prompt).toMatch(/edits, side effects,[^\n]+sequential/i);
-            expect(argon?.prompt).toMatch(/standalone calls direct/);
-          } else {
-            expect(argon?.prompt).not.toMatch(/Promise\.allSettled|Writing code is your superpower|`tool\.\*`/);
-            expect(argon?.prompt).toMatch(/independent calls[^\n]+parallel wave/i);
-          }
+          expect(argon?.prompt).not.toMatch(/`eval`|Promise\.allSettled|Writing code is your superpower|`tool\.\*`|standalone calls direct/);
+          expect(argon?.prompt).toMatch(/edits, side effects,[^\n]+sequential/i);
+          expect(argon?.prompt).toMatch(/Name the intended state before acting|Compare each action with intended state/);
+          expect(argon?.prompt).toMatch(/(?:render|screenshot)[^\n.]+look/i);
           expect(argon?.prompt.includes("## Search Grounding")).toBe(activeTools.includes("web_search"));
           for (const model of familyModels) expect(renderPreset(model, options)).toEqual(argon);
           for (const id of ["gemini-3-carbon", "gemini-3.1-hydrogen", "gemini-5-carbon", "gemini-40-carbon", "gemini-41-carbon", "gemini-4x", "gemini-4x-carbon", "notgemini-4-carbon", "google/notgemini-4-carbon"]) {

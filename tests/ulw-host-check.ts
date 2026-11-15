@@ -313,9 +313,9 @@ try {
   assert(todoDescription.includes("Tasks identified by verbatim content"));
   assert(todoDescription.includes("Before work, init for 3+ steps"));
   const evalDescription = description("eval");
-  assert(toolPrompt.includes("It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool;"));
+  assert(!toolPrompt.includes("Use `sh()`"), "model presets must leave shell-helper contracts to native eval documentation");
   const shSignature = evalDescription.split("\n").find(line => line.includes("sh(command,") && line.includes("embedded bash engine"));
-  assert(shSignature && !shSignature.includes("runs to completion (never backgrounded)"));
+  assert(shSignature?.includes("runs to completion (never backgrounded)"), "native eval must retain the shell helper's completion contract");
   assert(evalDescription.includes("stdout+stderr") && evalDescription.includes("ShellError"));
   const taskTool = taskRequest.tools.find((tool: unknown): tool is { function: { name: "task"; parameters?: unknown } } =>
     typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" &&

@@ -60,15 +60,7 @@ export function projectHostGuidance(text: string, source: string, modelGuidance:
 /** Native mechanics remain authoritative; only the active profile can own duplicate requirements. */
 export function adaptToolGuidance(name: string, text: string, profile: string): string {
   if (name === "eval" && text.startsWith("One cell per call;")) {
-    text = text.replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.");
-    if (text.startsWith("One cell per call; top-level state persists, including across compaction.")
-      && profile.includes("Use `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool; do not assume variables or functions transfer between them.")) {
-      // Match each pinned native sh block, not similarly worded custom helpers or cell lifecycle prose.
-      text = text.replace(/^(sh\(command, cwd\?, timeout\?\); JS: await sh\(…\) or await sh`cmd \$\{arg\}` — embedded bash engine), runs to completion \(never backgrounded\)(\n  returns stdout\+stderr; non-zero exit raises ShellError \(\.exit_code\/\.exitCode, \.output\)\n  JS interpolations are shell-quoted; starts in the session cwd unless cwd is given)$/m, "$1$2")
-        .replace(/^(sh\(command, cwd\?, timeout\?\) — embedded bash engine), runs to completion \(never backgrounded\)(\n  returns stdout\+stderr; non-zero exit raises ShellError \(`\.exit_code`, `\.output`\); starts in the session cwd unless `cwd` is given)$/m, "$1$2")
-        .replace(/^(await sh\(command, \{ cwd\?, timeout\? \}\)  await sh`cmd \$\{arg\}` — embedded bash engine), runs to completion \(never backgrounded\)(\n  resolves to stdout\+stderr; non-zero exit throws ShellError \(`\.exitCode`, `\.output`\)\n  interpolations are shell-quoted; starts in the session cwd unless `cwd` is given)$/m, "$1$2");
-    }
-    return text;
+    return text.replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.");
   }
   if (name === "todo" && text.startsWith("`todo` NEVER takes a turn of its own:")) {
     text = text.replace(" (parallel tool calls)", "");

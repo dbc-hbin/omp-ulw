@@ -45,7 +45,7 @@ omp -e ./omp-ulw/index.ts
 
 - [`upstream/presets.js`](upstream/presets.js)：生成的上游模型预设和选择规则。
 - [`presets.ts`](presets.ts)：将提示词适配到 OMP 的工具和异步契约。
-- [`code-mode.ts`](code-mode.ts)：将 GPT 请求的直接工具列表限制为原生 eval 和会话控制工具。
+- [`code-mode.ts`](code-mode.ts)：不区分模型系列，将受支持请求的直接工具列表限制为原生 JavaScript eval 和会话控制工具。
 - [`index.ts`](index.ts)：为主会话和受支持的子代理会话应用提示词。
 - [`host-guidance.ts`](host-guidance.ts)：移除与模型工作方式重复的 OMP 默认指令，同时保留工具与权限契约。
 - [`upstream/update.mjs`](upstream/update.mjs)：从固定的上游版本更新预设。
@@ -55,21 +55,23 @@ omp -e ./omp-ulw/index.ts
 
 角色路由和回复格式说明已压缩；ULW 将调用解析交给宿主，浏览器和桌面契约按需读取。剩余的原生编辑前重复规则仅在当前模型或保留的宿主指令已覆盖时删除，覆盖条件变化时恢复；原生交付规则按原文保留，包括运行中的新增和修改。模型专属的重读、验证层级和工具预算保持不变。
 
-原生 todo/sh 说明中的重复仅在当前模型提示词明确包含等同要求且原生文本匹配时删除。独有的工具机制和自定义说明保持不变；不支持的模型保留原生说明。
+原生 todo 说明中的重复仅在当前模型提示词明确包含等同要求且原生文本匹配时删除。Shell helper 契约保留在原生 eval 文档中。独有的工具机制和自定义说明保持不变；不支持的预设保留原生说明。
 
 33 个预设包含 Claude Fable / Mythos 5.2 专用提示词，替代临时 Fable 5.5 条目。研究及 mass-research 的交接为每项结论保留观察证据，为关闭的线索记录探查过程；记忆中的断言在核实前仍是线索。有效的已记录证据可以复用，无需重复已通过的检查。
 
 GPT-6.1 Terra 在主会话和子代理中均使用 `gpt-6-astra`，支持 provider 前缀、Fast 后缀及显示名称。这里只改变提示词，实际请求的模型和 provider 保持不变；上游已有的匹配优先。
 
-## GPT 代码模式
+## 代码模式
 
-无需修改 OMP 本体：GPT 请求不再直接暴露普通工作工具的 schema，而是在原生 eval 描述中提供当前可用工具的 `tool.<name>(args)` 调用说明。已启用的委派、交互、等待、会话控制及必要的设备/计划模式传输保持可用。GPT 预设移除重复的 eval 选择、批处理和 helper 使用引导；其他模型的预设不变。
+无需修改 OMP 本体：不区分模型系列，受支持请求不再直接暴露普通工作工具的 schema，而是在原生 eval 描述中提供当前可用工具的 `tool.<name>(args)` 调用说明。已启用的委派、交互、等待、会话控制及必要的设备/计划模式传输保持可用。所有渲染后的模型预设将 eval 选择、批处理和 helper 使用说明交给公共工具文档，同时保留各自的行为和证据要求。
 
-`write` 的公开 schema 同时承担文件写入、计划模式和 `xd://` 传输，部分会话变更依赖顶层 `write` 结果，因此保留直接调用。普通文件写入引导使用 `tool.write()`；读取、搜索、shell 和编辑通过 bridge。无法对应到真实工具名称的 wire 工具保留，不猜测别名。
+`write` 的公开 schema 同时承担文件写入、计划模式和 `xd://` 传输，部分会话变更依赖顶层 `write` 结果，因此保留直接调用。普通文件写入引导使用 `tool.write()`；原生传输仍直接调用。`apply_patch`（包括原生 edit 的 freeform wire 格式）保持直接调用。读取、搜索、shell 和 JSON schema 编辑工具通过 bridge。保留无法映射的 wire 工具和显式强制的工具选择，不猜测别名或更改请求选择。
 
-每次使用实际请求模型判断，因此可跟随 fallback。不会给受限代理增加 eval，不改变激活工具、原生执行或审批。缺少 eval 或请求格式不受支持时，保留原请求并提示未应用代码模式。
+是否投影由实际 provider payload 的能力决定：必须存在已激活且实际暴露的 eval，其 schema 接受 JavaScript，并有受支持的工具列表格式及具备实际 schema 和激活原生元数据的 bridge 工具。不会给受限代理增加 eval，不改变激活工具、原生执行或审批。缺少所需能力或请求格式不受支持时，保留原请求并提示未应用代码模式；模型名称（包括 fallback）不决定策略。
 
-缓存仅属于当前扩展会话，无 TTL 或磁盘持久化。模型元数据变化时重新分类，激活工具、schema 或描述变化时替换当前目录缓存；会话切换、关闭或重载时清空，子会话独立。完整请求及权限/审批结果不缓存。
+覆盖范围也受 provider hook 支持限制。已安装的 `antigravity-cli` 扩展会将带别名的最终请求传给 `onPayload`；公共 API 不提供自定义别名元数据，因此无法映射的 wire 别名仍保留直接调用并发出提示。已安装的 Kiro 扩展不调用 `onPayload` 就序列化请求，Cursor Agent 工具位于此 hook 之外，GitLab Duo Agent 工作流没有该 hook，Apple Foundation Models 则丢弃 hook 返回的 payload。这些路径无法通过公共请求 hook 投影。
+
+缓存仅属于当前扩展会话，无 TTL 或磁盘持久化。激活工具、schema 或描述变化时替换当前目录缓存；会话切换、关闭或重载时清空，子会话独立。完整请求及权限/审批结果不缓存。
 
 这是模型侧工具选择限制，**不是执行安全边界**：模型若仍输出隐藏工具的名称，OMP 仍可能执行。后续扩展和 provider hook 也可能影响最终请求。不使用已移除的 `providers.openai-codex.codeMode` 设置。
 

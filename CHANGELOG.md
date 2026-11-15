@@ -2,12 +2,14 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
-### 2026-11-15 GPT extension code mode
+### 2026-11-15 Model-neutral extension code mode
 
-- Restrict GPT request tool schemas to native eval, session controls and required device/plan transports without changing OMP core, active tools or approvals. Describe bridge-callable tools in eval rather than repeating eval-selection guidance in GPT presets.
-- Keep model and current tool-catalog caches session-local, invalidated by their inputs and cleared on session transitions/shutdown; never cache requests or permission results.
-- Preserve non-GPT behavior and restricted-agent capabilities. This is outgoing schema projection, not a runtime prohibition on hidden direct tool calls.
-- Recognize OMP 18.20's exact headerless native role opening so GPT preset cleanup reaches live requests; custom templates and trailing runtime/project/child blocks remain protected.
+- Project supported requests across model families through native JavaScript eval, session controls and required device/plan transports without changing OMP core, active tools or approvals. Require active, actually exposed JavaScript-capable eval and supported payload/schema metadata; retain the original request when these gates are not met.
+- Describe bridge-callable tools in common eval documentation; remove repeated eval batching, direct-call selection and sh-helper routing from every rendered preset while preserving behavioral, evidence, sequential-mutation and native-wait obligations. Keep write transports, apply_patch, orchestration/session controls, unmapped wire tools and explicitly forced choices direct.
+- Keep the current tool-catalog cache session-local, invalidated by its inputs and cleared on session transitions/shutdown; never cache requests or permission results.
+- Preserve restricted-agent capabilities. This is outgoing schema projection, not a runtime prohibition on hidden direct tool calls.
+- Document provider-hook limits: installed Kiro omits onPayload, Cursor Agent tools and GitLab Duo Agent workflows sit outside the hook, and Apple Foundation Models discards its return. Retain installed antigravity-cli payload compatibility and preserve unknown wire aliases with a notice.
+- Recognize OMP 18.20's exact headerless native role opening so preset cleanup reaches live requests; custom templates and trailing runtime/project/child blocks remain protected.
 
 ### 2026-11-15 Native browser default
 

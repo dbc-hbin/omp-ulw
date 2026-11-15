@@ -49,7 +49,7 @@ Research and mass-research carry their source-access contracts directly, includi
 
 - [`upstream/presets.js`](upstream/presets.js): generated upstream model presets and selection rules.
 - [`presets.ts`](presets.ts): adapts prompts to OMP's tool and async contracts.
-- [`code-mode.ts`](code-mode.ts): projects GPT requests onto native eval and direct session controls.
+- [`code-mode.ts`](code-mode.ts): projects supported requests onto native JavaScript eval and direct session controls, independent of model family.
 - [`index.ts`](index.ts): applies prompts to main and supported subagent sessions.
 - [`host-guidance.ts`](host-guidance.ts): removes overlapping native behavioral defaults for selected profiles while preserving tool and permission contracts.
 - [`upstream/update.mjs`](upstream/update.mjs): updates presets from a pinned upstream revision.
@@ -59,7 +59,7 @@ For supported profiles, model-specific guidance takes precedence over generic OM
 
 Role routing and response-format guidance are compact; ULW leaves invocation parsing to the host and links browser/desktop contracts on demand. Remaining native pre-editing duplicates are removed only when the active profile or preserved host instructions cover them, and restored when that coverage changes. Native delivery rules are preserved verbatim, including live additions and changes. Model-specific rereading, verification tiers and tool budgets remain intact.
 
-Native todo/sh explanation duplicates are removed only when the exact current preset supplies the same requirement and the native description is recognized. Unique tool mechanics and custom descriptions are preserved; unsupported models retain native descriptions.
+Native todo explanation duplicates are removed only when the exact current preset supplies the same requirement and the native description is recognized. Shell-helper contracts remain in native eval documentation. Unique tool mechanics and custom descriptions are preserved; unsupported presets retain native descriptions.
 
 The 33 presets include the dedicated Claude Fable / Mythos 5.2 profile, replacing the provisional Fable 5.5 entry. Research and mass-research handoffs attach observed evidence to claims and probes to closed leads; remembered assertions remain leads until checked. Valid recorded evidence is reused without repeating settled checks.
 
@@ -71,15 +71,17 @@ On OMP 18.19, native prewalk notices follow the selected model's working methods
 
 A later explicit implementation request restores only runtime overrides owned by this extension, including any prior runtime values. Settings changed by the operator take precedence. Session transitions and shutdown release owned overrides. Restoration rearms the configured target; OMP does not expose a pending one-off manual target for extensions to reconstruct. The extension uses OMP 18.19's exported session-settings lookup instead of the global `api.pi.settings` proxy.
 
-## GPT code mode
+## Code mode
 
-GPT requests use extension-only code mode: ordinary work tools are removed from the outgoing direct tool schemas and documented in the native eval description for `tool.<name>(args)` calls. Native orchestration, interaction and session-control tools stay direct when already available. Host-required device/plan transports are preserved. GPT model presets no longer repeat eval-selection, batching or helper-usage nudges; non-GPT preset guidance is unchanged.
+Supported requests use extension-only code mode regardless of model family: ordinary work tools are removed from the outgoing direct tool schemas and documented in the native eval description for `tool.<name>(args)` calls. Native orchestration, interaction and session-control tools stay direct when already available. Host-required device/plan transports are preserved. All rendered model presets leave eval selection, batching and helper usage to common tool documentation while retaining their behavioral and evidence obligations.
 
-`write` remains direct because its public schema combines file writes, plan transport and `xd://` dispatch; OMP recognizes some session changes from the outer `write` result. Ordinary file writes are guided through `tool.write()`, while native transport writes remain direct. `read`, search, shell and editing tools use the bridge. Unmapped wire tools are preserved rather than guessing their canonical names.
+`write` remains direct because its public schema combines file writes, plan transport and `xd://` dispatch; OMP recognizes some session changes from the outer `write` result. Ordinary file writes are guided through `tool.write()`, while native transport writes remain direct. `apply_patch` stays direct, including native edit's freeform wire format. `read`, search, shell and JSON-schema editing tools use the bridge. Unmapped wire tools and explicitly forced tool choices are preserved rather than guessing their canonical names or changing the request's choice.
 
-The policy uses the actual request model, including fallback, rather than assuming the selected session model is still in use. It does not enable eval for restricted agents, change active tools, wrap native implementations, or change approvals. Missing eval and unsupported request shapes retain the original request and report that code mode was not applied.
+Projection is gated by the actual provider payload: it requires an active, exposed eval tool whose schema accepts JavaScript, a supported tool-list shape, and bridge-callable tools with active native metadata and actual schemas. It does not enable eval for restricted agents, change active tools, wrap native implementations, or change approvals. Missing capability and unsupported request shapes retain the original request and report that code mode was not applied; model names, including fallback names, do not select the policy.
 
-Caches belong to each extension session, with no TTL or disk persistence. Model metadata changes invalidate classification; active tools, schemas and descriptions invalidate the current catalog snapshot. Session transitions, shutdown and reload discard caches; child sessions have independent state. Whole provider requests and permission/approval results are never cached.
+Provider hook support also limits coverage. The installed `antigravity-cli` extension passes its aliased final request through `onPayload`; unknown wire aliases still remain direct with a notice because the public API supplies no custom alias metadata. The installed Kiro extension serializes requests without calling `onPayload`, Cursor Agent tools sit outside this hook, GitLab Duo Agent's workflow has no hook, and Apple Foundation Models discards the hook's returned payload. This extension cannot project those paths through the public request hook.
+
+Caches belong to each extension session, with no TTL or disk persistence. Active tools, schemas and descriptions invalidate the current catalog snapshot. Session transitions, shutdown and reload discard caches; child sessions have independent state. Whole provider requests and permission/approval results are never cached.
 
 This is a model-facing routing restriction, **not an execution security boundary**: OMP can still execute a hidden active tool if a model emits its name anyway. Provider hooks and later extensions can also affect the final request. No OMP core patch or removed `providers.openai-codex.codeMode` setting is required.
 

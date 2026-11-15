@@ -1,8 +1,17 @@
 import installPreset from "../../index";
 
 export const provider = "omp-code-mode-probe";
-export const gptModel = "gpt-6.1-sol";
-export const otherModel = "claude-haiku-5.5";
+// Preset-recognized model ids covering representative families on one transport.
+export const models = ["gpt-6.1-sol", "claude-haiku-5.5", "kimi-k3", "gemini-4-argon", "grok-4.5"];
+export const bridgeProbe = {
+  name: "code-mode-probe",
+  label: "Code-mode bridge probe",
+  description: "Return the supplied value to verify native bridge tool-name dispatch.",
+  parameters: { type: "object", properties: { value: { type: "string" } }, required: ["value"] },
+  async execute(_toolCallId: string, { value }: { value: string }) {
+    return { content: [{ type: "text" as const, text: value }], details: { value } };
+  },
+};
 export interface WireTool {
   type: string;
   function: { name: string; description?: string; parameters: Record<string, unknown> };
@@ -18,6 +27,7 @@ export interface Observation {
 interface Context { model?: { provider: string; id: string } }
 interface FixtureApi {
   registerProvider(name: string, config: unknown): void;
+  registerTool(config: unknown): void;
   getActiveTools(): string[];
   on(event: "before_agent_start", handler: (event: { systemPrompt: string[] }, ctx: Context) => Promise<void>): void;
   on(event: "before_provider_request", handler: (event: { payload: unknown }, ctx: Context) => Promise<void>): void;
@@ -32,9 +42,10 @@ export default function codeModeFixture(api: Parameters<typeof installPreset>[0]
     url.username || url.password || url.pathname !== "/" || url.search || url.hash) {
     throw new Error("Code-mode probe refuses a non-loopback provider");
   }
+  api.registerTool(bridgeProbe);
   api.registerProvider(provider, {
     baseUrl: `${base}/v1`, apiKey: "local-test-only", api: "openai-completions",
-    models: [gptModel, otherModel].map(id => ({
+    models: models.map(id => ({
       id, name: id, reasoning: false, input: ["text"], contextWindow: 131072, maxTokens: 1024,
       cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
     })),

@@ -9,7 +9,7 @@ const newPreset = "<omp-model-preset>new profile $& $` $' $$</omp-model-preset>"
 const oldText = `Host instructions\n\n${oldPreset}\n\nProject rules`;
 const newText = `Host instructions\n\n${newPreset}\n\nProject rules`;
 
-// Pinned v18.19.0 todo.md and eval.md mechanics; model appendices remain their sole duplicate owner.
+// Pinned v18.19.0 todo.md and eval.md mechanics; helper contracts remain native-owned.
 const nativeTodo = [
 	"`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call (parallel tool calls), `init` beside the first read or action, `done`/`start` beside the next action or check. A response whose only call is `todo` wastes a full model round trip.",
 	"Tasks identified by verbatim content, NEVER generated IDs (task-1). Unique, stable task/phase names; lost text: view, NEVER guess.",
@@ -34,7 +34,6 @@ const nativeShBlocks = [
 	].join("\n"),
 ];
 const workpoolRule = "For 2+ independent items, use a named `workpool()`; results auto-deliver.";
-const shellRule = "Use `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool; do not assume variables or functions transfer between them.";
 const profile = renderPreset({ id: "gpt-6.1-terra" }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt;
 function nativeEval(sh: string): string {
 	return [
@@ -78,17 +77,16 @@ test("native todo deduplication keeps every mechanism and requires complete acti
 	expect(adaptToolGuidance("custom_todo", nativeTodo, profile)).toBe(nativeTodo);
 });
 
-test("native eval retains GPT helper contracts and deduplicates only profiles that still own them", () => {
-	const withShellGuidance = renderPreset({ id: "gemini-4-argon" }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt;
+test("native eval retains helper and lifecycle contracts regardless of active profile", () => {
+	const profiles = ["gpt-6.1-terra", "gemini-4-argon", "claude-opus-5.5", "kimi-k3", "grok-4.5"]
+		.map(id => renderPreset({ id }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt);
 	for (const sh of nativeShBlocks) {
 		const description = nativeEval(sh);
 		const parallelAdapted = description.replace(workpoolRule, "`workpool()` results auto-deliver.");
-		const expected = parallelAdapted.replace(", runs to completion (never backgrounded)", "");
-		expect(adaptToolGuidance("eval", description, profile)).toBe(parallelAdapted);
-		expect(adaptToolGuidance("eval", description, withShellGuidance)).toBe(expected);
-		expect(adaptToolGuidance("eval", expected, withShellGuidance)).toBe(expected);
-		for (const missing of ["", newPreset, withShellGuidance.replace(shellRule, ""), withShellGuidance.replace("without auto-backgrounding", ""), withShellGuidance.replace("runs to completion", "is never backgrounded")]) {
-			expect(adaptToolGuidance("eval", description, missing)).toBe(parallelAdapted);
+		for (const activeProfile of [...profiles, "", newPreset]) {
+			expect(activeProfile).not.toContain("Use `sh()`");
+			expect(adaptToolGuidance("eval", description, activeProfile)).toBe(parallelAdapted);
+			expect(adaptToolGuidance("eval", parallelAdapted, activeProfile)).toBe(parallelAdapted);
 		}
 		for (const custom of [
 			description.replace("One cell per call; top-level state persists, including across compaction.", "One cell per call; custom execution."),

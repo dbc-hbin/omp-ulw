@@ -4,23 +4,25 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { gptModel, otherModel, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
+import { bridgeProbe, models, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
 
 interface Message { role: string; content?: unknown; tool_call_id?: string }
 interface Payload { model: string; messages: Message[]; tools?: WireTool[] }
 interface Turn {
   name: string;
   model: string;
+  evalCall: string;
   calls: Payload[];
   observations: Observation[];
   finalSent: boolean;
   finalObserved: boolean;
 }
-const direct = new Set(["eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context", "write"]);
+const direct = new Set(["eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context", "write", "apply_patch"]);
 const sentinel = "NATIVE_CODE_MODE_READ_47A9";
 const present = "native-code-mode-present.txt";
 const missing = "native-code-mode-missing-47a9.txt";
-const evalCall = "native_eval_read_47a9";
+// Every registered model family, then a final switch back to the first model.
+const scenarios = [...models.map((model, index) => ({ name: `model-${index}`, model })), { name: "model-0-switch-back", model: models[0]! }];
 const turns: Turn[] = [];
 let turn: Turn | undefined;
 let failure: unknown;
@@ -79,28 +81,36 @@ const server = Bun.serve({
       assert.equal(body.model, turn.model);
       assert(Array.isArray(body.messages) && Array.isArray(body.tools));
       turn.calls.push(body);
-      const expected = turn.name === "gpt-native-eval" ? 2 : 1;
-      assert(turn.calls.length <= expected, "unexpected retry, continuation or auxiliary request");
-      if (turn.name === "gpt-native-eval" && turn.calls.length === 1) {
+      assert(turn.calls.length <= 2, "unexpected retry, continuation or auxiliary request");
+      if (turn.calls.length === 1) {
         assert(body.tools.some(tool => tool.function.name === "eval"), "native eval must be directly callable");
-        return stream({ name: "eval", id: evalCall, args: {
+        const description = body.tools.find(tool => tool.function.name === "eval")!.function.description ?? "";
+        const bridgeCall = description.split("\n").find(line => line === `await tool[${JSON.stringify(bridgeProbe.name)}](args)`);
+        assert(bridgeCall, "catalog must expose an executable accessor for the hyphenated native tool");
+        return stream({ name: "eval", id: turn.evalCall, args: {
           language: "js", title: "Reading native code-mode fixtures",
           code: [
             `const paths = ${JSON.stringify([present, missing])};`,
             "const settled = await Promise.allSettled(paths.map(path => tool.read({ path })));",
-            'print(JSON.stringify(settled.map((item, index) => ({ path: paths[index], status: item.status, result: item.status === "fulfilled" ? item.value : String(item.reason) }))));',
+            "for (const [index, item] of settled.entries()) {",
+            '  const result = item.status === "fulfilled" ? typeof item.value === "string" ? item.value : { text: item.value.text, hasError: item.value.hasError, isError: item.value.isError } : String(item.reason);',
+            "  print(JSON.stringify({ path: paths[index], status: item.status, result }));",
+            "}",
+            `const args = { value: ${JSON.stringify(`${bridgeProbe.name}:${turn.evalCall}`)} };`,
+            `const bridgeResult = ${bridgeCall};`,
+            'print(typeof bridgeResult === "string" ? bridgeResult : bridgeResult.text);',
           ].join("\n"),
         } });
       }
-      if (turn.name === "gpt-native-eval") {
-        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === evalCall);
-        assert(result, "native eval result must return to the actual provider");
-        const text = JSON.stringify(result.content);
-        assert(text.includes(sentinel), "native read must return the scratch-file sentinel");
-        assert(text.includes(missing), "native missing-file error must identify the requested file");
-        assert(/ENOENT|no such file|not found|does not exist/i.test(text), "native missing-file diagnostic must survive eval");
-        assert(/rejected|hasError|isError/.test(text), "native eval must expose the failed read, not silently succeed");
-      }
+      const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === turn.evalCall);
+      assert(result, "native eval result must return to the actual provider");
+      const text = JSON.stringify(result.content);
+      assert(text.includes(sentinel), "native read must return the scratch-file sentinel");
+      assert(text.includes(missing), "native missing-file error must identify the requested file");
+      assert(text.includes(`${bridgeProbe.name}:${turn.evalCall}`), "the advertised bracket accessor must reach the actual native tool");
+      assert(!text.includes("[Some lines truncated"), `${turn.name}: native batch evidence must remain untruncated`);
+      assert(/ENOENT|no such file|not found|does not exist/i.test(text), `${turn.name}: native missing-file diagnostic must survive eval: ${text}`);
+      assert(/rejected|hasError|isError/.test(text), "native eval must expose the failed read, not silently succeed");
       turn.finalSent = true;
       return stream(`CODE_MODE_COMPLETE:${turn.name}`);
     } catch (error) {
@@ -115,7 +125,7 @@ let output: Promise<void> | undefined;
 let stderr: Promise<string> | undefined;
 const pending = new Map<string, ReturnType<typeof Promise.withResolvers<void>>>();
 let ended: ReturnType<typeof Promise.withResolvers<void>> | undefined;
-const deadline = setTimeout(() => fail(new Error(`Code-mode host deadline: ${turn?.name ?? "startup"}; requests=${turn?.calls.length ?? 0}`)), 90_000);
+const deadline = setTimeout(() => fail(new Error(`Code-mode host deadline: ${turn?.name ?? "startup"}; requests=${turn?.calls.length ?? 0}`)), 180_000);
 function send(command: Record<string, unknown>): void {
   assert(child?.stdin && typeof child.stdin !== "number");
   child.stdin.write(`${JSON.stringify(command)}\n`);
@@ -146,8 +156,8 @@ try {
   child = Bun.spawn([
     "omp", "--mode", "rpc", "--no-ui", "--no-extensions",
     "-e", fileURLToPath(new URL("./fixtures/code-mode-provider.ts", import.meta.url)),
-    "--model", `${provider}/${gptModel}`, "--cwd", cwd, "--config", config,
-    "--tools", "read,grep,bash,edit,write,eval,task",
+    "--model", `${provider}/${models[0]}`, "--cwd", cwd, "--config", config,
+    "--tools", `read,grep,bash,edit,write,eval,task,${bridgeProbe.name}`,
     "--no-skills", "--no-rules", "--no-title", "--no-session", "--no-lsp", "--no-prewalk",
   ], { cwd, stdin: "pipe", stdout: "pipe", stderr: "pipe", env: {
     PATH: process.env.PATH, LANG: process.env.LANG ?? "en_US.UTF-8", TMPDIR: process.env.TMPDIR ?? tmpdir(),
@@ -193,21 +203,22 @@ try {
   })().catch(fail);
   await rpc({ type: "get_state", id: "ready" });
   await rpc({ type: "set_auto_compaction", id: "compaction-off", enabled: false });
-  for (const [index, [name, model]] of [
-    ["gpt-native-eval", gptModel], ["non-gpt-native-tools", otherModel], ["gpt-switch-back", gptModel],
-  ].entries()) {
-    if (index > 0) await rpc({ type: "set_model", id: `model-${index}`, provider, modelId: model });
-    turn = { name: name!, model: model!, calls: [], observations: [], finalSent: false, finalObserved: false };
+  for (const [index, scenario] of scenarios.entries()) {
+    if (index > 0) await rpc({ type: "set_model", id: `model-${index}`, provider, modelId: scenario.model });
+    turn = {
+      name: scenario.name, model: scenario.model, evalCall: `native_eval_read_47a9_${index}`,
+      calls: [], observations: [], finalSent: false, finalObserved: false,
+    };
     turns.push(turn);
     ended = Promise.withResolvers<void>();
-    send({ type: "prompt", id: `prompt-${index}`, message: `Code-mode deterministic host contract: ${name}.` });
+    send({ type: "prompt", id: `prompt-${index}`, message: `Code-mode deterministic host contract: ${scenario.name}.` });
     await Promise.race([ended.promise, failed.promise]);
-    assert.equal(turn.calls.length, index === 0 ? 2 : 1);
+    assert.equal(turn.calls.length, 2, `${scenario.name}: every model must complete the native eval round trip`);
   }
   let presetRegions = 0;
   const baseline = turns[0]!.observations.find(item => item.stage === "provider" && item.phase === "before")!;
   assert(baseline?.tools, "must observe native pre-plugin schemas");
-  for (const name of ["read", "grep", "bash", "edit", "write", "eval", "task"]) {
+  for (const name of ["read", "grep", "bash", "edit", "write", "eval", "task", bridgeProbe.name]) {
     assert(baseline.activeTools.includes(name), `explicit native selection must enable ${name}`);
     assert(names(baseline.tools).includes(name), `native request must originally expose ${name}`);
   }
@@ -226,37 +237,35 @@ try {
       const original = current.observations.filter(item => item.stage === "provider" && item.phase === "before")[index]!.tools!;
       const projected = current.observations.filter(item => item.stage === "provider" && item.phase === "after")[index]!.tools!;
       assert.deepEqual(body.tools, projected, "observed final schemas must reach the actual provider");
-      if (current.model !== gptModel) {
-        assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original), "non-GPT switch must restore every original native schema");
-        assert.deepEqual(toolSchemas(body.tools!), toolSchemas(baseline.tools!), "non-GPT must restore the original native tool set");
-        return;
-      }
-      assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), "GPT must expose exactly the conservative direct set");
-      assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), "projection must preserve every retained native tool's parameters");
-      for (const name of ["read", "grep", "bash", "edit"]) assert(!names(body.tools!).includes(name), `GPT must hide ordinary ${name}`);
-      for (const name of ["eval", "task", "write"]) assert(names(body.tools!).includes(name), `GPT must retain native ${name}`);
+      assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), `${current.name}: every model must expose exactly the conservative direct set`);
+      assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), `${current.name}: projection must preserve every retained native tool's parameters`);
+      for (const name of ["read", "grep", "bash", "edit", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide ordinary ${name}`);
+      for (const name of ["eval", "task", "write"]) assert(names(body.tools!).includes(name), `${current.name}: every model must retain native ${name}`);
       const read = original.find(tool => tool.function.name === "read")!;
       const description = body.tools!.find(tool => tool.function.name === "eval")!.function.description ?? "";
-      assert(description.includes("<omp-code-mode>") && description.includes("</omp-code-mode>"), "native eval must carry the catalog");
-      assert(description.includes("await tool.read(args)"), "catalog must advertise native read");
-      assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), "catalog must contain the actual native read wire schema");
+      assert(description.includes("<omp-code-mode>") && description.includes("</omp-code-mode>"), `${current.name}: native eval must carry the catalog`);
+      assert(description.includes("await tool.read(args)"), `${current.name}: catalog must advertise native read`);
+      assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
       const regions = [...systemText(body).matchAll(/<omp-model-preset>([\s\S]*?)<\/omp-model-preset>/g)];
-      assert.equal(regions.length, 1, `${current.name}: actual GPT request must contain exactly one installed model preset`);
+      assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one installed model preset`);
       for (const region of regions) {
         presetRegions++;
-        assert(!/\beval\b|await tool\./i.test(region[1]!), "any installed GPT preset region must have no eval steering");
+        assert(!/\beval\b|await tool\./i.test(region[1]!), `${current.name}: any installed preset region must have no eval steering`);
       }
     });
   }
   if (failure) throw failure;
+  const requests = turns.reduce((sum, item) => sum + item.calls.length, 0);
   console.log(JSON.stringify({
-    status: "PASS", requests: turns.reduce((sum, item) => sum + item.calls.length, 0),
+    status: "PASS", requests,
     scenarios: turns.map(item => ({ name: item.name, model: item.model, requests: item.calls.length })),
-    assertions: ["full index installation", "unchanged native activation before/after hooks", "actual GPT wire projection",
-      "native read schema in eval catalog", "real eval tool.read sentinel and missing-file diagnostic",
-      "direct native task retained", "RPC non-GPT restoration and GPT re-projection"],
+    assertions: ["full index installation", "unchanged native activation before/after hooks for every model",
+      "actual wire projection for every model family", "native read schema in eval catalog",
+      "real eval tool.read sentinel and missing-file diagnostic per model",
+      "advertised bracket accessor invokes a hidden hyphenated native tool",
+      "direct native task retained", "model switch back to the first model re-projects"],
     writeException: "Native write remains direct: its schema mixes ordinary files, plans and xd session-control; the public API cannot distinguish them.",
-    promptIntegration: `${presetRegions} installed GPT preset regions checked for absent eval steering`,
+    promptIntegration: `${presetRegions} installed preset regions across ${requests} provider requests checked for absent eval steering`,
     limitations: ["Scripted loopback responses verify transport, not model obedience",
       "No-eval authoritative selection and cache mutation belong to unit checks; this smoke does not claim those scenarios"],
   }, null, 2));
