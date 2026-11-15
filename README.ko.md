@@ -2,161 +2,87 @@
 
 [English](README.md) | 한국어 | [简体中文](README.zh-CN.md)
 
-OMP용 모델 프롬프트와 Native ULW 워크플로 확장입니다. extension 표시 이름은 `omp-ulw`입니다. 모델별 프롬프트, 세션 단위 ULW 활성화, 계획·실행·리서치 및 작업 검증 스킬을 제공합니다.
+[Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi)용 모델 프롬프트·코드모드·native ULW 워크플로 확장입니다. 도구·권한·실행은 OMP가 관리하고, 확장은 모델별 작업 방식과 계획·리서치·전문 스킬을 제공합니다.
 
-## 사용
+## 시작하기
 
 Git·Bun·OMP가 설치된 환경에서 실행합니다.
 
 ```bash
 git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
 bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw/index.ts
+omp -e ./omp-ulw
 ```
 
-- `/ulw <작업>`: 대화형 TUI에서 ULW와 native goal을 함께 활성화합니다. 직접 `ulw <작업>` 또는 `/goal ulw <작업>`을 입력해도 됩니다.
-- `/ulw-plan`, `/ulw-execute`, `/ulw-loop`, `/ulw-research`, `/mass-ulw`: 계획, 실행, 목표 루프, 리서치, 의존 작업 실행.
-- `/debugging`, `/review-work`, `/visual-qa`, `/frontend`, `/ast-grep`, `/lsp-setup`, `/refactor` 등: 필요한 전문 스킬 호출.
+대화형 TUI에서 `/ulw <작업>` 또는 `ulw <작업>`을 입력하면 ULW와 native goal을 활성화합니다. 일시정지·예산 제한 상태를 포함해 기존 goal은 유지합니다. RPC 클라이언트는 native goal을 별도로 생성해야 합니다.
 
-일반 `/ulw`는 전문 워크플로를 자동으로 켜지 않습니다. 대화형 TUI의 입력 단계에서 `/ulw`와 `ulw`/`ultrawork`를 `/goal`로 변환하므로, 작업 실행 중 입력해도 native goal objective가 생성됩니다. 이미 활성 goal이 있으면 새 goal로 교체하지 않습니다. OMP 18.12.5에서 `/goal`은 TUI 전용 명령이므로 RPC·프로그램 호출은 ULW 지침만 활성화하며, RPC 클라이언트는 native `goal` 요청을 별도로 사용해야 합니다. `ulw-loop`와 `ulw-execute`는 다중 목표·증거 ledger를 사용하므로 native goal을 중복 생성하지 않습니다. 참조 문서는 필요한 시점에만 읽으며, 기존 프로젝트 지침과 권한 규칙을 보존합니다.
+명령은 입력 맨 앞에 놓습니다. `Explain /ulw` 같은 언급만으로는 활성화되지 않습니다. 일반 ULW는 전문 워크플로를 자동으로 활성화하지 않습니다. 설치된 확장을 변경한 뒤에는 OMP를 재시작합니다.
 
-## OMP와 ULW의 책임
+## 워크플로와 스킬
 
-명령·별칭은 앞쪽 공백을 제외한 입력 맨 앞에서만 활성화됩니다. `Explain ulw`, `Explain /ulw`, `What does /ulw-plan do?`처럼 문장 안에서 언급하면 활성화하지 않습니다. 기존 호출을 옮길 때는 명령을 맨 앞으로 이동합니다. 이미 존재하는 paused·budget-limited goal도 소유권을 유지합니다.
+| 명령 | 용도 | 기본 OMP 키워드 |
+| --- | --- | --- |
+| `/ulw` | 세션에서 ULW 활성화 | — |
+| `/ulw-plan` | 구현 없이 검토된 계획 작성 | `ultrathink` |
+| `/ulw-execute` | 계획 실행과 진행 추적 | `orchestrate` |
+| `/ulw-loop` | 목표·의존성·증거 추적 | `orchestrate` |
+| `/mass-ulw` | 영속 의존성 그래프 실행 | `workflowz` |
+| `/ulw-research` | 출처와 반론을 포함한 조사 | `workflowz` |
 
-일반적인 작업 방식은 선택된 모델 프리셋이 소유합니다. 재읽기, 작업 분해·위임, 검증 단계 등에서 OMP의 일반 지침과 겹치거나 충돌하면 모델 지침을 남기고 OMP 쪽 중복을 제거합니다. OMP의 실제 도구 스키마·권한·승인·native mode 기능과 자식의 전문 역할·반환 계약은 유지합니다. ULW는 별도 실행 정책을 추가하지 않고 워크플로 산출물과 소유권을 정의합니다. 전문 명령의 native 키워드 연결과 도구 조건·활성화 설정·thinking effort는 OMP가 처리합니다.
+전문 명령은 이미 지정한 키워드가 없을 때 기본 키워드를 추가하며, OMP의 키워드 설정과 도구 조건을 따릅니다. RPC에서는 `prompt`와 적절한 `streamingBehavior`를 사용합니다. 별도 `steer`·`follow_up` 요청은 키워드 처리를 건너뜁니다. 입력 훅을 거치지 않는 `/skill:` 직접 호출이나 초기 CLI 텍스트에는 키워드를 명시해야 합니다.
 
-| 진입점 | 기본 native 연결 | ULW가 추가하는 기능 |
-|---|---|---|
-| `/ulw`, `ulw`, `ultrawork` | 기존 goal 연결만 유지 | 세션 활성화. 별도 notepad·ledger·검증 절차 없음 |
-| `/ulw-plan` | `ultrathink` | 구현하지 않는 계획 작성, 결정·계획 검토 기록, 실행 가능한 계획 산출물 |
-| `/ulw-execute` | `orchestrate` | 계획 선택, Boulder 소유권, 체크박스별 완료·차단·재개 기록 |
-| `/ulw-loop` | `orchestrate` | 다중 목표·의존성·증거 체크포인트 |
-| `/mass-ulw` | `workflowz` | 지속 가능한 의존성 그래프, 노드별 인계·무효화·복구 기록 |
-| `/ulw-research` | `workflowz` | 조사 범위, 주장·출처·관찰 기록, 반론 검증과 인용된 산출물 |
+그 밖의 진입점:
 
-TUI/RPC `prompt` 입력의 맨 앞에 놓인 전문 명령·별칭과 등록된 슬래시 명령 처리기에 적용됩니다. 예를 들어 `/ulw-execute 작업`은 `orchestrate`를 덧붙여 OMP에 전달합니다. `/ulw-execute workflowz 작업`처럼 사용자가 native 키워드를 지정하면 자동 선택을 생략합니다. 인수의 인용·부정 문장에 native 키워드가 있어도 보수적으로 자동 선택을 생략하고 실제 활성화 여부는 OMP matcher에 맡깁니다. 일반 언급·자식 입력·후속 `continue`에는 기본 키워드를 추가하지 않습니다. 초기 CLI의 일반 텍스트나 `/skill:` 직접 호출처럼 입력 훅·명령 처리기를 거치지 않는 경로에서는 native 키워드를 명시해야 합니다.
+- **코드·리뷰:** `/debugging`, `/programming`, `/review-work`, `/ast-grep`, `/lsp-setup`, `/refactor`
+- **UI·평가:** `/frontend`, `/visual-qa`, `/visualize`, `/data-scientist`, `/eval-integrity`
+- **브라우저·데스크톱:** `/web-browser`, `/ultimate-browsing`, `/computer-use`는 OMP의 native Eval API와 권한을 사용합니다. 기존 `/browser`·`/computer` 제어 명령은 유지합니다.
+- **세션·메모리:** `/coding-agent-sessions`, `/init-deep`, `/reflection`, `/memory-advisor`
 
-OMP 18.16의 별도 RPC `steer`·`follow_up` 요청은 native 키워드 처리를 건너뛰므로 자동 연결 대상이 아닙니다. RPC 클라이언트는 `{"type":"prompt","message":"ulw-loop 작업","streamingBehavior":"steer"}` 또는 `"followUp"`을 사용해야 native 키워드 처리와 큐 전달을 함께 거칩니다. 확장은 입력 이벤트에서 RPC 요청 종류를 알 수 없으므로, 이를 임의의 새 메시지로 재전송해 큐 순서·첨부를 바꾸지 않습니다.
+상세 지침은 [skills/](skills/)에서 확인합니다. 여러 제품의 세션 탐색에는 Python 3.11+가 필요하며, 특정 OMP 세션 상담은 native `seance`를 사용합니다.
 
-`--omo-ulw-workflows-disabled`는 자동 연결도 끕니다. OMP의 `magicKeywords.enabled`와 개별 키워드 설정, 필요한 `task`/`eval` 도구 조건을 그대로 존중하며, 사용할 수 없는 모드를 복사한 지침으로 대체하지 않습니다. `jevify`는 대량 분류 전용이므로 자동 선택하지 않습니다.
+## 프롬프트와 코드모드
 
-단순 병렬 실행에는 OMP의 실행 기능을 사용하고, 저장된 그래프가 필요한 경우에만 `mass-ulw`를 추가합니다. 전문 워크플로의 산출물·상태 계약은 유지하지만, 기본 ULW와 각 참조 문서가 별도 실행 정책을 겹쳐 주입하지 않습니다. 모델 프리셋은 기존대로 유지하고, ULW 정책은 모든 모델에서 `skills/ultrawork/SKILL.md` 한 곳을 사용합니다.
+지원 모델의 프롬프트를 OMP에 맞게 보정하고, 메인과 지원되는 자식 세션에 각각 적용합니다. 전문 역할·프로젝트 지침·권한·완료 프로토콜은 보존합니다. 커스텀 템플릿과 미지원 모델은 native 동작을 유지합니다. 명시적인 조사·계획 전용 요청에서는 prewalk를 잠시 억제하고, 구현 요청으로 전환하면 이 확장이 소유한 override만 복원합니다.
 
-## OMP skill set
+코드모드는 모델 계열이 아닌 요청의 기능 조건에 따라 적용합니다.
 
-- **Orchestration:** `ultrawork`, `ulw-plan`, `ulw-execute`, `ulw-loop`, `ulw-research`, `mass-ulw`, `hyperplan`
-- **Code understanding:** `debugging`, `ast-grep`, `lsp-setup`, `refactor`, `programming`
-- **Review and product work:** `review-work`, `eval-integrity`, `remove-ai-slops`, `frontend`, `visual-qa`, `visualize`, `data-scientist`
-- **Browser and source access:** `browser`, `ultimate-browsing`
-- **Project and memory workflows:** `init-deep`, `reflection`, `memory-advisor`, `coding-agent-sessions`
+- 일반 작업 도구는 직접 호출 스키마 대신 native JavaScript eval에 `tool.<name>(args)` 형태로 안내합니다.
+- 세션 제어, `write`, `apply_patch`, bridge 예약 이름(`defined`, `undefine`), 매핑할 수 없는 도구와 강제 선택된 도구는 직접 호출로 남깁니다.
+- 독립적인 읽기·검색·조회는 병렬 실행합니다. 코드모드에서는 `Promise.allSettled`를 사용하고, 변경·승인·대기·의존 호출은 순차 실행합니다.
+- JavaScript를 지원하는 활성 eval과 지원되는 provider 요청 훅이 필요합니다. 제한된 에이전트에 도구·권한을 추가하지 않으며, 미지원 요청은 알림과 함께 그대로 유지합니다.
 
-The three newly ported code skills use the native `xd://ast_grep` and
-`xd://lsp` contracts. `programming` carries the per-language rules, the test
-authoring gate and junk-test classes, and the Bun scripts that `remove-ai-slops`
-calls (`check-test-junk.ts`, `mutation-proof.ts`). Specific OMP session
-consultation and git history operations remain host-level concerns or project
-rules. Cross-product session discovery uses the on-demand finder. Persistent DAG records are lead-owned
-files, not a separate orchestration runtime. Tip catalogues and first-run
-onboarding were not ported.
+Kiro·Cursor Agent·GitLab Duo Agent·Apple Foundation Models는 요청 훅에 제약이 있어 코드모드 적용을 보장하지 않습니다. 카탈로그 캐시는 세션별로 관리하며 현재 도구 메타데이터를 반영합니다. **코드모드는 모델의 호출 방식을 유도하는 정책이지 실행 보안 경계가 아닙니다.**
 
-`/eval-integrity`는 벤치마크·A/B·LLM 평가의 데이터 누출, 순환 평가와 평가자 독립성을 읽기 전용으로 감사합니다. 리서치와 mass-research의 인계에는 주장별 `OBSERVED` 근거와 종료한 단서의 `PROBED` 기록을 붙입니다. 기억에서 나온 주장은 확인 전까지 LEAD로 남기며, 유효한 기존 근거와 통과한 검사를 불필요하게 다시 수행하지 않습니다.
+구현 위치: [모델 보정](presets.ts), [코드모드](code-mode.ts), [세션 통합](index.ts), [native 지침](host-guidance.ts).
 
-`/web-browser`는 `browser` 스킬과 `xd://eval/browser`를 읽고 OMP Eval의 native `browser` 객체로 관찰·입력·클릭·프레임·네트워크·캡처를 수행합니다. OMP 자체 `/browser`의 headless·visible 전환은 그대로 유지합니다. `/ultimate-browsing`은 불완전하거나 차단된 출처, 공식 플랫폼 API, 아카이브·미디어 경로를 `read`·`web_search`와 같은 브라우저로 처리합니다. 호스트의 브라우저 우선순위·권한은 유지하며, 일반 관리형 브라우저에는 릴레이가 필요하지 않습니다. 기존 Chrome 세션에 연결할 때만 승인된 릴레이·CDP 경로를 선택합니다. OmOWright 런타임·BrowserSkill daemon·쿠키 추출기·별도 크롤러는 설치하지 않으며, 각 스킬의 attribution에서 원본 전체 대응표와 라이선스를 확인할 수 있습니다.
+## 업데이트와 테스트
 
-브라우저 참조에는 OMP 18.20의 로그 반환 형식·Eval timeout 상속과 WebKit·Chromium의 기능 차이를 반영합니다. 컴퓨터 스킬은 macOS secure input 중 입력은 전달돼도 Escape·사용자 타이핑 기반 중단 감지가 불가능할 수 있음을 다룹니다. 실제 호스트 계약이 우선하며 OMP 업그레이드나 선택 기능 활성화는 수행하지 않습니다.
-
-`/coding-agent-sessions`는 Python 3.11+ 기반 `list`·`find`·`search`로 여러 코딩 에이전트 제품의 로컬 세션을 찾습니다. 플랫폼·프로젝트·기간·복수 검색어로 범위를 좁히며, 검색 미리보기에도 개인정보가 포함될 수 있으므로 요청 범위 안에서만 조회·보고합니다. 특정 OMP 세션의 상세 상담은 `sourceSession`을 지정한 native `seance`를 사용합니다. 별도 대화 열람 명령·로그 색인·서비스는 추가하지 않으며 출처·라이선스는 `skills/coding-agent-sessions/ATTRIBUTION.md`에 보존합니다.
-
-리서치와 mass-research는 출처 접근 계약을 직접 포함하므로, 공통 ULW 지침이 없는 `/skill:ulw-research`와 `/mass-ulw research`에도 적용됩니다. 웹 수집 작업에는 브라우저·차단 출처 스킬 경로와 필요한 상태·권한·증거를 명시해 실제 도구를 가진 작업자에게 전달합니다. 동적 참조 페이지와 HTML 보고서의 layout probe도 같은 native 브라우저를 사용하며, 정적 자료는 계속 `read`로 읽습니다.
-
-## 모델별 프롬프트 위치
-
-역할 라우팅과 보고 형식 설명을 축약하고, ULW의 명령 파싱은 호스트에 맡기며 브라우저·데스크톱 상세 계약은 필요할 때 읽습니다. 남아 있는 native 편집 전 중복 지침은 활성 프리셋이나 보존된 호스트 지침이 같은 규칙을 소유할 때만 제거하고, 모델 전환으로 해당 근거가 없어지면 복원합니다. native 전달(Delivery) 지침은 라이브 추가·변경을 포함해 원문 그대로 보존합니다. 모델별 재독해·검증 단계·도구 예산은 유지합니다.
-
-native todo 설명의 중복은 현재 프리셋에 같은 요구가 있고 native 원문을 인식한 경우에만 제거합니다. 셸 helper 계약은 native eval 설명에 유지합니다. 고유한 도구 동작과 커스텀 설명은 보존하며, 미지원 프리셋에서는 native 설명을 그대로 사용합니다.
-
-- [`upstream/presets.js`](upstream/presets.js): GitHub 원본에서 생성한 모델별 프롬프트·선택 규칙입니다. Kimi K3.1과 Claude Fable / Mythos 5.2 전용 코어를 포함한 33개 프리셋과 원본 리비전·라이선스를 담습니다. 임시 Fable 5.5 항목은 제거됐으며, 프리셋 등록은 기본 모델 추천을 의미하지 않습니다.
-- [`presets.ts`](presets.ts): 선택된 프롬프트의 도구 호출·비동기 실행 규칙을 OMP에 맞게 보정합니다.
-- [`code-mode.ts`](code-mode.ts): 모델 계열과 무관하게 지원 요청의 직접 도구 목록을 native JavaScript eval과 세션 제어 도구 중심으로 제한합니다.
-- [`index.ts`](index.ts): 메인과 일반 서브에이전트의 턴 시작 시 각 세션의 모델 프롬프트를 적용하고, 지원 provider 요청 훅에서 모델 변경을 반영합니다.
-- [`host-guidance.ts`](host-guidance.ts): 지원 모델의 작업 방식과 겹치는 OMP 기본 행동 지침을 제거하고, 도구·권한·프로젝트 경계를 보존합니다. 미지원 모델로 fallback하면 native 행동 지침을 복원합니다.
-- [`upstream/update.mjs`](upstream/update.mjs): upstream 프롬프트 소스를 고정 SHA로 받아 로컬 프리셋을 생성합니다. 바이너리 추출이나 별도 에이전트 패키지 설치는 필요 없습니다.
-- [`upstream/omp-build.mjs`](upstream/omp-build.mjs): OMP가 이미 제공하는 도구·프로젝트·스킬·워크스테이션 영역을 중복 주입하지 않는 조립 계층입니다.
-
-`prompts/`의 Markdown 파일은 모델별 프롬프트가 아니라 ULW 워크플로 호출 템플릿입니다. 템플릿의 스킬 경로는 템플릿 파일 기준 상대경로이며, 확장은 실제 설치 위치에서 스킬 경로를 계산하므로 저장소를 다른 위치에 두어도 동작합니다.
-
-서브에이전트는 부모의 프리셋을 복사하지 않고 **자신의 선택된 모델과 실제 활성 도구 목록**으로 프리셋을 생성합니다. 요청 직전에도 활성 도구 변경을 반영합니다. 지원 모델에서는 기본 역할을 교체하고 겹치는 일반 행동 지침을 제거하지만, 뒤에 붙는 자식 전문 역할·공유 context·할당 작업·반환 프로토콜은 보존합니다. 자식용 보정은 이 역할·권한·검증 제한이 일반 모델 지침보다 우선하도록 하며, 사용자 대상 시작 문구·진행 보고·todo를 부모처럼 수행하지 않게 합니다. 일반 worker와 sonic에 이미 노출된 `eval`은 모델 지침에 반영되지만, scout 등에 없는 도구를 새로 부여하지 않습니다.
-
-업스트림에서 아직 매칭하지 않는 `gpt-6.1-terra`는 **메인과 서브에이전트 모두** `gpt-6-astra` 프리셋을 사용합니다. provider 접두사·Fast 접미사·`gpt-6-1-terra`·`gpt-61-terra`·표시 이름 `GPT 6.1 Terra`도 인식합니다. 프롬프트만 연결하며 실제 요청 모델과 provider는 Terra 설정을 유지합니다. 업스트림이 해당 모델의 프리셋을 제공하면 그 선택이 우선합니다.
-
-Google의 현재 [Gemini 4 공식 목록](https://aistudio.google.com/docs/models#all-gemini-4-models)은 Carbon(`gemini-4-carbon`)·Argon(`gemini-4-argon`)·Hydrogen(`gemini-4-hydrogen`)입니다. 세 모델은 **터미널·앱과 메인·서브에이전트 모두** OMP에 맞게 보정한 기존 `gemini-4-argon` 프롬프트를 공유하며, Carbon·Hydrogen 전용 업스트림 프리셋을 새로 추가하는 것은 아닙니다. 로컬 세대 매칭은 ID·표시 이름, Antigravity 등의 provider 접두사와 기본 `gemini-4` 계열 식별자를 인식합니다. 정체성 문장은 계열 전체에 맞게 Gemini 4로 바꾸되 Argon의 규칙과 실제 도구 제공 조건은 유지합니다. 다른 세대는 변경하지 않고 업스트림 매칭을 우선하며, 실제 요청 모델·provider는 바꾸지 않습니다.
-
-명시적 커스텀/인식 불가 시스템 템플릿은 그대로 유지하고, 미지원 모델은 기본 OMP 역할을 사용합니다. 자식에서 ULW를 자동 활성화하지 않습니다. `seance`처럼 OMP가 확장 자체를 격리하는 세션은 이 주입 경로의 대상이 아닙니다. provider 요청 훅을 우회하는 전송은 메인과 마찬가지로 턴 시작 시점의 프리셋만 보장합니다. 설치된 확장 변경은 새 OMP 세션을 시작해야 반영됩니다.
-
-실제 주입되는 프롬프트와 워크플로 포인터는 `omp-` 태그를 사용합니다. 기존 세션 복원과 CLI 호환성을 위해 저장된 `omo-ultrawork:*` 키와 `--omo-ultrawork-disabled`, `--omo-ulw-workflows-disabled`, `--omo-ulw-continuation-disabled` 플래그는 유지하며, 이전 `omo-` 프롬프트 태그도 읽을 수 있습니다. `upstream/`의 원본 지침은 `presets.ts`를 거쳐 OMP 도구 계약으로 변환된 뒤 전달됩니다.
-
-## 코드모드
-
-본체 수정 없이 모델 계열과 무관하게 지원 요청의 일반 작업 도구 스키마를 직접 호출 목록에서 제외하고, native eval 설명에 실제 활성 도구의 `tool.<name>(args)` 호출 정보를 제공합니다. 이미 사용 가능한 위임·질문·대기·세션 제어 도구와 필요한 장치·계획모드 전송은 보존합니다. 모든 렌더링된 모델 프리셋의 eval 선택·배치·helper 사용 안내는 공통 도구 설명으로 일원화하며, 모델별 행동·근거 확인 의무는 유지합니다.
-
-`write`는 공개 스키마 하나가 파일 쓰기·계획모드 전송·`xd://` 호출을 함께 처리하고, 일부 세션 변경은 최상위 `write` 결과로 인식되므로 직접 호출을 유지합니다. 일반 파일 쓰기는 `tool.write()`로, native 전송 쓰기는 직접 호출하도록 안내합니다. native edit의 freeform wire 형식을 포함한 `apply_patch`도 직접 호출을 유지합니다. 읽기·검색·셸·JSON 스키마 편집 도구는 bridge를 사용합니다. 대응할 수 없는 wire 도구와 명시적으로 강제된 도구 선택은 이름이나 요청 선택을 추측해 바꾸지 않고 보존합니다.
-
-적용 여부는 실제 provider payload의 기능으로 판단합니다. 활성 상태로 노출된 eval의 스키마가 JavaScript를 허용하고, 지원하는 도구 목록 형식과 실제 스키마·활성 native 메타데이터를 갖춘 bridge 도구가 있어야 합니다. 제한된 에이전트에 eval을 추가하거나 활성 도구·native 구현·승인 체계를 바꾸지 않습니다. 필요한 기능이 없거나 미지원 요청 형식이면 원래 요청을 유지하고 코드모드가 적용되지 않았음을 알립니다. fallback을 포함한 모델 이름으로 적용 정책을 고르지 않습니다.
-
-provider 훅 지원에도 제한이 있습니다. 설치된 `antigravity-cli` 확장은 별칭이 적용된 최종 요청을 `onPayload`로 전달하지만, 공개 API에 커스텀 별칭 메타데이터가 없어 대응할 수 없는 wire 별칭은 알림과 함께 직접 호출을 유지합니다. 설치된 Kiro 확장은 `onPayload` 없이 요청을 직렬화하며, Cursor Agent 도구는 이 훅 밖에서 처리되고, GitLab Duo Agent 워크플로에는 훅이 없으며, Apple Foundation Models는 훅의 반환 payload를 버립니다. 이 경로들은 공개 요청 훅으로 투영할 수 없습니다.
-
-캐시는 각 확장 세션의 메모리에만 보관하며 TTL은 없습니다. 활성 도구·스키마·설명이 바뀌면 현재 도구 카탈로그를 다시 생성합니다. 세션 전환·종료·확장 재로드 시 폐기하고, 자식 세션과 공유하지 않습니다. 전체 provider 요청이나 권한·승인 결과는 캐시하지 않습니다.
-
-이는 **모델에게 제공하는 도구 선택지의 제한이지 실행 보안 경계는 아닙니다.** 모델이 숨긴 활성 도구 이름을 임의로 호출하면 OMP가 실행할 수 있으며, provider 훅이나 뒤에 실행되는 다른 확장도 최종 요청에 영향을 줄 수 있습니다. 삭제된 `providers.openai-codex.codeMode` 설정이나 OMP 본체 패치는 사용하지 않습니다.
-
-## Frontend 외부 참조 생성
-
-외부 디자인 참조, UI/UX 조사 데이터와 designpowers 참조 본문은 `upstream/skills/` 아래 네 Git 서브모듈의 고정 커밋에서 생성합니다. 생성 파일은 Git에서 제외하며, 기존 `skills/frontend/references/` 경로를 유지합니다. OMP용 안내문과 통합 규칙은 계속 추적합니다.
-
-저장소를 갱신한 뒤 기록된 원본 리비전을 초기화하고 다시 생성합니다.
+저장소를 갱신한 뒤 고정된 서브모듈에서 frontend 참조를 다시 생성합니다.
 
 ```bash
 git submodule update --init --recursive
 bun upstream/materialize-frontend-refs.mjs
 ```
 
-서브모듈 초기화에는 네트워크가 필요하며, 생성과 일반 OMP 실행은 로컬에서 처리합니다. Git 없이 배포할 때는 생성이 끝난 `skills/` 트리 전체를 복사합니다. GitHub의 소스 압축 파일만 받으면 서브모듈 내용과 생성 참조는 포함되지 않습니다.
+GitHub 소스 압축 파일에는 서브모듈과 생성 참조가 없습니다. Git 없이 배포할 때는 생성이 완료된 `skills/` 트리 전체를 복사합니다. 초기화와 upstream 갱신에는 네트워크가 필요하며, 참조 생성은 로컬에서 수행합니다.
 
-## GitHub에서 프리셋 갱신
-
-기존 Bun만 사용합니다. 네트워크는 갱신 명령에서만 필요하며, OMP 실행 시에는 생성된 로컬 파일만 읽습니다.
+모델 프리셋 갱신:
 
 ```bash
-# 태그, 커밋 SHA 또는 브랜치 지정
-bun upstream/update.mjs --ref v2026.10.13
-
-# 최신 main과 비교만 수행: 차이 없음 0, 변경 후보 있음 1, 오류 1
 bun upstream/update.mjs --ref main --check
-
-# 최신 원본으로 실제 갱신한 뒤 OMP 보정과 모델 선택 검증
 bun upstream/update.mjs --ref main
-bun test
 ```
 
-명령은 먼저 ref를 커밋 SHA로 고정하고 그 SHA의 소스만 내려받습니다. 빌드·모든 프리셋 렌더링 검사가 성공한 뒤 `upstream/presets.js` 한 파일을 원자적으로 교체합니다. 다운로드·검증 실패 시 기존 파일은 유지합니다. `--ref`를 생략하면 `main`이며, GitHub API 제한이 있으면 `GITHUB_TOKEN`을 사용할 수 있습니다. 재현하려면 생성 파일 첫 줄의 SHA를 `--ref`로 전달합니다.
-
-자동 갱신 대상은 모델 프리셋입니다. `presets.ts`와 스킬은 덮어쓰지 않습니다. 스킬의 상태 의미나 도구 계약 변경은 OMP 코드와 함께 선별 이식해야 합니다. 현재 스킬은 OMP 도구·task 계약에 맞춘 native 포트만 유지합니다.
-
-변경 이력은 [CHANGELOG.ko.md](CHANGELOG.ko.md)를 참고하세요.
-
-## 테스트
+`--ref`에는 브랜치·태그·커밋 SHA를 지정할 수 있습니다. 검증이 성공한 뒤 생성 프리셋만 교체하며, 로컬 보정 코드와 스킬은 유지합니다. `--check`는 변경 없음에 0, 변경 또는 오류에 1을 반환합니다. API 호출 제한 시 `GITHUB_TOKEN`을 사용할 수 있습니다.
 
 ```bash
-cd omp-ulw
 bun test
-
-# 설치된 OMP와 로컬 provider로 실제 호스트 경로 검증
-bun tests/ulw-host-check.ts
-bun tests/ulw-goal-host-check.ts
-
-# 실제 task/sonic/scout의 모델 프리셋·역할 보존·eval/도구 제한 검증
-bun tests/child-preset-host-check.ts
+bun run typecheck
+bun run test:host
 ```
 
-모델 프롬프트와 워크플로를 OMP에 맞게 이식했습니다. 원본 출처와 개별 리소스의 라이선스는 `upstream/` 및 각 스킬의 출처·라이선스 파일을 참고하세요.
+호스트 검증은 설치된 OMP를 격리된 상태와 로컬 응답기로 실행합니다. 통합·전송 경로를 확인하며, 외부 모델의 지침 준수까지 검증하지는 않습니다.
+
+## 변경 이력과 출처
+
+[변경 이력](CHANGELOG.ko.md). 원본 리비전·출처·라이선스는 [upstream/](upstream/)과 각 스킬의 attribution 파일에 보존합니다.

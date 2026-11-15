@@ -2,7 +2,7 @@
 
 English | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
-Model-specific prompts and native ULW workflows for [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi). Model profiles own working methods; OMP supplies tool schemas, permissions and native mode capabilities. The extension also provides session-level ULW activation, planning, execution, research and specialist skills.
+Model-specific prompts, code mode and native ULW workflows for [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi). OMP retains control of tools, permissions and execution; this extension adapts working methods and adds planning, research and specialist skills.
 
 ## Getting started
 
@@ -11,128 +11,78 @@ With Git, Bun and OMP installed:
 ```bash
 git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
 bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw/index.ts
+omp -e ./omp-ulw
 ```
 
-Alternatively, `omp -e` accepts the package directory itself (`omp -e ./omp-ulw`), which loads the `omp.extensions` entry declared in `package.json`.
+In the interactive TUI, enter `/ulw <task>` or `ulw <task>` to activate ULW and a native goal. Existing goals, including paused or budget-limited ones, are preserved. RPC clients must create native goals separately.
 
-In the interactive TUI, use `/ulw <task>`, `ulw <task>`, or `/goal ulw <task>` to activate ULW and a native goal. An existing goal is not replaced. RPC clients must create a native goal separately; `/goal` is a TUI command.
+Commands must start the input; mentions such as `Explain /ulw` do not activate them. Plain ULW does not automatically enable specialized workflows. Restart OMP after changing the installed extension.
 
-Put the command or alias at the start of the input, after optional whitespace. Discussion such as `Explain ulw`, `Explain /ulw` or `What does /ulw-plan do?` stays inert. Existing paused and budget-limited goals also retain ownership.
-
-## Workflows
+## Workflows and skills
 
 | Command | Purpose | Default OMP keyword |
 | --- | --- | --- |
 | `/ulw` | Activate ULW for the session | — |
-| `/ulw-plan` | Create a reviewed, actionable plan without implementation | `ultrathink` |
+| `/ulw-plan` | Create a reviewed plan without implementation | `ultrathink` |
 | `/ulw-execute` | Execute and track a plan | `orchestrate` |
-| `/ulw-loop` | Track multiple goals, dependencies, and evidence | `orchestrate` |
+| `/ulw-loop` | Track goals, dependencies and evidence | `orchestrate` |
 | `/mass-ulw` | Execute a persistent dependency graph | `workflowz` |
-| `/ulw-research` | Research with sources, observations, and counterarguments | `workflowz` |
+| `/ulw-research` | Research with sources and counterarguments | `workflowz` |
 
-Specialized commands add their default keyword when entered through the TUI or RPC `prompt` input, unless a native keyword is already specified. They respect OMP's keyword settings and tool requirements. RPC `steer` and `follow_up` requests bypass native keyword processing; use a `prompt` request with the corresponding `streamingBehavior` instead. Direct `/skill:` calls and initial CLI text that bypass the input hook require an explicit keyword.
+Specialized commands add their default keyword unless one is already specified, respecting OMP's keyword settings and tool requirements. For RPC, use `prompt` with the appropriate `streamingBehavior`; separate `steer` and `follow_up` requests bypass keyword processing. Direct `/skill:` calls and initial CLI text that bypass the input hook need an explicit keyword.
 
-Additional skills include `debugging`, `programming`, `review-work`, `eval-integrity`, `visual-qa`, `frontend`, `ast-grep`, `lsp-setup`, and `refactor`. `/eval-integrity` audits benchmark, A/B and LLM-judge claims for independent, valid measurement without modifying their inputs. Plain ULW does not automatically enable specialized workflows.
+Other entry points:
 
-`/web-browser` loads the `browser` skill for OMP's native Eval browser: interactive pages, snapshots, frames, network evidence and captures. OMP's own `/browser` headless/visible command remains intact. Read `xd://eval/browser` first. `/ultimate-browsing` covers incomplete/blocked sources, official platform endpoints, archives and media prerequisites using `read`, `web_search` and the same browser. Host browser routing and permissions remain authoritative. A relay is optional for real Chrome sessions; public managed-browser work does not require one. No OmOWright runtime, BrowserSkill daemon, cookie extractor or crawler is installed by these skills. Their attribution files map the upstream source coverage and retain the source license.
+- **Code and review:** `/debugging`, `/programming`, `/review-work`, `/ast-grep`, `/lsp-setup`, `/refactor`
+- **UI and evaluation:** `/frontend`, `/visual-qa`, `/visualize`, `/data-scientist`, `/eval-integrity`
+- **Browser and desktop:** `/web-browser`, `/ultimate-browsing`, `/computer-use` use OMP's native Eval APIs and permissions; OMP's `/browser` and `/computer` controls remain intact.
+- **Sessions and memory:** `/coding-agent-sessions`, `/init-deep`, `/reflection`, `/memory-advisor`
 
-`/computer-use` loads the native desktop workflow through OMP's JavaScript/Python Eval `computer` global. Read `xd://eval/computer` for its current helper contract. Browser chrome, native apps, GUI debugging, review and visual evidence use this same skill, with AX or window screenshots, background input and native foreground confirmation. The prelude must be enabled by the host; the skill does not change settings or install a driver. OMP retains its `/computer` command and permission/stop controls. Sources and license notices are in `skills/computer-use/ATTRIBUTION.md`.
+See [skills/](skills/) for individual instructions. Cross-product session discovery requires Python 3.11+; detailed OMP session consultation uses native `seance`.
 
-The browser references follow OMP 18.20's diagnostic envelopes and Eval timeout inheritance, and distinguish owned WebKit from Chromium-only capabilities. The computer skill covers macOS secure input, where Escape and user-typing interruption can be unavailable even while input is delivered. The live host contract remains authoritative; these skills do not upgrade OMP or enable optional backends.
+## Prompts and code mode
 
-`/coding-agent-sessions` discovers local sessions across coding-agent products with the bundled Python 3.11+ finder (`list`, `find`, `search`). Search by platform, project, time or several query lanes; matching snippets may contain private data, so keep searches and reports within the requested scope. Specific OMP session consultation remains native `seance` with `sourceSession`; no parallel transcript-reading command, history index or service is installed. Source and license notices are in `skills/coding-agent-sessions/ATTRIBUTION.md`.
+Supported model profiles are adapted to OMP and applied independently to main and supported child sessions. Specialist roles, project instructions, permissions and completion protocols remain intact. Custom templates and unsupported models retain native behavior. Explicit investigation and planning-only requests temporarily suppress prewalk; implementation requests restore only overrides owned by this extension.
 
-Research and mass-research carry their source-access contracts directly, including native `/skill:ulw-research` and `/mass-ulw research` invocations without the shared ULW policy. Web collection briefs explicitly pass the applicable browser/blocked-reader references and state/evidence requirements to capable workers. Rendered references and HTML report probes use the same native browser; static sources continue to use `read`.
+Code mode depends on request capabilities, not model family:
 
-## Model prompts
+- Ordinary work tools are documented in native JavaScript eval for `tool.<name>(args)` calls instead of exposed as direct schemas.
+- Session controls, `write`, `apply_patch`, reserved bridge names (`defined`, `undefine`), unmapped tools and forced tool choices stay direct.
+- Independent reads, searches and lookups run in parallel. Code mode uses `Promise.allSettled`; mutations, approvals, waits and dependent calls remain sequential.
+- An active JavaScript-capable eval and a supported provider request hook are required. Restricted agents gain no tools or permissions; unsupported requests remain unchanged with a notice.
 
-- [`upstream/presets.js`](upstream/presets.js): generated upstream model presets and selection rules.
-- [`presets.ts`](presets.ts): adapts prompts to OMP's tool and async contracts.
-- [`code-mode.ts`](code-mode.ts): projects supported requests onto native JavaScript eval and direct session controls, independent of model family.
-- [`index.ts`](index.ts): applies prompts to main and supported subagent sessions.
-- [`host-guidance.ts`](host-guidance.ts): removes overlapping native behavioral defaults for selected profiles while preserving tool and permission contracts.
-- [`upstream/update.mjs`](upstream/update.mjs): updates presets from a pinned upstream revision.
-- [`upstream/omp-build.mjs`](upstream/omp-build.mjs): avoids duplicating sections already supplied by OMP.
+Kiro, Cursor Agent, GitLab Duo Agent and Apple Foundation Models have request-hook limitations; code mode is not guaranteed on those paths. Catalog caches are session-local and follow live tool metadata. **Code mode is a model-facing routing policy, not an execution security boundary.**
 
-For supported profiles, model-specific guidance takes precedence over generic OMP working style; duplicated native planning, rereading, delegation and verification rules are removed. Tool availability is refreshed before provider requests. Subagents retain their specialist role, permissions and completion protocol. Custom or unrecognized system templates are preserved; unsupported models retain native OMP behavior, including after fallback. Restart OMP after changing an installed extension.
+Implementation: [model adaptation](presets.ts), [code mode](code-mode.ts), [session integration](index.ts), [native guidance](host-guidance.ts).
 
-Role routing and response-format guidance are compact; ULW leaves invocation parsing to the host and links browser/desktop contracts on demand. Remaining native pre-editing duplicates are removed only when the active profile or preserved host instructions cover them, and restored when that coverage changes. Native delivery rules are preserved verbatim, including live additions and changes. Model-specific rereading, verification tiers and tool budgets remain intact.
+## Updates and tests
 
-Native todo explanation duplicates are removed only when the exact current preset supplies the same requirement and the native description is recognized. Shell-helper contracts remain in native eval documentation. Unique tool mechanics and custom descriptions are preserved; unsupported presets retain native descriptions.
-
-The 33 presets include the dedicated Claude Fable / Mythos 5.2 profile, replacing the provisional Fable 5.5 entry. Research and mass-research handoffs attach observed evidence to claims and probes to closed leads; remembered assertions remain leads until checked. Valid recorded evidence is reused without repeating settled checks.
-
-GPT-6.1 Terra uses `gpt-6-astra` in both main and child sessions, including provider-prefixed IDs, Fast suffixes and its display name. This changes only the prompt profile; the requested model and provider remain unchanged. An upstream match takes precedence.
-
-Google's current [Gemini 4 catalog](https://aistudio.google.com/docs/models#all-gemini-4-models) lists Carbon (`gemini-4-carbon`), Argon (`gemini-4-argon`) and Hydrogen (`gemini-4-hydrogen`). All three share the existing adapted `gemini-4-argon` prompt in terminal/app and main/child sessions; this does not add bespoke upstream Carbon/Hydrogen presets. The local generation matcher recognizes IDs and display names, including provider prefixes such as Antigravity and the bare Gemini 4 family identifier. The prompt identifies the family as Gemini 4 while retaining Argon's rules and tool-availability gates. Other generations are unchanged; upstream matches take precedence, and the requested model/provider is not rewritten.
-
-On OMP 18.19, native prewalk notices follow the selected model's working methods and preserve approved plans, todo and workflow state. Explicit investigation, explanation, review, research and planning-only requests temporarily suppress both configured and automatic prewalk in the current main session, without a classifier call or persistent settings write. English and Korean requests, workflow aliases and expanded native skills are recognized; quoted examples and ambiguous continuations retain the current scope.
-
-A later explicit implementation request restores only runtime overrides owned by this extension, including any prior runtime values. Settings changed by the operator take precedence. Session transitions and shutdown release owned overrides. Restoration rearms the configured target; OMP does not expose a pending one-off manual target for extensions to reconstruct. The extension uses OMP 18.19's exported session-settings lookup instead of the global `api.pi.settings` proxy.
-
-## Code mode
-
-Supported requests use extension-only code mode regardless of model family: ordinary work tools are removed from the outgoing direct tool schemas and documented in the native eval description for `tool.<name>(args)` calls. Native orchestration, interaction and session-control tools stay direct when already available. Host-required device/plan transports are preserved. All rendered model presets leave eval selection, batching and helper usage to common tool documentation while retaining their behavioral and evidence obligations.
-
-`write` remains direct because its public schema combines file writes, plan transport and `xd://` dispatch; OMP recognizes some session changes from the outer `write` result. Ordinary file writes are guided through `tool.write()`, while native transport writes remain direct. `apply_patch` stays direct, including native edit's freeform wire format. `read`, search, shell and JSON-schema editing tools use the bridge. Unmapped wire tools and explicitly forced tool choices are preserved rather than guessing their canonical names or changing the request's choice.
-
-Projection is gated by the actual provider payload: it requires an active, exposed eval tool whose schema accepts JavaScript, a supported tool-list shape, and bridge-callable tools with active native metadata and actual schemas. It does not enable eval for restricted agents, change active tools, wrap native implementations, or change approvals. Missing capability and unsupported request shapes retain the original request and report that code mode was not applied; model names, including fallback names, do not select the policy.
-
-Provider hook support also limits coverage. The installed `antigravity-cli` extension passes its aliased final request through `onPayload`; unknown wire aliases still remain direct with a notice because the public API supplies no custom alias metadata. The installed Kiro extension serializes requests without calling `onPayload`, Cursor Agent tools sit outside this hook, GitLab Duo Agent's workflow has no hook, and Apple Foundation Models discards the hook's returned payload. This extension cannot project those paths through the public request hook.
-
-Caches belong to each extension session, with no TTL or disk persistence. Active tools, schemas and descriptions invalidate the current catalog snapshot. Session transitions, shutdown and reload discard caches; child sessions have independent state. Whole provider requests and permission/approval results are never cached.
-
-This is a model-facing routing restriction, **not an execution security boundary**: OMP can still execute a hidden active tool if a model emits its name anyway. Provider hooks and later extensions can also affect the final request. No OMP core patch or removed `providers.openai-codex.codeMode` setting is required.
-
-## Frontend reference sources
-
-Third-party design references, UI/UX research data and designpowers reference bodies are generated from four pinned Git submodules under `upstream/skills/`. Their generated files are ignored by Git and retain the existing paths under `skills/frontend/references/`. OMP-specific guides and integration rules remain tracked.
-
-After pulling an update, initialize the recorded source revisions and regenerate:
+After pulling an update, regenerate frontend references from the pinned submodules:
 
 ```bash
 git submodule update --init --recursive
 bun upstream/materialize-frontend-refs.mjs
 ```
 
-Submodule initialization needs network access; generation and normal OMP use are local. Copy the complete materialized `skills/` tree when deploying without Git. A GitHub source archive alone omits the submodule contents and generated references.
+A GitHub source archive omits submodules and generated references. For deployment without Git, copy the complete materialized `skills/` tree. Initialization and upstream updates need network access; reference generation is local.
 
-## Updating presets
-
-Bun is required. Network access is needed for updates, not normal OMP execution.
+To update model presets:
 
 ```bash
-# Pin a tag, commit SHA, or branch
-bun upstream/update.mjs --ref v2026.10.13
-
-# Check for changes without updating
 bun upstream/update.mjs --ref main --check
-
-# Update and test
 bun upstream/update.mjs --ref main
-bun test
 ```
 
-The updater resolves the ref to a commit SHA and replaces the generated preset file only after validation. `--check` returns 0 for no change and 1 for either a change or an error. `GITHUB_TOKEN` can be used when GitHub API limits apply. Updates do not overwrite local adaptations or skills.
-
-## Tests
+`--ref` accepts a branch, tag or commit SHA. The updater validates before replacing generated presets and leaves local adaptations and skills untouched. `--check` returns 0 for no change, 1 for a change or error; `GITHUB_TOKEN` can help with API rate limits.
 
 ```bash
 bun test
-
-# Exercise the installed OMP host with a local provider
-bun tests/ulw-host-check.ts
-bun tests/ulw-goal-host-check.ts
-bun tests/child-preset-host-check.ts
-bun tests/prewalk-host-check.ts
-bun tests/code-mode-host-check.ts
+bun run typecheck
+bun run test:host
 ```
 
-The RPC smoke uses a temporary HOME/workspace and a local provider without inheriting user credentials or workflow settings. It loads the package directory and checks discovery of its shipped skills.
-The prewalk smoke checks actual plan writes, native skill/keyword expansion, refactor and scoped implementation requests, later handoff, auto-judge suppression, preset/ULW retention, runtime override ownership and unchanged persisted settings. Scripted local responses verify host control and transport rather than model obedience.
+Host checks use the installed OMP with isolated state and a scripted local provider. They verify integration and transport, not external model obedience.
 
 ## History and attribution
 
-- [Change history](CHANGELOG.md)
-- Upstream sources and licenses are listed in `upstream/` and the individual skills.
+[Change history](CHANGELOG.md). Upstream revisions, sources and licenses are retained in [upstream/](upstream/) and each skill's attribution files.

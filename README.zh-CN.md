@@ -2,7 +2,7 @@
 
 [English](README.md) | [한국어](README.ko.md) | 简体中文
 
-面向 [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi) 的模型专用提示词和原生 ULW 工作流扩展。模型预设负责工作方式，OMP 保留工具协议、权限与原生模式功能；扩展还提供会话级 ULW 启用、规划、执行、研究及专业技能。
+面向 [Oh My Pi (OMP)](https://github.com/can1357/oh-my-pi) 的模型提示词、代码模式和原生 ULW 工作流扩展。工具、权限和执行仍由 OMP 管理；扩展适配模型的工作方式，并提供规划、研究及专业技能。
 
 ## 快速开始
 
@@ -11,114 +11,78 @@
 ```bash
 git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
 bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw/index.ts
+omp -e ./omp-ulw
 ```
 
-在交互式 TUI 中，使用 `/ulw <任务>`、`ulw <任务>` 或 `/goal ulw <任务>` 同时启用 ULW 和原生目标。已有目标不会被替换。RPC 客户端须单独创建原生目标；`/goal` 是 TUI 命令。
+在交互式 TUI 中输入 `/ulw <任务>` 或 `ulw <任务>`，即可启用 ULW 和原生目标。已有目标（包括暂停或达到预算限制的目标）保持不变。RPC 客户端须单独创建原生目标。
 
-命令或别名必须位于输入开头，可带前导空白。`Explain ulw`、`Explain /ulw` 等讨论不会启用工作流。暂停或达到预算限制的现有目标也保留所有权。
+命令必须位于输入开头；`Explain /ulw` 等提及不会启用工作流。普通 ULW 不会自动启用专业工作流。修改已安装的扩展后，请重启 OMP。
 
-## 工作流
+## 工作流与技能
 
 | 命令 | 用途 | 默认 OMP 关键词 |
 | --- | --- | --- |
 | `/ulw` | 为当前会话启用 ULW | — |
-| `/ulw-plan` | 创建经过审查、可执行的计划，不进行实现 | `ultrathink` |
+| `/ulw-plan` | 创建经过审查的计划，不进行实现 | `ultrathink` |
 | `/ulw-execute` | 执行并跟踪计划 | `orchestrate` |
-| `/ulw-loop` | 跟踪多个目标、依赖和证据 | `orchestrate` |
+| `/ulw-loop` | 跟踪目标、依赖和证据 | `orchestrate` |
 | `/mass-ulw` | 执行持久化依赖图 | `workflowz` |
-| `/ulw-research` | 记录来源、观察和反证的研究 | `workflowz` |
+| `/ulw-research` | 包含来源与反证的研究 | `workflowz` |
 
-通过 TUI 或 RPC `prompt` 输入专业命令时，若未指定原生关键词，扩展会添加默认关键词，并遵守 OMP 的关键词设置和工具要求。RPC `steer` 和 `follow_up` 请求会跳过原生关键词处理；请改用带相应 `streamingBehavior` 的 `prompt` 请求。直接调用 `/skill:` 以及绕过输入钩子的初始 CLI 文本需要显式指定关键词。
+专业命令会在尚未指定关键词时添加默认关键词，并遵守 OMP 的关键词设置与工具要求。RPC 请使用带相应 `streamingBehavior` 的 `prompt`；独立的 `steer` 和 `follow_up` 请求会跳过关键词处理。直接调用 `/skill:` 或使用绕过输入钩子的初始 CLI 文本时，需要显式指定关键词。
 
-其他技能包括 `debugging`、`programming`、`review-work`、`eval-integrity`、`visual-qa`、`frontend`、`ast-grep`、`lsp-setup` 和 `refactor`。`/eval-integrity` 以只读方式检查基准、A/B 和 LLM 评判的独立性与有效性，不修改评估输入。普通 ULW 不会自动启用专业工作流。
+其他入口：
 
-`/web-browser` 加载 `browser` 技能，使用 OMP Eval 的原生 `browser` 对象处理交互页面、快照、框架、网络证据和截图，先读取 `xd://eval/browser`。OMP 自带的 `/browser` headless/visible 切换保持不变。`/ultimate-browsing` 通过 `read`、`web_search` 和同一浏览器处理不完整或受阻来源、平台 API、档案和媒体前提。保留宿主的浏览器路由与权限；普通托管浏览器不需要中继，真实 Chrome 会话可使用已授权的中继或 CDP。不安装 OmOWright、BrowserSkill daemon、Cookie 提取器或额外爬虫；各技能的 attribution 保留来源覆盖表和许可证。
+- **代码与审查：** `/debugging`、`/programming`、`/review-work`、`/ast-grep`、`/lsp-setup`、`/refactor`
+- **UI 与评估：** `/frontend`、`/visual-qa`、`/visualize`、`/data-scientist`、`/eval-integrity`
+- **浏览器与桌面：** `/web-browser`、`/ultimate-browsing`、`/computer-use` 使用 OMP 的原生 Eval API 和权限；OMP 自带的 `/browser`、`/computer` 控制保持不变。
+- **会话与记忆：** `/coding-agent-sessions`、`/init-deep`、`/reflection`、`/memory-advisor`
 
-浏览器参考补充 OMP 18.20 的诊断返回结构、Eval 超时继承及 WebKit/Chromium 能力差异。桌面技能说明 macOS 安全输入开启时，输入仍可发送，但 Escape 和用户键入可能无法触发中断。以当前宿主契约为准，不自动升级 OMP 或启用可选后端。
+详细说明见 [skills/](skills/)。跨产品会话发现需要 Python 3.11+；特定 OMP 会话的详细咨询使用原生 `seance`。
 
-`/coding-agent-sessions` 使用随附的 Python 3.11+ 工具，通过 `list`、`find` 和 `search` 发现多个编码代理产品的本地会话。按平台、项目、时间及多个查询词缩小范围；预览可能含有私密信息，只查询和报告已授权范围。特定 OMP 会话的详细咨询仍使用带 `sourceSession` 的原生 `seance`，不添加独立的对话读取命令、日志索引或服务。来源和许可证保留在 `skills/coding-agent-sessions/ATTRIBUTION.md`。
+## 提示词与代码模式
 
-研究与 mass-research 直接包含来源访问契约，适用于没有共享 ULW 指令的 `/skill:ulw-research` 和 `/mass-ulw research`。网页收集任务明确向有能力的子代理传递浏览器、受阻来源读取参考及状态和证据要求。动态参考页面与 HTML 报告探针使用同一原生浏览器；静态来源继续使用 `read`。
+受支持的模型提示词会适配到 OMP，并分别应用于主会话和受支持的子会话。专业角色、项目指令、权限与完成协议保持不变。自定义模板和不受支持的模型保留原生行为。明确的调查或仅规划请求会暂时抑制 prewalk；转入实现时，只恢复本扩展拥有的 override。
 
-## 模型提示词
+代码模式依据请求能力启用，而不区分模型系列：
 
-- [`upstream/presets.js`](upstream/presets.js)：生成的上游模型预设和选择规则。
-- [`presets.ts`](presets.ts)：将提示词适配到 OMP 的工具和异步契约。
-- [`code-mode.ts`](code-mode.ts)：不区分模型系列，将受支持请求的直接工具列表限制为原生 JavaScript eval 和会话控制工具。
-- [`index.ts`](index.ts)：为主会话和受支持的子代理会话应用提示词。
-- [`host-guidance.ts`](host-guidance.ts)：移除与模型工作方式重复的 OMP 默认指令，同时保留工具与权限契约。
-- [`upstream/update.mjs`](upstream/update.mjs)：从固定的上游版本更新预设。
-- [`upstream/omp-build.mjs`](upstream/omp-build.mjs)：避免重复注入 OMP 已提供的内容。
+- 普通工作工具不再直接暴露 schema，而是在原生 JavaScript eval 中提供 `tool.<name>(args)` 调用说明。
+- 会话控制、`write`、`apply_patch`、bridge 保留名称（`defined`、`undefine`）、无法映射的工具及强制选择的工具保持直接调用。
+- 独立的读取、搜索和查询并行执行。代码模式使用 `Promise.allSettled`；修改、审批、等待和有依赖的调用顺序执行。
+- 需要已启用且支持 JavaScript 的 eval，以及受支持的 provider 请求 hook。不会给受限代理增加工具或权限；不支持的请求保持原样并发出提示。
 
-受支持模型的工作方式优先于通用 OMP 指令，重复的规划、重读、委派和验证要求会被移除。每次请求前刷新可用工具。子代理保留其专业角色、权限与完成协议。自定义或无法识别的系统模板保持不变；不受支持的模型及其回退保留 OMP 默认行为。更改已安装的扩展后，请重启 OMP。
+Kiro、Cursor Agent、GitLab Duo Agent 和 Apple Foundation Models 的请求 hook 存在限制，无法保证在这些路径上应用代码模式。目录缓存按会话隔离，并跟随当前工具元数据。**代码模式是面向模型的调用策略，不是执行安全边界。**
 
-角色路由和回复格式说明已压缩；ULW 将调用解析交给宿主，浏览器和桌面契约按需读取。剩余的原生编辑前重复规则仅在当前模型或保留的宿主指令已覆盖时删除，覆盖条件变化时恢复；原生交付规则按原文保留，包括运行中的新增和修改。模型专属的重读、验证层级和工具预算保持不变。
+实现位置：[模型适配](presets.ts)、[代码模式](code-mode.ts)、[会话集成](index.ts)、[原生指令](host-guidance.ts)。
 
-原生 todo 说明中的重复仅在当前模型提示词明确包含等同要求且原生文本匹配时删除。Shell helper 契约保留在原生 eval 文档中。独有的工具机制和自定义说明保持不变；不支持的预设保留原生说明。
+## 更新与测试
 
-33 个预设包含 Claude Fable / Mythos 5.2 专用提示词，替代临时 Fable 5.5 条目。研究及 mass-research 的交接为每项结论保留观察证据，为关闭的线索记录探查过程；记忆中的断言在核实前仍是线索。有效的已记录证据可以复用，无需重复已通过的检查。
-
-GPT-6.1 Terra 在主会话和子代理中均使用 `gpt-6-astra`，支持 provider 前缀、Fast 后缀及显示名称。这里只改变提示词，实际请求的模型和 provider 保持不变；上游已有的匹配优先。
-
-## 代码模式
-
-无需修改 OMP 本体：不区分模型系列，受支持请求不再直接暴露普通工作工具的 schema，而是在原生 eval 描述中提供当前可用工具的 `tool.<name>(args)` 调用说明。已启用的委派、交互、等待、会话控制及必要的设备/计划模式传输保持可用。所有渲染后的模型预设将 eval 选择、批处理和 helper 使用说明交给公共工具文档，同时保留各自的行为和证据要求。
-
-`write` 的公开 schema 同时承担文件写入、计划模式和 `xd://` 传输，部分会话变更依赖顶层 `write` 结果，因此保留直接调用。普通文件写入引导使用 `tool.write()`；原生传输仍直接调用。`apply_patch`（包括原生 edit 的 freeform wire 格式）保持直接调用。读取、搜索、shell 和 JSON schema 编辑工具通过 bridge。保留无法映射的 wire 工具和显式强制的工具选择，不猜测别名或更改请求选择。
-
-是否投影由实际 provider payload 的能力决定：必须存在已激活且实际暴露的 eval，其 schema 接受 JavaScript，并有受支持的工具列表格式及具备实际 schema 和激活原生元数据的 bridge 工具。不会给受限代理增加 eval，不改变激活工具、原生执行或审批。缺少所需能力或请求格式不受支持时，保留原请求并提示未应用代码模式；模型名称（包括 fallback）不决定策略。
-
-覆盖范围也受 provider hook 支持限制。已安装的 `antigravity-cli` 扩展会将带别名的最终请求传给 `onPayload`；公共 API 不提供自定义别名元数据，因此无法映射的 wire 别名仍保留直接调用并发出提示。已安装的 Kiro 扩展不调用 `onPayload` 就序列化请求，Cursor Agent 工具位于此 hook 之外，GitLab Duo Agent 工作流没有该 hook，Apple Foundation Models 则丢弃 hook 返回的 payload。这些路径无法通过公共请求 hook 投影。
-
-缓存仅属于当前扩展会话，无 TTL 或磁盘持久化。激活工具、schema 或描述变化时替换当前目录缓存；会话切换、关闭或重载时清空，子会话独立。完整请求及权限/审批结果不缓存。
-
-这是模型侧工具选择限制，**不是执行安全边界**：模型若仍输出隐藏工具的名称，OMP 仍可能执行。后续扩展和 provider hook 也可能影响最终请求。不使用已移除的 `providers.openai-codex.codeMode` 设置。
-
-## 生成前端参考文件
-
-第三方设计参考、UI/UX 研究数据和 designpowers 参考正文由 `upstream/skills/` 下四个 Git 子模块的固定提交生成。生成文件不纳入 Git，仍使用 `skills/frontend/references/` 下的原有路径；OMP 专用指南与集成规则继续跟踪。
-
-更新仓库后，初始化记录的版本并重新生成：
+更新仓库后，从固定版本的子模块重新生成前端参考：
 
 ```bash
 git submodule update --init --recursive
 bun upstream/materialize-frontend-refs.mjs
 ```
 
-初始化子模块需要网络，生成和正常运行 OMP 均在本地完成。无需 Git 的部署应复制生成后的完整 `skills/` 目录。GitHub 源码压缩包本身不包含子模块内容和生成参考。
+GitHub 源码压缩包不包含子模块和生成的参考文件。无需 Git 的部署应复制生成后的完整 `skills/` 目录。初始化和上游更新需要网络；参考生成在本地完成。
 
-## 更新预设
-
-需要 Bun。更新时需要网络连接，正常运行 OMP 时不需要。
+更新模型预设：
 
 ```bash
-# 指定标签、提交 SHA 或分支
-bun upstream/update.mjs --ref v2026.10.13
-
-# 只检查更改，不更新
 bun upstream/update.mjs --ref main --check
-
-# 更新并测试
 bun upstream/update.mjs --ref main
-bun test
 ```
 
-更新器会先将 ref 解析为提交 SHA，仅在验证成功后替换生成的预设文件。`--check` 在没有更改时返回 0，在发现更改或发生错误时返回 1。遇到 GitHub API 限流时可使用 `GITHUB_TOKEN`。更新不会覆盖本地适配代码或技能。
-
-## 测试
+`--ref` 接受分支、标签或提交 SHA。更新器验证成功后才替换生成的预设，不覆盖本地适配代码或技能。`--check` 在没有更改时返回 0，发现更改或错误时返回 1；遇到 API 限流时可使用 `GITHUB_TOKEN`。
 
 ```bash
 bun test
-
-# 使用本地 provider 验证已安装的 OMP 宿主路径
-bun tests/ulw-host-check.ts
-bun tests/ulw-goal-host-check.ts
-bun tests/child-preset-host-check.ts
-bun tests/code-mode-host-check.ts
+bun run typecheck
+bun run test:host
 ```
+
+宿主检查在隔离状态下使用已安装的 OMP 和脚本化本地 provider，验证集成与传输路径，而非外部模型是否遵循指令。
 
 ## 更新历史与来源
 
-- [更新历史](CHANGELOG.md)
-- 上游来源和许可证见 `upstream/` 及各技能目录。
+[更新历史](CHANGELOG.md)。上游版本、来源和许可证保留在 [upstream/](upstream/) 及各技能的 attribution 文件中。
