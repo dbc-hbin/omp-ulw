@@ -28,6 +28,8 @@
  * Regression checks: bun test in this directory. Upstream provenance and the
  * reproducible updater live in upstream/; presets.ts contains transport adaptations.
  */
+import { registerCodeMode } from "./code-mode";
+import type { CodeModeApi } from "./code-mode";
 import { replaceHostBehavior } from "./host";
 import { adaptOrchestrateNotice, projectHostGuidance } from "./host-guidance";
 import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
@@ -52,7 +54,7 @@ interface ModelPromptApi {
   on(event: "before_provider_request", handler: (event: { payload: unknown }, ctx: PromptContext) => unknown): void;
 }
 
-type ExtensionApi = ModelPromptApi & UlwApi & PrewalkApi;
+type ExtensionApi = ModelPromptApi & UlwApi & PrewalkApi & CodeModeApi;
 
 function markPreset(prompt: string, subagent: boolean): string {
   const scope = subagent
@@ -142,4 +144,7 @@ export default function ompUlw(pi: ExtensionApi): void {
     return modelGuidance ? rewriteToolGuidancePayload(projected, ctx.model.api, replacement.prompt) : projected;
   });
   registerPrewalk(pi);
+  // Project the final request after profile/tool-description rewrites. This also
+  // works when a custom host template prevents model-preset replacement.
+  registerCodeMode(pi);
 }

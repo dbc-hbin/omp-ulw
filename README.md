@@ -49,6 +49,7 @@ Research and mass-research carry their source-access contracts directly, includi
 
 - [`upstream/presets.js`](upstream/presets.js): generated upstream model presets and selection rules.
 - [`presets.ts`](presets.ts): adapts prompts to OMP's tool and async contracts.
+- [`code-mode.ts`](code-mode.ts): projects GPT requests onto native eval and direct session controls.
 - [`index.ts`](index.ts): applies prompts to main and supported subagent sessions.
 - [`host-guidance.ts`](host-guidance.ts): removes overlapping native behavioral defaults for selected profiles while preserving tool and permission contracts.
 - [`upstream/update.mjs`](upstream/update.mjs): updates presets from a pinned upstream revision.
@@ -69,6 +70,18 @@ Google's current [Gemini 4 catalog](https://aistudio.google.com/docs/models#all-
 On OMP 18.19, native prewalk notices follow the selected model's working methods and preserve approved plans, todo and workflow state. Explicit investigation, explanation, review, research and planning-only requests temporarily suppress both configured and automatic prewalk in the current main session, without a classifier call or persistent settings write. English and Korean requests, workflow aliases and expanded native skills are recognized; quoted examples and ambiguous continuations retain the current scope.
 
 A later explicit implementation request restores only runtime overrides owned by this extension, including any prior runtime values. Settings changed by the operator take precedence. Session transitions and shutdown release owned overrides. Restoration rearms the configured target; OMP does not expose a pending one-off manual target for extensions to reconstruct. The extension uses OMP 18.19's exported session-settings lookup instead of the global `api.pi.settings` proxy.
+
+## GPT code mode
+
+GPT requests use extension-only code mode: ordinary work tools are removed from the outgoing direct tool schemas and documented in the native eval description for `tool.<name>(args)` calls. Native orchestration, interaction and session-control tools stay direct when already available. Host-required device/plan transports are preserved. GPT model presets no longer repeat eval-selection, batching or helper-usage nudges; non-GPT preset guidance is unchanged.
+
+`write` remains direct because its public schema combines file writes, plan transport and `xd://` dispatch; OMP recognizes some session changes from the outer `write` result. Ordinary file writes are guided through `tool.write()`, while native transport writes remain direct. `read`, search, shell and editing tools use the bridge. Unmapped wire tools are preserved rather than guessing their canonical names.
+
+The policy uses the actual request model, including fallback, rather than assuming the selected session model is still in use. It does not enable eval for restricted agents, change active tools, wrap native implementations, or change approvals. Missing eval and unsupported request shapes retain the original request and report that code mode was not applied.
+
+Caches belong to each extension session, with no TTL or disk persistence. Model metadata changes invalidate classification; active tools, schemas and descriptions invalidate the current catalog snapshot. Session transitions, shutdown and reload discard caches; child sessions have independent state. Whole provider requests and permission/approval results are never cached.
+
+This is a model-facing routing restriction, **not an execution security boundary**: OMP can still execute a hidden active tool if a model emits its name anyway. Provider hooks and later extensions can also affect the final request. No OMP core patch or removed `providers.openai-codex.codeMode` setting is required.
 
 ## Frontend reference sources
 
@@ -111,6 +124,7 @@ bun tests/ulw-host-check.ts
 bun tests/ulw-goal-host-check.ts
 bun tests/child-preset-host-check.ts
 bun tests/prewalk-host-check.ts
+bun tests/code-mode-host-check.ts
 ```
 
 The RPC smoke uses a temporary HOME/workspace and a local provider without inheriting user credentials or workflow settings. It loads the package directory and checks discovery of its shipped skills.

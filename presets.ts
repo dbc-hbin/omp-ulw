@@ -33,6 +33,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const hasTodo = options.toolNames.includes("todo");
   const hasBash = options.toolNames.includes("bash");
   const hasWait = options.toolNames.includes("wait");
+  const isGpt = preset.name.startsWith("gpt-");
   if (preset.name === "gemini-4-argon") {
     prompt = prompt.replace("a coding agent running on Gemini 4 Argon.", "a coding agent running on Gemini 4.");
   }
@@ -42,7 +43,32 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       "Make routine judgment calls yourself. Ask when missing information materially changes the deliverable or required authorization is absent; resolve that blocker when it arises and finish independent authorized work where possible. Use ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",
     );
   }
-  if (options.toolNames.includes("eval")) {
+  if (isGpt) {
+    // GPT code mode owns execution transport. Strip inherited routing even without eval:
+    // older profiles include it unconditionally. Keep observation and recovery obligations.
+    prompt = prompt
+      .replaceAll("When `eval` is available, follow its Tool Guidelines for multi-call work.", "")
+      .replace(/When a code-execution tool is available, batch [^\n]+?one action observed before the next\./, "")
+      .replace(
+        "Batch a step's independent reads, searches, symbol lookups, and probes in one `eval` js cell and inspect every result. Edits, side-effecting commands, approvals, waits, and calls whose input you have not seen run one at a time, each observed before the next.",
+        "",
+      )
+      .replace(
+        "Before running a cell, name the state it should produce; when it returns, compare the returned evidence with that state and check that a mutating cell changed nothing beyond it.",
+        "Before acting, name the intended state; compare the returned evidence with it and check that a mutation changed nothing beyond it.",
+      )
+      .replace(
+        /Call tools directly instead when one call is enough[^\n]+?before concluding nothing exists\./,
+        "After two failed approaches for the same fact, or an empty or suspiciously narrow result, try one or two meaningful alternatives before concluding nothing exists.",
+      )
+      .replace(
+        "Skip the cell when it buys nothing: a lone call, an already-small result, a result you must read before choosing the next call, a judgment between steps, or an action that needs approval.",
+        "",
+      )
+      .replace("Default to js on Bun; reach for Bun builtins before adding a dependency.", "")
+      .replace("With no code-execution tool registered, fire those independent calls in one message instead - one bash call per command, never chained with `;` or `&&`. ", "");
+    prompt += "\n\nInspect every tool result. Keep edits, side effects, deploys, approvals, native waits, and state-dependent shell calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
+  } else if (options.toolNames.includes("eval")) {
     // Reuse shared imperative prose; Kimi, Gemini, and Grok's audit role keep their source style.
     let batchRouting = "Batch independent lookups in one JavaScript `eval` cell.";
     if (preset.name.startsWith("kimi-")) {
@@ -58,22 +84,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     // Replace execution rules in place; keep each family's evidence and observation loops.
     prompt = prompt
       .replace(/Sort (?:each multi-call step first:|a multi-call step before you write it:)[^\n]+/, `${batchRouting} ${sequentialRouting}`)
-      .replace(
-        "Batch a step's independent reads, searches, symbol lookups, and probes in one `eval` js cell and inspect every result. Edits, side-effecting commands, approvals, waits, and calls whose input you have not seen run one at a time, each observed before the next.",
-        `${batchRouting} ${sequentialRouting}`,
-      )
-      .replace(/When a code-execution tool is available, batch [^\n]+?one action observed before the next\./, `${batchRouting} ${sequentialRouting}`)
       .replace(/(?:Direct tool call only when:|Call a tool directly only when|Use a direct tool call when one call is enough)[^\n]+/, directRouting)
-      .replace(
-        "Skip the cell when it buys nothing: a lone call, an already-small result, a result you must read before choosing the next call, a judgment between steps, or an action that needs approval.",
-        directRouting,
-      )
-      .replace(
-        /Call tools directly instead when one call is enough[^\n]+?before concluding nothing exists\./,
-        directRouting,
-      )
-      .replace("With no code-execution tool registered, fire those independent calls in one message instead - one bash call per command, never chained with `;` or `&&`. ", "")
-      .replaceAll("When `eval` is available, follow its Tool Guidelines for multi-call work.", "")
       // Do not retain a per-response planning or transport rule beside code-mode execution.
       .replace(/Before each response, (?:privately )?list what you need next, then request every item that does not depend on another's result in that one response; sequence only true dependencies, and never fill missing parameters with placeholders\./g, "Never fill missing parameters with placeholders.")
       .replace("Fire independent tool calls as one parallel wave; sequence only when a call needs another's result, and never fill missing parameters with placeholders.", "Never fill missing parameters with placeholders.")
@@ -310,18 +321,19 @@ Never invent evidence or claim unperformed checks passed.`,
     .replace("`tool.monitor({ description, command, filter })` FROM THE EVAL CELL THAT STARTS THE RUN", "A `monitor` CALL")
     .replace(" A cell that awaits the wait holds the js kernel until the cell limit kills it.", "");
   prompt = prompt.replace(monitor, hasBash
-    ? "When an external condition needs a new watch and bash offers async, start an async bash watch with timeout: 0; a named ready service instead follows the service contract. Use available process controls for an existing run rather than launching a duplicate. Never hold a foreground eval cell on a watcher."
+    ? "When an external condition needs a new watch and bash offers async, start an async bash watch with timeout: 0; a named ready service instead follows the service contract. Use available process controls for an existing run rather than launching a duplicate."
+      + (isGpt ? " Never hold a foreground call on a watcher." : " Never hold a foreground eval cell on a watcher.")
     : "");
   prompt = prompt.replace(
     " A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; spawn such tracks together in the background, each brief naming its output, allowed edit paths, stop condition, and returned evidence.",
     hasTask ? " A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; dispatch such tracks together using task's advertised async or blocking contract, each brief naming its output, allowed edit paths, stop condition, and returned evidence." : "",
   );
-  if (options.toolNames.includes("bash") || options.toolNames.includes("eval")) {
+  if (hasBash || (!isGpt && options.toolNames.includes("eval"))) {
     prompt += "\n\n## OMP shell execution";
     if (options.toolNames.includes("bash")) {
       prompt += "\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
     }
-    if (options.toolNames.includes("eval")) {
+    if (!isGpt && options.toolNames.includes("eval")) {
       prompt += "\n\nUse `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding and uses persistent shell state separate from the bash tool; do not assume variables or functions transfer between them.";
       prompt += options.toolNames.includes("bash")
         ? " Use bash's advertised background or named-service contract for long jobs and watches."

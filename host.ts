@@ -26,16 +26,19 @@ export function replaceHostBehavior(blocks: string[], behavior: string): HostPro
   const base = blocks[0];
   if (!base || /<om[op]-model-preset>/.test(base)) return undefined;
   const heading = /\n([§⁂]) Role\n/.exec(base);
-  if (!heading) return undefined;
-  const role = heading.index;
-  const marker = heading[1];
+  // OMP 18.20 removed the Role heading from its default template. Recognize
+  // that exact native opening, not arbitrary custom text before Runtime.
+  const headerless = base.startsWith("You are omp's trusted coding assistant.\n\n# Engineering\n");
+  if (!heading && !headerless) return undefined;
+  const role = heading?.index ?? 0;
+  const marker = heading?.[1] ?? "⁂";
   const runtime = base.indexOf(`\n${marker} Runtime\n`, role);
   const policy = base.indexOf(`\n${marker} Tool Policy\n`, runtime);
   const workflow = base.indexOf(`\n${marker} Workflow\n`, policy);
   if (runtime <= role || policy <= runtime || workflow <= policy) return undefined;
   // Preserve native defaults here so unsupported-model fallback can restore them.
   // Model-specific behavioral projection happens after this replacement.
-  const roleBodyStart = role + heading[0].length;
+  const roleBodyStart = heading ? role + heading[0].length : 0;
   const originalBehavior = base.slice(roleBodyStart, runtime);
   const host = base.slice(0, roleBodyStart) + behavior + "\n" + base.slice(runtime, policy)
     + adaptResearchRouting(base.slice(policy, workflow))

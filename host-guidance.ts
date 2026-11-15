@@ -1,9 +1,14 @@
 /** Project the recognized host's behavioral defaults without changing its capability or permission contracts. */
 export function projectHostGuidance(text: string, source: string, modelGuidance: boolean): string {
   const role = /\n([§⁂]) Role\n/.exec(source);
-  if (!role || !text.startsWith(source.slice(0, role.index + role[0].length))) return text;
-  if (!/^<(?:omp|omo)-model-preset>/.test(text.slice(role.index + role[0].length))) return text;
-  const marker = role[1];
+  // Headerless native templates reach here only after replaceHostBehavior has
+  // recognized their opening and installed our marker at the start.
+  const headerless = /^<(?:omp|omo)-model-preset>/.test(source);
+  if (!role && !headerless) return text;
+  const roleBodyStart = role ? role.index + role[0].length : 0;
+  if (!text.startsWith(source.slice(0, roleBodyStart))) return text;
+  if (!/^<(?:omp|omo)-model-preset>/.test(text.slice(roleBodyStart))) return text;
+  const marker = role?.[1] ?? "⁂";
   const policyAt = source.indexOf(`\n${marker} Tool Policy\n`);
   const workflowAt = source.indexOf(`\n${marker} Workflow\n`, policyAt);
   const deliveryAt = source.indexOf(`\n${marker} Delivery\n`, workflowAt);

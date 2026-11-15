@@ -61,15 +61,19 @@ test("unsupported models preserve native policy and tools at turn start and afte
         expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).toBe(nativeRegion);
         expect(result.tools).toEqual(nativeTools);
       } else {
+        const gpt = id.startsWith("gpt-");
         expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).not.toBe(nativeRegion);
         expect(message.content).toMatch(/Never make a todo-only turn: (?:send|emit) todo in the same response as the next real tool call\./);
-        expect(message.content).toContain("Use `sh()` only when the live eval documentation exposes it, for short commands. It runs to completion without auto-backgrounding");
+        // GPT profiles no longer own eval routing or helper documentation;
+        // the native description must retain the runtime contract instead.
+        if (gpt) expect(message.content).not.toContain("Use `sh()`");
         expect(result.tools).toEqual(nativeTools.map(tool => ({
           ...tool,
           function: {
             ...tool.function,
             description: tool.function.name === "eval"
-              ? tool.function.description.replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.").replace(", runs to completion (never backgrounded)", "")
+              ? tool.function.description.replace("For 2+ independent items, use a named `workpool()`; results auto-deliver.", "`workpool()` results auto-deliver.")
+                .replace(", runs to completion (never backgrounded)", gpt ? ", runs to completion (never backgrounded)" : "")
               : tool.function.name === "todo"
                 ? tool.function.description.replace("`todo` NEVER takes a turn of its own: emit it in the same response as your next real tool call (parallel tool calls), ", "").replace(" A response whose only call is `todo` wastes a full model round trip.", "")
                 : tool.function.description,

@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-15 GPT extension code mode
+
+- Restrict GPT request tool schemas to native eval, session controls and required device/plan transports without changing OMP core, active tools or approvals. Describe bridge-callable tools in eval rather than repeating eval-selection guidance in GPT presets.
+- Keep model and current tool-catalog caches session-local, invalidated by their inputs and cleared on session transitions/shutdown; never cache requests or permission results.
+- Preserve non-GPT behavior and restricted-agent capabilities. This is outgoing schema projection, not a runtime prohibition on hidden direct tool calls.
+- Recognize OMP 18.20's exact headerless native role opening so GPT preset cleanup reaches live requests; custom templates and trailing runtime/project/child blocks remain protected.
+
 ### 2026-11-15 Native browser default
 
 - Make the browser and ultimate-browsing skills default to OMP's native Eval browser, removing external-browser priority instructions.

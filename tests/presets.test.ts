@@ -53,6 +53,67 @@ describe("faithful omo presets", () => {
     expect(renderPreset({ id: "opaque", name: "gpt-5.6" }, { surface: "app", toolNames })).toBeUndefined();
   });
 
+  test("GPT profiles leave eval transport to the host while retaining action and evidence contracts", () => {
+    const gptModels = [
+      ...presetNames.filter(name => name.startsWith("gpt-") && name !== "gpt-5").map(id => ({ id })),
+      { id: "openai/gpt-6.1-sol", provider: "openrouter" },
+      { id: "opaque", name: "GPT 6.1 Luna", provider: "custom" },
+      { id: "openai-codex/gpt-6.1-terra" },
+    ];
+    for (const model of gptModels) {
+      for (const surface of ["terminal", "app"] as const) {
+        for (const subagent of [false, true]) {
+          for (const activeTools of [toolNames, toolNames.filter(tool => tool !== "eval"), ["eval"], []]) {
+            const rendered = renderPreset(model, { surface, toolNames: activeTools, subagent });
+            expect(rendered?.name.startsWith("gpt-")).toBe(true);
+            const prompt = rendered!.prompt;
+            expect(prompt).not.toMatch(/Promise\.all(?:Settled)?|parallel\(thunks\)|code-execution tool/i);
+            expect(prompt).not.toMatch(/(?:batch|lookups?)[^\n.]*`eval`|`eval`[^\n.]*multi-call/i);
+            expect(prompt).not.toMatch(/(?:skip|use|running) the cell|cell strateg|standalone calls direct|call tools directly instead/i);
+            expect(prompt).not.toMatch(/superpower|default to js on Bun|`sh\(\)`/i);
+            expect(prompt).toMatch(/edits[^\n.]+approvals[^\n.]+sequential/i);
+            expect(prompt).toMatch(/specialized-tool routing/);
+            expect(prompt).toMatch(/tool-reported errors[^\n.]+missing or truncated results/);
+            expect(prompt).toMatch(/permission or approval denial/i);
+            expect(prompt).toMatch(/never (?:suppress|delete|skip)/i);
+            expect(prompt).toMatch(/(?:verified fact|evidence-backed|never invent tool output)/i);
+          }
+        }
+      }
+    }
+  });
+
+  test("GPT keeps visual verification, symbol routing, recovery and pending-job lifecycles", () => {
+    const activeTools = [...toolNames, "lsp_goto_definition"];
+    for (const id of ["gpt-5.6", "gpt-6.1-sol"]) {
+      const prompt = renderPreset({ id }, { surface: "terminal", toolNames: activeTools })!.prompt;
+      expect(prompt).toMatch(/(?:render|screenshot)[^\n.]+(?:look|see)/i);
+      expect(prompt).toMatch(/language server[^\n.]+(?:references|callers)/i);
+      expect(prompt).toMatch(/(?:empty|narrow|thin)[^\n.]+(?:alternatives|source)/i);
+      expect(prompt).toMatch(/(?:user|sibling) changes/i);
+      expect(prompt).toMatch(/(?:validators?|checks|tests)[^\n.]+(?:run|clean|evidence)|run[^\n.]+validator/i);
+      if (id === "gpt-6.1-sol") {
+        expect(prompt).toMatch(/native `wait`/);
+        expect(prompt).toMatch(/never (?:poll|hold a foreground eval cell)|do not poll/i);
+        expect(prompt).toMatch(/(?:existing run|running session)[^\n.]+duplicate/i);
+      }
+    }
+  });
+
+  test("non-GPT families retain their eval routing only when eval is available", () => {
+    for (const id of ["claude-opus-5.5", "kimi-k3", "gemini-4-argon", "grok-4.5"]) {
+      for (const surface of ["terminal", "app"] as const) {
+        const withEval = renderPreset({ id }, { surface, toolNames })!.prompt;
+        expect(withEval).toMatch(/JavaScript `eval` cell/);
+        expect(withEval).toMatch(/`Promise\.allSettled`/);
+        expect(withEval).toMatch(/standalone calls direct/);
+        expect(withEval).toMatch(/`sh\(\)`/);
+        const withoutEval = renderPreset({ id }, { surface, toolNames: toolNames.filter(tool => tool !== "eval") })!.prompt;
+        expect(withoutEval).not.toMatch(/Promise\.allSettled|JavaScript `eval` cell|`sh\(\)`/);
+      }
+    }
+  });
+
   test("Gemini 4 family shares the adapted Argon profile and capability gates across surfaces and sessions", () => {
     // Official family: https://aistudio.google.com/docs/models#all-gemini-4-models
     // Provider/separator variants below exercise adapter normalization, not extra catalog entries.

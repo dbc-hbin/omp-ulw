@@ -78,15 +78,16 @@ test("native todo deduplication keeps every mechanism and requires complete acti
 	expect(adaptToolGuidance("custom_todo", nativeTodo, profile)).toBe(nativeTodo);
 });
 
-test("native eval deduplication recognizes all sh contracts without changing helpers or cell lifecycle", () => {
-	expect(profile).toContain(shellRule);
+test("native eval retains GPT helper contracts and deduplicates only profiles that still own them", () => {
+	const withShellGuidance = renderPreset({ id: "gemini-4-argon" }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt;
 	for (const sh of nativeShBlocks) {
 		const description = nativeEval(sh);
 		const parallelAdapted = description.replace(workpoolRule, "`workpool()` results auto-deliver.");
 		const expected = parallelAdapted.replace(", runs to completion (never backgrounded)", "");
-		expect(adaptToolGuidance("eval", description, profile)).toBe(expected);
-		expect(adaptToolGuidance("eval", expected, profile)).toBe(expected);
-		for (const missing of ["", newPreset, profile.replace(shellRule, ""), profile.replace("without auto-backgrounding", ""), profile.replace("runs to completion", "is never backgrounded")]) {
+		expect(adaptToolGuidance("eval", description, profile)).toBe(parallelAdapted);
+		expect(adaptToolGuidance("eval", description, withShellGuidance)).toBe(expected);
+		expect(adaptToolGuidance("eval", expected, withShellGuidance)).toBe(expected);
+		for (const missing of ["", newPreset, withShellGuidance.replace(shellRule, ""), withShellGuidance.replace("without auto-backgrounding", ""), withShellGuidance.replace("runs to completion", "is never backgrounded")]) {
 			expect(adaptToolGuidance("eval", description, missing)).toBe(parallelAdapted);
 		}
 		for (const custom of [

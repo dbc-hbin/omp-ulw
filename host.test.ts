@@ -33,6 +33,30 @@ Original completion
 § Critical
 Original critical`;
 
+test("headerless OMP native prompts install profiles without changing runtime or child context", () => {
+  const runtime = base.slice(base.indexOf("\n§ Runtime\n")).replaceAll("§", "⁂");
+  const nativeRole = "You are omp's trusted coding assistant.\n\n# Engineering\nNative engineering\n\n# Personality\nNative tone";
+  const template = nativeRole + runtime;
+  const child = "⁂ Role\nRead-only child assignment";
+  const profile = "<omp-model-preset>Current model behavior</omp-model-preset>";
+  const result = replaceHostBehavior([template, child], profile)!;
+  expect(result.originalBehavior).toBe(nativeRole);
+  expect(result.blocks).toEqual([profile + "\n" + runtime, child]);
+  const projected = projectHostGuidance(result.blocks[0], result.blocks[0], true);
+  expect(projected).toContain("<skills>available skill</skills>");
+  expect(projected).toContain("Call tools by their exposed names");
+  expect(projected).not.toContain("Original delegation preference");
+  expect(projected).toContain("Original reporting");
+  expect(projectHostGuidance(projected, result.blocks[0], false)).toBe(result.blocks[0]);
+  for (const custom of [
+    template.replace("You are omp's trusted coding assistant.", "You are a custom assistant."),
+    template.replace("# Engineering\n", "# Custom role\n"),
+    template.replace("⁂ Tool Policy", "§ Tool Policy"),
+  ]) {
+    expect(replaceHostBehavior([custom, child], profile)).toBeUndefined();
+  }
+});
+
 test("behavior replacement preserves host capabilities, project instructions, and specialized agent assignment", () => {
   const project = "<repo-rules>Never modify customer data</repo-rules>";
   const agent = "Review only; report security findings without edits";

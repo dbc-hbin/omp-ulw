@@ -45,6 +45,7 @@ omp -e ./omp-ulw/index.ts
 
 - [`upstream/presets.js`](upstream/presets.js)：生成的上游模型预设和选择规则。
 - [`presets.ts`](presets.ts)：将提示词适配到 OMP 的工具和异步契约。
+- [`code-mode.ts`](code-mode.ts)：将 GPT 请求的直接工具列表限制为原生 eval 和会话控制工具。
 - [`index.ts`](index.ts)：为主会话和受支持的子代理会话应用提示词。
 - [`host-guidance.ts`](host-guidance.ts)：移除与模型工作方式重复的 OMP 默认指令，同时保留工具与权限契约。
 - [`upstream/update.mjs`](upstream/update.mjs)：从固定的上游版本更新预设。
@@ -59,6 +60,18 @@ omp -e ./omp-ulw/index.ts
 33 个预设包含 Claude Fable / Mythos 5.2 专用提示词，替代临时 Fable 5.5 条目。研究及 mass-research 的交接为每项结论保留观察证据，为关闭的线索记录探查过程；记忆中的断言在核实前仍是线索。有效的已记录证据可以复用，无需重复已通过的检查。
 
 GPT-6.1 Terra 在主会话和子代理中均使用 `gpt-6-astra`，支持 provider 前缀、Fast 后缀及显示名称。这里只改变提示词，实际请求的模型和 provider 保持不变；上游已有的匹配优先。
+
+## GPT 代码模式
+
+无需修改 OMP 本体：GPT 请求不再直接暴露普通工作工具的 schema，而是在原生 eval 描述中提供当前可用工具的 `tool.<name>(args)` 调用说明。已启用的委派、交互、等待、会话控制及必要的设备/计划模式传输保持可用。GPT 预设移除重复的 eval 选择、批处理和 helper 使用引导；其他模型的预设不变。
+
+`write` 的公开 schema 同时承担文件写入、计划模式和 `xd://` 传输，部分会话变更依赖顶层 `write` 结果，因此保留直接调用。普通文件写入引导使用 `tool.write()`；读取、搜索、shell 和编辑通过 bridge。无法对应到真实工具名称的 wire 工具保留，不猜测别名。
+
+每次使用实际请求模型判断，因此可跟随 fallback。不会给受限代理增加 eval，不改变激活工具、原生执行或审批。缺少 eval 或请求格式不受支持时，保留原请求并提示未应用代码模式。
+
+缓存仅属于当前扩展会话，无 TTL 或磁盘持久化。模型元数据变化时重新分类，激活工具、schema 或描述变化时替换当前目录缓存；会话切换、关闭或重载时清空，子会话独立。完整请求及权限/审批结果不缓存。
+
+这是模型侧工具选择限制，**不是执行安全边界**：模型若仍输出隐藏工具的名称，OMP 仍可能执行。后续扩展和 provider hook 也可能影响最终请求。不使用已移除的 `providers.openai-codex.codeMode` 设置。
 
 ## 生成前端参考文件
 
@@ -100,6 +113,7 @@ bun test
 bun tests/ulw-host-check.ts
 bun tests/ulw-goal-host-check.ts
 bun tests/child-preset-host-check.ts
+bun tests/code-mode-host-check.ts
 ```
 
 ## 更新历史与来源
