@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bridgeProbe, models, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
+import { bridgeProbe, directProbeNames, models, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
 
 interface Message { role: string; content?: unknown; tool_call_id?: string }
 interface Payload { model: string; messages: Message[]; tools?: WireTool[] }
@@ -17,7 +17,7 @@ interface Turn {
   finalSent: boolean;
   finalObserved: boolean;
 }
-const direct = new Set(["eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context", "write", "apply_patch"]);
+const direct = new Set(["eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context", "write", "apply_patch", ...directProbeNames]);
 const sentinel = "NATIVE_CODE_MODE_READ_47A9";
 const present = "native-code-mode-present.txt";
 const missing = "native-code-mode-missing-47a9.txt";
@@ -81,7 +81,7 @@ const server = Bun.serve({
       assert.equal(body.model, turn.model);
       assert(Array.isArray(body.messages) && Array.isArray(body.tools));
       turn.calls.push(body);
-      assert(turn.calls.length <= 2, "unexpected retry, continuation or auxiliary request");
+      assert(turn.calls.length <= 2 + directProbeNames.length, "unexpected retry, continuation or auxiliary request");
       if (turn.calls.length === 1) {
         assert(body.tools.some(tool => tool.function.name === "eval"), "native eval must be directly callable");
         const description = body.tools.find(tool => tool.function.name === "eval")!.function.description ?? "";
@@ -102,15 +102,27 @@ const server = Bun.serve({
           ].join("\n"),
         } });
       }
-      const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === turn.evalCall);
-      assert(result, "native eval result must return to the actual provider");
-      const text = JSON.stringify(result.content);
-      assert(text.includes(sentinel), "native read must return the scratch-file sentinel");
-      assert(text.includes(missing), "native missing-file error must identify the requested file");
-      assert(text.includes(`${bridgeProbe.name}:${turn.evalCall}`), "the advertised bracket accessor must reach the actual native tool");
-      assert(!text.includes("[Some lines truncated"), `${turn.name}: native batch evidence must remain untruncated`);
-      assert(/ENOENT|no such file|not found|does not exist/i.test(text), `${turn.name}: native missing-file diagnostic must survive eval: ${text}`);
-      assert(/rejected|hasError|isError/.test(text), "native eval must expose the failed read, not silently succeed");
+      if (turn.calls.length === 2) {
+        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === turn.evalCall);
+        assert(result, "native eval result must return to the actual provider");
+        const text = JSON.stringify(result.content);
+        assert(text.includes(sentinel), "native read must return the scratch-file sentinel");
+        assert(text.includes(missing), "native missing-file error must identify the requested file");
+        assert(text.includes(`${bridgeProbe.name}:${turn.evalCall}`), "the advertised bracket accessor must reach the actual native tool");
+        assert(!text.includes("[Some lines truncated"), `${turn.name}: native batch evidence must remain untruncated`);
+        assert(/ENOENT|no such file|not found|does not exist/i.test(text), `${turn.name}: native missing-file diagnostic must survive eval: ${text}`);
+        assert(/rejected|hasError|isError/.test(text), "native eval must expose the failed read, not silently succeed");
+      } else {
+        const name = directProbeNames[turn.calls.length - 3]!;
+        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === `${name}_${turn.evalCall}`);
+        assert(result, `${name}: direct tool result must return to the provider`);
+        assert(JSON.stringify(result.content).includes(`${name}:${turn.evalCall}`), `${name}: must invoke the registered tool, not the eval helper`);
+      }
+      const next = directProbeNames[turn.calls.length - 2];
+      if (next) {
+        assert(body.tools.some(tool => tool.function.name === next), `${next}: must remain directly callable`);
+        return stream({ name: next, id: `${next}_${turn.evalCall}`, args: { value: `${next}:${turn.evalCall}` } });
+      }
       turn.finalSent = true;
       return stream(`CODE_MODE_COMPLETE:${turn.name}`);
     } catch (error) {
@@ -157,7 +169,7 @@ try {
     "omp", "--mode", "rpc", "--no-ui", "--no-extensions",
     "-e", fileURLToPath(new URL("./fixtures/code-mode-provider.ts", import.meta.url)),
     "--model", `${provider}/${models[0]}`, "--cwd", cwd, "--config", config,
-    "--tools", `read,grep,bash,edit,write,eval,task,${bridgeProbe.name}`,
+    "--tools", `read,grep,bash,edit,write,eval,task,${bridgeProbe.name},${directProbeNames.join(",")}`,
     "--no-skills", "--no-rules", "--no-title", "--no-session", "--no-lsp", "--no-prewalk",
   ], { cwd, stdin: "pipe", stdout: "pipe", stderr: "pipe", env: {
     PATH: process.env.PATH, LANG: process.env.LANG ?? "en_US.UTF-8", TMPDIR: process.env.TMPDIR ?? tmpdir(),
@@ -213,12 +225,12 @@ try {
     ended = Promise.withResolvers<void>();
     send({ type: "prompt", id: `prompt-${index}`, message: `Code-mode deterministic host contract: ${scenario.name}.` });
     await Promise.race([ended.promise, failed.promise]);
-    assert.equal(turn.calls.length, 2, `${scenario.name}: every model must complete the native eval round trip`);
+    assert.equal(turn.calls.length, 2 + directProbeNames.length, `${scenario.name}: every model must complete eval and reserved-name direct tool round trips`);
   }
   let presetRegions = 0;
   const baseline = turns[0]!.observations.find(item => item.stage === "provider" && item.phase === "before")!;
   assert(baseline?.tools, "must observe native pre-plugin schemas");
-  for (const name of ["read", "grep", "bash", "edit", "write", "eval", "task", bridgeProbe.name]) {
+  for (const name of ["read", "grep", "bash", "edit", "write", "eval", "task", bridgeProbe.name, ...directProbeNames]) {
     assert(baseline.activeTools.includes(name), `explicit native selection must enable ${name}`);
     assert(names(baseline.tools).includes(name), `native request must originally expose ${name}`);
   }
@@ -240,12 +252,13 @@ try {
       assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), `${current.name}: every model must expose exactly the conservative direct set`);
       assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), `${current.name}: projection must preserve every retained native tool's parameters`);
       for (const name of ["read", "grep", "bash", "edit", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide ordinary ${name}`);
-      for (const name of ["eval", "task", "write"]) assert(names(body.tools!).includes(name), `${current.name}: every model must retain native ${name}`);
+      for (const name of ["eval", "task", "write", ...directProbeNames]) assert(names(body.tools!).includes(name), `${current.name}: every model must retain native ${name}`);
       const read = original.find(tool => tool.function.name === "read")!;
       const description = body.tools!.find(tool => tool.function.name === "eval")!.function.description ?? "";
       assert(description.includes("<omp-code-mode>") && description.includes("</omp-code-mode>"), `${current.name}: native eval must carry the catalog`);
       assert(description.includes("await tool.read(args)"), `${current.name}: catalog must advertise native read`);
       assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
+      for (const name of directProbeNames) assert(!description.includes(`await tool.${name}(args)`), `${name}: must not advertise a reserved eval accessor`);
       const regions = [...systemText(body).matchAll(/<omp-model-preset>([\s\S]*?)<\/omp-model-preset>/g)];
       assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one installed model preset`);
       for (const region of regions) {
@@ -263,6 +276,7 @@ try {
       "actual wire projection for every model family", "native read schema in eval catalog",
       "real eval tool.read sentinel and missing-file diagnostic per model",
       "advertised bracket accessor invokes a hidden hyphenated native tool",
+      "defined and undefine invoke registered tools directly, never eval-local helpers",
       "direct native task retained", "model switch back to the first model re-projects"],
     writeException: "Native write remains direct: its schema mixes ordinary files, plans and xd session-control; the public API cannot distinguish them.",
     promptIntegration: `${presetRegions} installed preset regions across ${requests} provider requests checked for absent eval steering`,

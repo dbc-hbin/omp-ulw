@@ -3,6 +3,7 @@ import installPreset from "../../index";
 export const provider = "omp-code-mode-probe";
 // Preset-recognized model ids covering representative families on one transport.
 export const models = ["gpt-6.1-sol", "claude-haiku-5.5", "kimi-k3", "gemini-4-argon", "grok-4.5"];
+export const directProbeNames = ["defined", "undefine"] as const;
 export const bridgeProbe = {
   name: "code-mode-probe",
   label: "Code-mode bridge probe",
@@ -43,6 +44,7 @@ export default function codeModeFixture(api: Parameters<typeof installPreset>[0]
     throw new Error("Code-mode probe refuses a non-loopback provider");
   }
   api.registerTool(bridgeProbe);
+  for (const name of directProbeNames) api.registerTool({ ...bridgeProbe, name });
   api.registerProvider(provider, {
     baseUrl: `${base}/v1`, apiKey: "local-test-only", api: "openai-completions",
     models: models.map(id => ({

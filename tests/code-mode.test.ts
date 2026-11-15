@@ -100,7 +100,7 @@ describe("model-neutral request-local code mode", () => {
 	});
 
 	test("Responses namespace/custom filtering retains metadata and never mutates incoming payload", () => {
-		const names = ["eval", "read", "edit", "write", "task", "checkpoint", "rewind", "new_context", "ask", "wait", "todo", "yield", "think"];
+		const names = ["eval", "read", "edit", "write", "task", "checkpoint", "rewind", "new_context", "ask", "wait", "todo", "yield", "think", "defined", "undefine"];
 		const h = host(names);
 		const direct = names.filter(name => !["read", "edit"].includes(name));
 		const kept = direct.filter(name => name !== "eval").map(name => ({ ...responseTool(name), cache_control: { type: "ephemeral" } }));
@@ -133,6 +133,8 @@ describe("model-neutral request-local code mode", () => {
 		expect(evaluation.description).not.toContain("await tool.task(args)");
 		expect(evaluation.description).not.toContain("await tool.checkpoint(args)");
 		expect(evaluation.description).not.toContain("await tool.new_context(args)");
+		expect(evaluation.description).not.toContain("await tool.defined(args)");
+		expect(evaluation.description).not.toContain("await tool.undefine(args)");
 		expect(h.warnings.some(message => message.includes("provider_patch"))).toBe(true);
 	});
 

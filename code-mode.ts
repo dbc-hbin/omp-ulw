@@ -27,10 +27,13 @@ export interface CodeModeApi {
 const DIRECT = new Set([
 	"eval", "ask", "wait", "todo", "yield", "think",
 	"task", "checkpoint", "rewind", "new_context", "write", "apply_patch",
+	"defined", "undefine",
 ]);
 const BRIDGE_EXCLUDED = new Set([
 	"eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context",
 	"apply_patch",
+	// Native JS tool.defined/undefine manage local definitions, not session tools.
+	"defined", "undefine",
 ]);
 const REGION = /<omp-code-mode>[\s\S]*?<\/omp-code-mode>/g;
 
