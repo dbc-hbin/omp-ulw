@@ -83,7 +83,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     .replace("Edits and result-dependent calls go one at a time, each compared with the state you meant to produce;", "Compare each action with the state you meant to produce;")
     .replace("Exploration: fire independent reads, searches, and listings as one parallel wave; go sequential only when a call needs a previous result, and", "Exploration:")
     .replace("Fire independent tool calls - reads, searches, listings, diagnostics - in one parallel wave; sequence only when a call needs a value another produced.", "");
-  prompt += "\n\nInspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
+  prompt += "\n\nRun independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
   if (!hasTodo) {
     prompt = prompt.replace(/^Todo discipline:.*\n?/gm, "")
       .replace(/^On any multi-step task, write the todo list before the first edit.*\n?/gm, "");

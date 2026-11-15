@@ -135,6 +135,7 @@ describe("faithful omo presets", () => {
             expect(prompt).not.toMatch(/superpower|default to js on Bun|`sh\(\)`|independent (?:tool )?calls[^\n.]*parallel wave/i);
             expect(prompt).not.toMatch(/Before each response,[^\n.]+request every item|one (?:message|response) instead/i);
             expect(prompt).not.toMatch(/Send a step's independent calls in one message/);
+            expect(prompt).toContain("Run independent reads, searches, and lookups in parallel.");
             expect(prompt).toMatch(/edits[^\n.]+approvals[^\n.]+sequential/i);
             expect(prompt).toContain("result-dependent calls sequential; inspect each before the next");
             expect(prompt).toMatch(/specialized-tool routing, permissions, and job lifecycles/);
