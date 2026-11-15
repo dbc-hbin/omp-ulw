@@ -317,6 +317,10 @@ try {
   const shSignature = evalDescription.split("\n").find(line => line.includes("sh(command,") && line.includes("embedded bash engine"));
   assert(shSignature?.includes("runs to completion (never backgrounded)"), "native eval must retain the shell helper's completion contract");
   assert(evalDescription.includes("stdout+stderr") && evalDescription.includes("ShellError"));
+  const taskDescription = description("task");
+  assert(taskDescription.includes("Supply authoritative inputs, numbered must-do steps, allowed write scope, forbidden deviations and concrete success criteria."));
+  assert(taskDescription.includes("Supply the diff, affected contracts and existing QA evidence."));
+  assert(taskDescription.includes("Supply the scope and trust boundaries."));
   const taskTool = taskRequest.tools.find((tool: unknown): tool is { function: { name: "task"; parameters?: unknown } } =>
     typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" &&
     tool.function !== null && "name" in tool.function && tool.function.name === "task",

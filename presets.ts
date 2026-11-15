@@ -95,31 +95,28 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   if (hasTodo && !prompt.includes("Never make a todo-only turn")) {
     prompt += "\n\n## OMP todo updates\n\nNever make a todo-only turn: emit todo in the same response as the next real tool call.";
   }
-  // Keep model work/stop contracts, but do not require a generic visible routing template.
+  // Keep scope visible on new requests without repeating a fixed template on steering turns.
   // Kimi K2 explicitly reinforces its per-turn routing line in model-specific tuning.
   if (!preset.name.startsWith("kimi-k2-")) {
-    prompt = prompt
-      .replace(
-        /^(?:Open (?:every turn|a new request) with [^\n]+:\n\n)?I read this as \[intent\] - \[plan\]\.(?: I'll stop(?: right away)? when \[[^\]\n]+\]\.)?\n\n/m,
-        match => match.includes("I'll stop") ? "Before acting, settle the exact, observable stop condition.\n\n" : "",
-      )
-      .replace(/(?:The line|Line) keeps your reading transparent; only/, "Only")
-      .replace("That line is your preamble; after it, act. ", "")
-      .replace("That line is your preamble; it commits you to finish the named work this turn, and the declared stop condition", "Finish the named work this turn; the stop condition")
-      .replaceAll("the user sees only the routing line and real progress", "the user sees only real progress")
-      .replace("Name that end state in the routing line", "Settle that end state before acting")
-      .replace("Before the routing line, reread the request once for ambiguity", "Before you act, reread the request once for ambiguity")
-      .replace("keep going under the reading you already declared, so the reply opens with the work instead of another routing line;", "keep going under the reading you already settled;");
+    prompt = prompt.replace(
+      /^(?:Open (?:every turn|a new request) with [^\n]+:\n\n)?I read this as \[intent\] - \[plan\]\.(?: I'll stop(?: right away)? when \[[^\]\n]+\]\.)?\n\n/m,
+      "Open a new request with one short routing line in the user's language: state your reading of the request, the intended work, and the observable stop condition. On continuation or confirmation turns, keep the settled scope and act without repeating the opening.\n\n",
+    );
   }
-  // These shared sections contain only reply mechanics; evidence and work policy live elsewhere.
+  // Preserve upstream reporting moments and model-specific cadence, not fixed labels or ledgers.
+  const progressReport = "Briefly connect the outcome so far to the user's requested result, include relevant evidence or blockers, and state the next action only while work remains. Use the user's language without fixed labels or a progress ledger; execute any stated next action in the same response with tool calls.";
   prompt = prompt
     .replace(
-      /## Handoff\n\n(?:A handoff is|Handoff moments:|At a handoff -)[\s\S]*?(?=\n\n## |$)/,
-      "## Replies\n\nReply in the user's language (explicitly requested, otherwise the language they use). Report material findings or blockers without routine progress narration; take any stated next action in the same response with tool calls.",
+      /## Handoff\n\n((?:A handoff is|Handoff moments:|At a handoff -)[^\n]+)\n\n[\s\S]*?(?=\n\n## |$)/,
+      (section, moments: string) => `## Replies\n\n${moments.replace("one short block:", "one short update:").replace("then open with one block:", "then give one short update:")}\n\n${progressReport} ${
+        section.includes("after each tool wave that changes what you know")
+          ? "Between handoffs, after each tool wave that changes what you know, give one short update: what you found and what happens next."
+          : "Between handoffs, work without narration."
+      }`,
     )
     .replace(
-      /At a handoff -[^\n]+\n\n\[Outcome so far\][\s\S]*?Between handoffs, no narration\. /,
-      "Report material findings or blockers without routine progress narration; take any stated next action in the same response with tool calls. ",
+      /(At a handoff -[^\n]+)\n\n\[Outcome so far\][\s\S]*?Between handoffs, no narration\. /,
+      (_section, moments: string) => `${moments.replace("then open with one block:", "then give one short update:")}\n\n${progressReport} Between handoffs, no narration. `,
     )
     .replaceAll("The final message of a change is the handoff block and stands alone: the outcome first, then in its You need slot what a reader needs to trust it", "The final message of a change stands alone: the outcome first, then the evidence a reader needs to trust it")
     .replaceAll("The final message of a change opens with the Handoff block; its For you slot is", "The final message of a change stands alone")
@@ -134,7 +131,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     // Keep presentation and calibrated reporting local; preserve evidence and review contracts.
     prompt = prompt.replace(
       /## Writing\n\n[\s\S]*?(?=\n\n## Reporting)/,
-      "## Writing\n\nUse plain, concise language suited to the reader. Lead with the main point, connect actions to purposes and findings to implications, and include useful supporting detail. Prefer connected prose; use lists for parallel, sequential, or comparative content. Avoid filler, invented labels, canned transitions, and unprompted contrasts.",
+      "## Writing\n\nUse plain, concise language suited to the reader. Lead with the main point, connect actions to purposes and findings to implications, and include useful supporting detail. Prefer connected prose; use lists for parallel, sequential, or comparative content. Avoid section headings and redundant concluding summaries. State intended actions directly; omit unsolicited descriptions of what you will not do, what stays unchanged, or how you will categorize results. Avoid filler, invented labels, canned transitions, and unprompted contrasts.",
     ).replace(
       'Disagree when you have a reason and give it; no flattery, no reassurance, no hedging with "it depends" when you have enough context to judge.',
       `Disagree when you have a reason and give it; no flattery or reassurance.

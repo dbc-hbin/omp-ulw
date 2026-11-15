@@ -120,6 +120,9 @@ test("research routing changes only the host policy region, never project or run
   for (const contract of ["`scout`", "`sonic`", "`reviewer`", "`security-reviewer`", "`seance`", "`sourceSession`", "`solutionSpace`"]) {
     expect(routing).toContain(contract);
   }
+  expect(routing).toContain("Supply authoritative inputs, numbered must-do steps, allowed write scope, forbidden deviations and concrete success criteria.");
+  expect(routing).toContain("Supply the diff, affected contracts and existing QA evidence.");
+  expect(routing).toContain("Supply the scope and trust boundaries.");
   expect(adaptResearchRouting(routing)).toBe(routing);
   const taskDirective = "Read-only research MUST use `scout` only when files unknown.";
   const inputs = "# Inputs\n- `agent`: most specific.\n";

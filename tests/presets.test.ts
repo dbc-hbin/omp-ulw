@@ -22,6 +22,28 @@ describe("faithful omo presets", () => {
           expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
           expect(rendered?.prompt).not.toMatch(/request_user_input|ask_user_question|wait_for_answer|waitForAnswer|`(?:tool\.)?monitor(?:`|\()|--print/);
           expect(rendered?.prompt).not.toMatch(/<workstation>|<context_files>|<skills>/);
+          const prompt = rendered!.prompt;
+          const moments = original!.prompt.match(/^(?:A handoff is|Handoff moments:|At a handoff -)[^\n]+/m)?.[0];
+          expect(moments).toBeDefined();
+          expect(prompt).toContain(moments!.replace("one short block:", "one short update:").replace("then open with one block:", "then give one short update:"));
+          expect(prompt).toContain("Briefly connect the outcome so far to the user's requested result");
+          expect(prompt).toContain("execute any stated next action in the same response with tool calls");
+          expect(prompt.includes("after each tool wave that changes what you know")).toBe(original!.prompt.includes("after each tool wave that changes what you know"));
+          expect(prompt).not.toMatch(/Ask: \[|You need: \[|Now: \[|Next: \[|Now and Next are todo labels verbatim/);
+          if (name === "gpt-6-astra") {
+            const writing = prompt.match(/## Writing\n\n([\s\S]*?)(?=\n\n## Reporting)/)?.[1];
+            expect(writing).toContain("Avoid section headings and redundant concluding summaries.");
+            expect(writing).toContain("State intended actions directly; omit unsolicited descriptions of what you will not do, what stays unchanged, or how you will categorize results.");
+          }
+          if (surface === "terminal" && !name.startsWith("kimi-k2-")) {
+            expect(prompt).toContain("Open a new request with one short routing line");
+            expect(prompt).toContain("the intended work, and the observable stop condition");
+            expect(prompt).toContain("On continuation or confirmation turns, keep the settled scope and act without repeating the opening");
+            expect(prompt).not.toMatch(/Open every turn|I read this as \[intent\]/);
+          } else {
+            expect(prompt.includes("I read this as [intent]")).toBe(original!.prompt.includes("I read this as [intent]"));
+            expect(prompt).not.toContain("On continuation or confirmation turns");
+          }
         }
       }
     }
