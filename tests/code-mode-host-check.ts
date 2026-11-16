@@ -11,6 +11,7 @@ interface Payload { model: string; messages: Message[]; tools?: WireTool[] }
 interface Turn {
   name: string;
   model: string;
+  language: "py" | "js";
   evalCall: string;
   calls: Payload[];
   observations: Observation[];
@@ -21,8 +22,12 @@ const direct = new Set(["eval", "ask", "wait", "yield", "think", "checkpoint", "
 const sentinel = "NATIVE_CODE_MODE_READ_47A9";
 const present = "native-code-mode-present.txt";
 const missing = "native-code-mode-missing-47a9.txt";
-// Every registered model family, then a final switch back to the first model.
-const scenarios = [...models.map((model, index) => ({ name: `model-${index}`, model })), { name: "model-0-switch-back", model: models[0]! }];
+// Python for every model family, a JavaScript round trip, then back to Python.
+const scenarios = [
+  ...models.map((model, index) => ({ name: `model-${index}`, model, language: "py" as const })),
+  { name: "model-0-javascript", model: models[0]!, language: "js" as const },
+  { name: "model-0-switch-back", model: models[0]!, language: "py" as const },
+];
 const turns: Turn[] = [];
 let turn: Turn | undefined;
 let failure: unknown;
@@ -85,6 +90,7 @@ const server = Bun.serve({
       if (turn.calls.length === 1) {
         assert(body.tools.some(tool => tool.function.name === "eval"), "native eval must be directly callable");
         const description = body.tools.find(tool => tool.function.name === "eval")!.function.description ?? "";
+        assert(description.includes('Prefer language="py"'), "Python-first guidance must reach the provider");
         const bridgeCall = description.split("\n").find(line => line === `await tool[${JSON.stringify(bridgeProbe.name)}](args)`);
         assert(bridgeCall, "catalog must expose an executable accessor for the hyphenated native tool");
         const mountedCall = description.split("\n").find(line => line === `await tool[${JSON.stringify(mountedProbe.name)}](args)`);
@@ -94,8 +100,33 @@ const server = Bun.serve({
         const patchValue = `NATIVE_PATCH:${turn.evalCall}`;
         const patch = `*** Begin Patch\n*** Add File: ${patchFile}\n+${patchValue}\n*** End Patch\n`;
         return stream({ name: "eval", id: turn.evalCall, args: {
-          language: "js", title: "Reading native code-mode fixtures",
-          code: [
+          language: turn.language, title: "Reading native code-mode fixtures",
+          code: (turn.language === "py" ? [
+            "import asyncio, json",
+            `await tool.todo({"op": "init", "items": [${JSON.stringify(turn.name)}]})`,
+            `paths = ${JSON.stringify([present, missing])}`,
+            "settled = await asyncio.gather(*(tool.read({'path': path}) for path in paths), return_exceptions=True)",
+            "for path, item in zip(paths, settled):",
+            "    failed_read = isinstance(item, BaseException)",
+            "    result = str(item) if failed_read else item if isinstance(item, str) else {key: item.get(key) for key in ('text', 'hasError', 'isError')}",
+            "    print(json.dumps({'path': path, 'status': 'rejected' if failed_read else 'fulfilled', 'result': result}))",
+            `args = {"value": ${JSON.stringify(`${bridgeProbe.name}:${turn.evalCall}`)}}`,
+            `bridge_result = ${bridgeCall}`,
+            "print(bridge_result if isinstance(bridge_result, str) else bridge_result['text'])",
+            `docs = await tool.read({"path": ${JSON.stringify(`xd://${mountedProbe.name}`)}})`,
+            "print(docs if isinstance(docs, str) else docs['text'])",
+            `args = {"value": ${JSON.stringify(`${mountedProbe.name}:${turn.evalCall}`)}}`,
+            `mounted = await asyncio.gather(${mountedCall.replace(/^await /, "")}, tool.read({"path": ${JSON.stringify(present)}}), return_exceptions=True)`,
+            "for item in mounted:",
+            "    print(str(item) if isinstance(item, BaseException) else item if isinstance(item, str) else item['text'])",
+            `patch_result = await tool.edit({"input": ${JSON.stringify(patch)}})`,
+            "print(patch_result if isinstance(patch_result, str) else patch_result['text'])",
+            `patched = await tool.read({"path": ${JSON.stringify(patchFile)}})`,
+            "print(patched if isinstance(patched, str) else patched['text'])",
+            `await tool.todo({"op": "done", "task": ${JSON.stringify(turn.name)}})`,
+            'checklist = await tool.todo({"op": "view"})',
+            "print(checklist if isinstance(checklist, str) else checklist['text'])",
+          ] : [
             `await tool.todo({ op: "init", items: [${JSON.stringify(turn.name)}] });`,
             `const paths = ${JSON.stringify([present, missing])};`,
             "const settled = await Promise.allSettled(paths.map(path => tool.read({ path })));",
@@ -116,7 +147,7 @@ const server = Bun.serve({
             'print(typeof patched === "string" ? patched : patched.text);',
             `await tool.todo({ op: "done", task: ${JSON.stringify(turn.name)} });`,
             'const checklist = await tool.todo({ op: "view" }); print(checklist);',
-          ].join("\n"),
+          ]).join("\n"),
         } });
       }
       if (turn.calls.length === 2) {
@@ -241,7 +272,7 @@ try {
   for (const [index, scenario] of scenarios.entries()) {
     if (index > 0) await rpc({ type: "set_model", id: `model-${index}`, provider, modelId: scenario.model });
     turn = {
-      name: scenario.name, model: scenario.model, evalCall: `native_eval_read_47a9_${index}`,
+      name: scenario.name, model: scenario.model, language: scenario.language, evalCall: `native_eval_read_47a9_${index}`,
       calls: [], observations: [], finalSent: false, finalObserved: false,
     };
     turns.push(turn);
@@ -286,6 +317,7 @@ try {
       for (const name of ["task", "todo"]) assert(description.includes(`await tool.${name}(args)`), `${current.name}: catalog must advertise native ${name}`);
       assert(description.includes(`await tool[${JSON.stringify(mountedProbe.name)}](args)`), `${current.name}: catalog must advertise the discoverable accessor`);
       assert(description.includes("Use eval to call listed tools"), `${current.name}: compact invocation guidance must reach the provider`);
+      assert(description.includes('Prefer language="py"'), `${current.name}: Python-first guidance must reach every request`);
       const guidance = description.split("<omp-code-mode>")[1]!.split("\n\nawait tool")[0]!;
       assert(!/parallel|sequential|Promise\.all/.test(guidance), `${current.name}: code-mode guidance must not duplicate concurrency policy`);
       assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
@@ -302,9 +334,10 @@ try {
   const requests = turns.reduce((sum, item) => sum + item.calls.length, 0);
   console.log(JSON.stringify({
     status: "PASS", requests,
-    scenarios: turns.map(item => ({ name: item.name, model: item.model, requests: item.calls.length })),
+    scenarios: turns.map(item => ({ name: item.name, model: item.model, language: item.language, requests: item.calls.length })),
     assertions: ["full index installation", "unchanged native activation before/after hooks for every model",
       "actual wire projection for every model family", "native read schema in eval catalog",
+      "Python-first guidance for every model with real Python eval round trips and a retained JavaScript alternative",
       "real eval tool.read sentinel and missing-file diagnostic per model",
       "real eval tool.edit applies native apply_patch input and reads back the created file",
       "advertised bracket accessor invokes a hidden hyphenated native tool",

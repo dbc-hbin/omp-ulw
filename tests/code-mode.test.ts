@@ -68,6 +68,8 @@ describe("model-neutral request-local code mode", () => {
 			const output = h.request(input, model);
 			expect(output.tools.map(tool => tool.name)).toEqual(["eval", "write"]);
 			expect(output.tools[0]!.description).toContain("Use eval to call listed tools");
+			expect(output.tools[0]!.description).toContain('Prefer language="py"');
+			expect(output.tools[0]!.description).toContain('Use language="js" when JavaScript-specific APIs or libraries are needed.');
 			expect(output.tools[0]!.description).toContain("inspect results");
 			expect(output.tools[0]!.description).toContain("Native permissions apply");
 			expect(output.tools[0]!.description).not.toMatch(/parallel|sequential|Promise\.all/);
@@ -79,7 +81,7 @@ describe("model-neutral request-local code mode", () => {
 	});
 
 	test("catalog accessors invoke tools with hyphenated, dotted and colon-qualified names", async () => {
-		for (const name of ["foo-bar", "server.tool", "mcp:search", "read"]) {
+		for (const name of ["foo-bar", "server.tool", "mcp:search", "$probe", "class", "None", "lambda", "read"]) {
 			const h = host(["eval", name]);
 			const input = { config: { tools: [{ functionDeclarations: [
 				{ name: "eval", description: "eval", parametersJsonSchema: js },
@@ -414,7 +416,27 @@ describe("model-neutral request-local code mode", () => {
 		expect(h.request(responses()).tools.map(tool => tool.name)).toEqual(["eval", "write"]);
 	});
 
-	test("missing eval/JS/schema or unsupported payload never grants access; diagnostics reset with every session lifecycle", () => {
+	test("runtime availability selects Python first and invalidates the catalog without changing the wire schema", () => {
+		const h = host();
+		const input = responses();
+		for (const [language, guidance] of [
+			[{ enum: ["py", "js"] }, 'Prefer language="py"'],
+			[{ const: "py" }, 'Use language="py" for code mode; JavaScript is not available.'],
+			[{ oneOf: [{ const: "js" }] }, 'Use language="js" for code mode; Python is not available.'],
+			[{ anyOf: [{ const: "js" }, { enum: ["py"] }] }, 'Prefer language="py"'],
+		] as const) {
+			const schema = { type: "object", properties: { language } };
+			input.tools[0]!.parameters = schema;
+			const output = h.request(input);
+			expect(output.tools.map(tool => tool.name)).toEqual(["eval", "write"]);
+			expect(output.tools[0]!.parameters).toBe(schema);
+			expect(output.tools[0]!.description).toContain(guidance);
+			expect(output.tools[0]!.description.match(/(?:Prefer|Use) language=/g)).toHaveLength(guidance.startsWith("Prefer") ? 2 : 1);
+		}
+		expect(h.warnings).toEqual([]);
+	});
+
+	test("missing eval/runtime/schema or unsupported payload never grants access; diagnostics reset with every session lifecycle", () => {
 		for (const event of ["session_start", "session_switch", "session_branch", "session_tree", "session_shutdown"]) {
 			const h = host();
 			const input = { ...responses(), tools: [responseTool("read")] };
@@ -428,7 +450,7 @@ describe("model-neutral request-local code mode", () => {
 		}
 		const h = host();
 		for (const input of [
-			{ tools: [responseTool("eval", { type: "object", properties: { language: { enum: ["py"] } } }), responseTool("read")] },
+			{ tools: [responseTool("eval", { type: "object", properties: { language: { enum: ["ruby"] } } }), responseTool("read")] },
 			{ tools: [responseTool("eval", {}), responseTool("read")] },
 			{ tools: "not a known schema list" },
 		]) expect(h.request(input)).toBe(input);

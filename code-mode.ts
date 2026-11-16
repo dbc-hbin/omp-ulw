@@ -38,21 +38,28 @@ const BRIDGE_EXCLUDED = new Set([
 // write also transports session-control devices that require direct results.
 const DIRECT = new Set([...BRIDGE_EXCLUDED, "write"]);
 const REGION = /<omp-code-mode>[\s\S]*?<\/omp-code-mode>/g;
+// Attribute access rejects Python keywords; bracket access works in both kernels.
+const PYTHON_KEYWORDS = new Set([
+	"False", "None", "True", "and", "as", "assert", "async", "await", "break", "class",
+	"continue", "def", "del", "elif", "else", "except", "finally", "for", "from",
+	"global", "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass",
+	"raise", "return", "try", "while", "with", "yield",
+]);
 
 function object(value: unknown): ObjectValue | undefined {
 	return value !== null && typeof value === "object" && !Array.isArray(value)
 		? value as ObjectValue : undefined;
 }
 
-function acceptsJs(schema: unknown): boolean {
+function acceptsLanguage(schema: unknown, token: "py" | "js"): boolean {
 	const root = object(schema);
 	const language = object(object(root?.properties)?.language);
 	if (!language) return false;
 	const accepts = (value: unknown): boolean => {
 		const entry = object(value);
 		if (!entry) return false;
-		if (entry.const === "js" || entry.const === "javascript") return true;
-		if (Array.isArray(entry.enum)) return entry.enum.includes("js") || entry.enum.includes("javascript");
+		if (entry.const === token) return true;
+		if (Array.isArray(entry.enum)) return entry.enum.includes(token);
 		return ["anyOf", "oneOf"].some(key => Array.isArray(entry[key]) && entry[key].some(accepts));
 	};
 	return accepts(language);
@@ -252,8 +259,10 @@ export function registerCodeMode(pi: CodeModeApi): void {
 		const active = new Set(pi.getActiveTools());
 		const all = pi.getAllTools();
 		const native = new Map(all.filter(tool => active.has(tool.name)).map(tool => [tool.name, tool]));
-		if (evals.length !== 1 || !native.has("eval") || !acceptsJs(evals[0]?.schema)) {
-			warn("an active, actually exposed eval tool with JavaScript schema support is required");
+		const python = acceptsLanguage(evals[0]?.schema, "py");
+		const javascript = acceptsLanguage(evals[0]?.schema, "js");
+		if (evals.length !== 1 || !native.has("eval") || (!python && !javascript)) {
+			warn("an active, actually exposed eval tool with py or js schema support is required");
 			return;
 		}
 		const forced = choiceNames(event.payload);
@@ -314,17 +323,22 @@ export function registerCodeMode(pi: CodeModeApi): void {
 		}
 		// Catalog cache is a single replaceable render, never a cache of requests,
 		// grants, approvals, or tool_choice. Mutable schemas/descriptions are read now.
-		const key = JSON.stringify([Array.from(active).sort(), entries]);
+		const key = JSON.stringify([python, javascript, Array.from(active).sort(), entries]);
 		if (catalog?.key !== key) {
 			const text = [
 				"<omp-code-mode>",
 				"Use eval to call listed tools: await tool.<name>(args). Match the JSON schema, inspect results and print only needed output. Native permissions apply.",
+				python
+					? javascript
+						? 'Prefer language="py" for code mode. Use language="js" when JavaScript-specific APIs or libraries are needed.'
+						: 'Use language="py" for code mode; JavaScript is not available.'
+					: 'Use language="js" for code mode; Python is not available.',
 				"Read linked xd:// docs before first use, then invoke the tool accessor, not write.",
 				"Tools absent from this catalog keep their native direct calls.",
 				...(entries.some(entry => entry.name === "write")
 					? ["Use tool.write for files; direct write for session/plan transports or devices without a listed accessor."] : []),
 				...entries.map(entry => [
-					`await tool${/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(entry.name) ? `.${entry.name}` : `[${JSON.stringify(entry.name)}]`}(args)`,
+					`await tool${/^[A-Za-z_][A-Za-z0-9_]*$/.test(entry.name) && !PYTHON_KEYWORDS.has(entry.name) ? `.${entry.name}` : `[${JSON.stringify(entry.name)}]`}(args)`,
 					...(entry.deferred ? [`Read xd://${entry.name} for current documentation and JSON Schema before first use.`] : [
 						entry.description,
 						...(entry.nativeDescription === entry.description ? [] : [`Native documentation: ${entry.nativeDescription}`]),

@@ -23,7 +23,7 @@ function stream(content: string | { name: string; arguments: unknown }): Respons
   ].join("\n\n"), { headers: { "content-type": "text/event-stream" } });
 }
 
-async function run(invocation: "direct" | "eval"): Promise<Stats> {
+async function run(invocation: "direct" | "py" | "js"): Promise<Stats> {
   const root = mkdtempSync(join(tmpdir(), "omp-task-bridge-"));
   const home = join(root, "home");
   const cwd = join(root, "workspace");
@@ -72,8 +72,10 @@ async function run(invocation: "direct" | "eval"): Promise<Stats> {
               solutionSpace: "One fixed response, no investigation or edits." }] };
           return stream(invocation === "direct"
             ? { name: "task", arguments: args }
-            : { name: "eval", arguments: { language: "js",
-              code: `const result = await tool.task(${JSON.stringify(args)}); print(result);`,
+            : { name: "eval", arguments: { language: invocation,
+              code: invocation === "py"
+                ? `import json\nresult = await tool.task(json.loads(${JSON.stringify(JSON.stringify(args))}))\nprint(result if isinstance(result, str) else result["text"])`
+                : `const result = await tool.task(${JSON.stringify(args)}); print(result);`,
               title: "Checking native task bridge" } });
         }
         const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === "task_contract");
@@ -155,15 +157,19 @@ async function run(invocation: "direct" | "eval"): Promise<Stats> {
 }
 
 const direct = await run("direct");
-const bridged = await run("eval");
+const python = await run("py");
+const javascript = await run("js");
 assert.equal(direct.tokens.total, usage.total_tokens * 3);
 // OMP 18.20.2 returns the blocking child's result but does not add nested
 // task usage to session stats. Keep this gap visible until the host fixes it.
-assert.equal(bridged.tokens.total, usage.total_tokens * 2);
-assert(Math.abs(direct.cost / bridged.cost - 1.5) < 1e-9);
+for (const bridged of [python, javascript]) {
+  assert.equal(bridged.tokens.total, usage.total_tokens * 2);
+  assert(Math.abs(direct.cost / bridged.cost - 1.5) < 1e-9);
+}
 console.log(JSON.stringify({
-  status: "PASS", assertions: ["native blocking child result returns through direct and eval paths"],
+  status: "PASS", assertions: ["native blocking child result returns through direct, Python eval and JavaScript eval paths"],
   knownLimitation: "OMP 18.20.2 omits bridged blocking task usage from native session totals",
   direct: { tokens: direct.tokens.total, cost: direct.cost },
-  bridged: { tokens: bridged.tokens.total, cost: bridged.cost },
+  python: { tokens: python.tokens.total, cost: python.cost },
+  javascript: { tokens: javascript.tokens.total, cost: javascript.cost },
 }, null, 2));
