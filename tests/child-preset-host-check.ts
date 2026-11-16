@@ -9,7 +9,7 @@ import { childModels, parentModel, provider, type Observation } from "./fixtures
 
 type Role = keyof typeof childModels;
 type ToolSchema = { properties?: Record<string, ToolSchema>; items?: ToolSchema; required?: string[] };
-type WireTool = { type: string; function: { name: string; parameters: ToolSchema } };
+type WireTool = { type: string; function: { name: string; description?: string; parameters: ToolSchema } };
 type Payload = { model: string; messages: Array<{ role: string; content?: unknown; tool_call_id?: string }>; tools?: WireTool[] };
 const roles = Object.keys(childModels) as Role[];
 const assignment = (role: Role) => `CHILD_ASSIGNMENT_${role.toUpperCase()}_79B1`;
@@ -48,7 +48,12 @@ function systemText(body: Payload): string {
   }).join("\n");
 }
 function taskArguments(body: Payload): unknown {
-  const schema = body.tools?.find(tool => tool.function.name === "task")?.function.parameters;
+  assert(!body.tools?.some(tool => tool.function.name === "task"), "task must be projected into code mode");
+  const description = body.tools?.find(tool => tool.function.name === "eval")?.function.description ?? "";
+  const taskSection = description.split("await tool.task(args)\n")[1]?.split("\n\nawait tool")[0];
+  const schemaText = taskSection?.match(/^JSON Schema: (.+)$/m)?.[1];
+  assert(schemaText, "eval catalog must expose the native task schema");
+  const schema = JSON.parse(schemaText) as ToolSchema;
   const item = schema?.properties?.tasks?.items;
   assert(item?.properties, "installed task tool must expose native batch schema");
   assert(schema?.required?.includes("context") && schema.required.includes("tasks"));
@@ -78,9 +83,13 @@ const server = Bun.serve({
       if (body.model === parentModel) {
         parentRequests++;
         assert(parentRequests <= 12, "unexpected parent continuation loop");
-        if (parentRequests === 1) return stream({ name: "task", id: "spawn_children_79b1", args: taskArguments(body) });
-        // Native async result messages, not request arrival or an elapsed delay, prove completion.
-        const delivered = JSON.stringify(body.messages.filter(message => message.role !== "assistant"));
+        if (parentRequests === 1) return stream({ name: "eval", id: "spawn_children_79b1", args: {
+          language: "js", title: "Spawning native children from code mode",
+          code: `const spawned = await tool.task(${JSON.stringify(taskArguments(body))}); if (spawned.hasError) throw new Error(spawned.text); print(spawned);`,
+        } });
+        // Only auto-delivered user messages prove completion. The eval result's
+        // progress metadata already contains assignments with these sentinels.
+        const delivered = JSON.stringify(body.messages.filter(message => message.role === "user"));
         if (roles.every(role => delivered.includes(completion(role)))) {
           finalSent = true;
           return stream("PARENT_CHILD_CHECK_COMPLETE_79B1");
@@ -242,7 +251,7 @@ try {
   });
   assert.equal(childRequests.get("task")!.length, 2, "worker must execute real eval and receive its result");
   console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: summaries,
-    assertions: ["native default worker, sonic and scout spawn", "complete shipped model profiles", "exact trailing-block preservation", "native role/assignment/completion retention", "parent ULW isolation", "unchanged active tools", "readonly scout restrictions", "native worker eval retains batch successes and partial failure", "native async completion delivery"],
+    assertions: ["native default worker, sonic and scout spawn through eval tool.task", "complete shipped model profiles", "exact trailing-block preservation", "native role/assignment/completion retention", "parent ULW isolation", "unchanged active tools", "readonly scout restrictions", "native worker eval retains batch successes and partial failure", "native async completion delivery"],
     limitations: ["Scripted local responses verify host transport, not model obedience", "Model refresh/fallback and custom-template rejection are covered by unit tests", "Seance is excluded because it isolates extensions"],
   }, null, 2));
 } finally {

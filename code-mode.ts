@@ -23,18 +23,20 @@ export interface CodeModeApi {
 }
 
 // Native edit can expose the freeform apply_patch wire tool, while public tool
-// metadata still names it edit. Keep that transport direct, without a bridge alias.
-const DIRECT = new Set([
-	"eval", "ask", "wait", "todo", "yield", "think",
-	"task", "checkpoint", "rewind", "new_context", "write", "apply_patch",
-	"defined", "undefine",
-]);
+// metadata still names it edit. Keep the freeform transport direct; the native
+// edit accessor uses its own JSON schema, not an invented apply_patch alias.
 const BRIDGE_EXCLUDED = new Set([
-	"eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context",
+	// eval is the entry point; ask/wait retain human-wait and interrupt handling.
+	"eval", "ask", "wait",
+	// Completion/rollover consume direct result events; checkpoint/rewind also
+	// have native bridge guards. think's private rendering is a direct surface.
+	"yield", "think", "checkpoint", "rewind", "new_context",
 	"apply_patch",
 	// Native JS tool.defined/undefine manage local definitions, not session tools.
 	"defined", "undefine",
 ]);
+// write also transports session-control devices that require direct results.
+const DIRECT = new Set([...BRIDGE_EXCLUDED, "write"]);
 const REGION = /<omp-code-mode>[\s\S]*?<\/omp-code-mode>/g;
 
 function object(value: unknown): ObjectValue | undefined {
@@ -255,7 +257,7 @@ export function registerCodeMode(pi: CodeModeApi): void {
 			return;
 		}
 		const forced = choiceNames(event.payload);
-		const entries: { name: string; description: string; nativeDescription: string; guidelines: string[]; schema: unknown; format?: unknown }[] = [];
+		const entries: { name: string; description: string; nativeDescription: string; guidelines: string[]; schema: unknown; format?: unknown; deferred?: boolean }[] = [];
 		const hidden = new Set<string>();
 		const unprojected = new Set<string>();
 		const inspectUnknown = (tools: unknown[], kind: ToolList["kind"]): void => {
@@ -287,6 +289,18 @@ export function registerCodeMode(pi: CodeModeApi): void {
 			});
 			if (!DIRECT.has(tool.name) && !forced.has(tool.name)) hidden.add(tool.name);
 		}
+		// Discoverable tools are active native tools too, but have no wire schema.
+		// Advertise their native accessor and defer docs/schema to the existing xd
+		// mount instead of duplicating the entire MCP/extension catalog in eval.
+		const wireNames = new Set(actual.map(tool => tool.name));
+		for (const info of native.values()) {
+			if (BRIDGE_EXCLUDED.has(info.name) || wireNames.has(info.name) || unprojected.has(info.name)) continue;
+			if (!object(info.parameters) || typeof info.description !== "string") continue;
+			entries.push({
+				name: info.name, description: info.description, nativeDescription: info.description,
+				guidelines: info.promptGuidelines ?? [], schema: info.parameters, deferred: true,
+			});
+		}
 		if (unprojected.size) {
 			const reason = `unprojected tools: ${Array.from(unprojected).sort().join(", ")}`;
 			if (!notices.has(reason)) {
@@ -295,7 +309,7 @@ export function registerCodeMode(pi: CodeModeApi): void {
 			}
 		}
 		if (!entries.length) {
-			warn("no bridge catalog with active native metadata and actual schemas is available");
+			warn("no bridge catalog with active native metadata and schemas is available");
 			return;
 		}
 		// Catalog cache is a single replaceable render, never a cache of requests,
@@ -304,21 +318,20 @@ export function registerCodeMode(pi: CodeModeApi): void {
 		if (catalog?.key !== key) {
 			const text = [
 				"<omp-code-mode>",
-				"Use native session tools from JavaScript with the accessors below. Pass one object matching its JSON Schema; await results and print only what is needed.",
-				"Batch independent read-only calls in one cell with Promise.allSettled; inspect every result, including rejections and tool-reported errors. Keep mutations, approvals, native waits and result-dependent actions sequential.",
-				"These are the current active tools also present in this request, not new permissions. Native approval and execution rules still apply.",
-				"Use direct orchestration/session-control tools when exposed; do not bridge task, checkpoint, rewind or new_context.",
-				...(entries.some(entry => entry.name === "read")
-					? ["Use tool.read for reads, including xd:// documentation."] : []),
+				"Use eval to call listed tools: await tool.<name>(args). Match the JSON schema, inspect results and print only needed output. Native permissions apply.",
+				"Read linked xd:// docs before first use, then invoke the tool accessor, not write.",
+				"Tools absent from this catalog keep their native direct calls.",
 				...(entries.some(entry => entry.name === "write")
-					? ["Use tool.write for ordinary files; use direct write for xd:// devices, session-control and plan transports. Its shared file/device schema cannot safely be split by this extension."] : []),
+					? ["Use tool.write for files; direct write for session/plan transports or devices without a listed accessor."] : []),
 				...entries.map(entry => [
 					`await tool${/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(entry.name) ? `.${entry.name}` : `[${JSON.stringify(entry.name)}]`}(args)`,
-					entry.description,
-					...(entry.nativeDescription === entry.description ? [] : [`Native documentation: ${entry.nativeDescription}`]),
-					...entry.guidelines,
-					`JSON Schema: ${JSON.stringify(entry.schema)}`,
-					...(entry.format === undefined ? [] : [`Direct custom wire format (bridge still takes JSON args): ${JSON.stringify(entry.format)}`]),
+					...(entry.deferred ? [`Read xd://${entry.name} for current documentation and JSON Schema before first use.`] : [
+						entry.description,
+						...(entry.nativeDescription === entry.description ? [] : [`Native documentation: ${entry.nativeDescription}`]),
+						...entry.guidelines,
+						`JSON Schema: ${JSON.stringify(entry.schema)}`,
+						...(entry.format === undefined ? [] : [`Direct custom wire format (bridge still takes JSON args): ${JSON.stringify(entry.format)}`]),
+					]),
 				].join("\n")),
 				"</omp-code-mode>",
 			].join("\n\n");

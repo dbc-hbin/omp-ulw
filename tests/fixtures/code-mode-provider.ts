@@ -7,12 +7,14 @@ export const directProbeNames = ["defined", "undefine"] as const;
 export const bridgeProbe = {
   name: "code-mode-probe",
   label: "Code-mode bridge probe",
+  loadMode: "essential",
   description: "Return the supplied value to verify native bridge tool-name dispatch.",
   parameters: { type: "object", properties: { value: { type: "string" } }, required: ["value"] },
   async execute(_toolCallId: string, { value }: { value: string }) {
     return { content: [{ type: "text" as const, text: value }], details: { value } };
   },
 };
+export const mountedProbe = { ...bridgeProbe, name: "code-mode-mounted-probe", loadMode: "discoverable" };
 export interface WireTool {
   type: string;
   function: { name: string; description?: string; parameters: Record<string, unknown> };
@@ -44,6 +46,7 @@ export default function codeModeFixture(api: Parameters<typeof installPreset>[0]
     throw new Error("Code-mode probe refuses a non-loopback provider");
   }
   api.registerTool(bridgeProbe);
+  api.registerTool(mountedProbe);
   for (const name of directProbeNames) api.registerTool({ ...bridgeProbe, name });
   api.registerProvider(provider, {
     baseUrl: `${base}/v1`, apiKey: "local-test-only", api: "openai-completions",

@@ -1,10 +1,10 @@
 // Run with: bun tests/code-mode-host-check.ts (requires the installed omp binary).
 import { strict as assert } from "node:assert";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bridgeProbe, directProbeNames, models, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
+import { bridgeProbe, directProbeNames, models, mountedProbe, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
 
 interface Message { role: string; content?: unknown; tool_call_id?: string }
 interface Payload { model: string; messages: Message[]; tools?: WireTool[] }
@@ -17,7 +17,7 @@ interface Turn {
   finalSent: boolean;
   finalObserved: boolean;
 }
-const direct = new Set(["eval", "ask", "wait", "todo", "yield", "think", "task", "checkpoint", "rewind", "new_context", "write", "apply_patch", ...directProbeNames]);
+const direct = new Set(["eval", "ask", "wait", "yield", "think", "checkpoint", "rewind", "new_context", "write", "apply_patch", ...directProbeNames]);
 const sentinel = "NATIVE_CODE_MODE_READ_47A9";
 const present = "native-code-mode-present.txt";
 const missing = "native-code-mode-missing-47a9.txt";
@@ -87,9 +87,16 @@ const server = Bun.serve({
         const description = body.tools.find(tool => tool.function.name === "eval")!.function.description ?? "";
         const bridgeCall = description.split("\n").find(line => line === `await tool[${JSON.stringify(bridgeProbe.name)}](args)`);
         assert(bridgeCall, "catalog must expose an executable accessor for the hyphenated native tool");
+        const mountedCall = description.split("\n").find(line => line === `await tool[${JSON.stringify(mountedProbe.name)}](args)`);
+        assert(mountedCall, "catalog must also expose the discoverable tool accessor");
+        assert(description.includes(`Read xd://${mountedProbe.name} for current documentation and JSON Schema before first use.`));
+        const patchFile = `${turn.evalCall}.txt`;
+        const patchValue = `NATIVE_PATCH:${turn.evalCall}`;
+        const patch = `*** Begin Patch\n*** Add File: ${patchFile}\n+${patchValue}\n*** End Patch\n`;
         return stream({ name: "eval", id: turn.evalCall, args: {
           language: "js", title: "Reading native code-mode fixtures",
           code: [
+            `await tool.todo({ op: "init", items: [${JSON.stringify(turn.name)}] });`,
             `const paths = ${JSON.stringify([present, missing])};`,
             "const settled = await Promise.allSettled(paths.map(path => tool.read({ path })));",
             "for (const [index, item] of settled.entries()) {",
@@ -99,6 +106,16 @@ const server = Bun.serve({
             `const args = { value: ${JSON.stringify(`${bridgeProbe.name}:${turn.evalCall}`)} };`,
             `const bridgeResult = ${bridgeCall};`,
             'print(typeof bridgeResult === "string" ? bridgeResult : bridgeResult.text);',
+            `const docs = await tool.read({ path: ${JSON.stringify(`xd://${mountedProbe.name}`)} });`,
+            'print(typeof docs === "string" ? docs : docs.text);',
+            `const mounted = await Promise.allSettled([${mountedCall.replace("(args)", `({ value: ${JSON.stringify(`${mountedProbe.name}:${turn.evalCall}`)} })`).replace(/^await /, "")}, tool.read({ path: ${JSON.stringify(present)} })]);`,
+            'for (const item of mounted) print(item.status === "fulfilled" ? item.value : String(item.reason));',
+            `const patchResult = await tool.edit({ input: ${JSON.stringify(patch)} });`,
+            'print(typeof patchResult === "string" ? patchResult : patchResult.text);',
+            `const patched = await tool.read({ path: ${JSON.stringify(patchFile)} });`,
+            'print(typeof patched === "string" ? patched : patched.text);',
+            `await tool.todo({ op: "done", task: ${JSON.stringify(turn.name)} });`,
+            'const checklist = await tool.todo({ op: "view" }); print(checklist);',
           ].join("\n"),
         } });
       }
@@ -109,6 +126,10 @@ const server = Bun.serve({
         assert(text.includes(sentinel), "native read must return the scratch-file sentinel");
         assert(text.includes(missing), "native missing-file error must identify the requested file");
         assert(text.includes(`${bridgeProbe.name}:${turn.evalCall}`), "the advertised bracket accessor must reach the actual native tool");
+        assert(text.includes(`${mountedProbe.name}:${turn.evalCall}`), "the discoverable accessor must reach the actual mounted tool");
+        assert(text.includes(mountedProbe.description), "the native xd mount must supply the discoverable tool documentation");
+        assert(text.includes(`NATIVE_PATCH:${turn.evalCall}`), "native edit must apply the patch and read back its contents");
+        assert(text.includes(`[X] ${turn.name}`), "native todo must retain the completed checklist");
         assert(!text.includes("[Some lines truncated"), `${turn.name}: native batch evidence must remain untruncated`);
         assert(/ENOENT|no such file|not found|does not exist/i.test(text), `${turn.name}: native missing-file diagnostic must survive eval: ${text}`);
         assert(/rejected|hasError|isError/.test(text), "native eval must expose the failed read, not silently succeed");
@@ -169,11 +190,13 @@ try {
     "omp", "--mode", "rpc", "--no-ui", "--no-extensions",
     "-e", fileURLToPath(new URL("./fixtures/code-mode-provider.ts", import.meta.url)),
     "--model", `${provider}/${models[0]}`, "--cwd", cwd, "--config", config,
-    "--tools", `read,grep,bash,edit,write,eval,task,${bridgeProbe.name},${directProbeNames.join(",")}`,
+    // --tools promotes explicitly selected discoverable tools to direct schemas.
+    // Use native default activation to exercise the real xd-only catalog path.
     "--no-skills", "--no-rules", "--no-title", "--no-session", "--no-lsp", "--no-prewalk",
   ], { cwd, stdin: "pipe", stdout: "pipe", stderr: "pipe", env: {
     PATH: process.env.PATH, LANG: process.env.LANG ?? "en_US.UTF-8", TMPDIR: process.env.TMPDIR ?? tmpdir(),
     HOME: home, PI_CODING_AGENT_DIR: join(home, "agent"),
+    PI_EDIT_VARIANT: "apply_patch",
     OMP_CODE_MODE_PROBE_BASE: `http://127.0.0.1:${server.port}`,
   } });
   assert(child.stdout && typeof child.stdout !== "number");
@@ -225,15 +248,18 @@ try {
     ended = Promise.withResolvers<void>();
     send({ type: "prompt", id: `prompt-${index}`, message: `Code-mode deterministic host contract: ${scenario.name}.` });
     await Promise.race([ended.promise, failed.promise]);
+    assert.equal(readFileSync(join(cwd, `${turn.evalCall}.txt`), "utf8"), `NATIVE_PATCH:${turn.evalCall}\n`, "native patch must reach the scratch filesystem");
     assert.equal(turn.calls.length, 2 + directProbeNames.length, `${scenario.name}: every model must complete eval and reserved-name direct tool round trips`);
   }
   let presetRegions = 0;
   const baseline = turns[0]!.observations.find(item => item.stage === "provider" && item.phase === "before")!;
   assert(baseline?.tools, "must observe native pre-plugin schemas");
   for (const name of ["read", "grep", "bash", "edit", "write", "eval", "task", bridgeProbe.name, ...directProbeNames]) {
-    assert(baseline.activeTools.includes(name), `explicit native selection must enable ${name}`);
+    assert(baseline.activeTools.includes(name), `native activation must enable ${name}`);
     assert(names(baseline.tools).includes(name), `native request must originally expose ${name}`);
   }
+  assert(baseline.activeTools.includes(mountedProbe.name), "discoverable tool must be active");
+  assert(!names(baseline.tools).includes(mountedProbe.name), "discoverable tool must not have a direct wire schema before projection");
   for (const current of turns) {
     for (const stage of ["agent", "provider"] as const) {
       const before = current.observations.filter(item => item.stage === stage && item.phase === "before");
@@ -251,12 +277,17 @@ try {
       assert.deepEqual(body.tools, projected, "observed final schemas must reach the actual provider");
       assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), `${current.name}: every model must expose exactly the conservative direct set`);
       assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), `${current.name}: projection must preserve every retained native tool's parameters`);
-      for (const name of ["read", "grep", "bash", "edit", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide ordinary ${name}`);
-      for (const name of ["eval", "task", "write", ...directProbeNames]) assert(names(body.tools!).includes(name), `${current.name}: every model must retain native ${name}`);
+      for (const name of ["read", "grep", "bash", "edit", "task", "todo", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide code-mode ${name}`);
+      for (const name of ["eval", "write", ...directProbeNames]) assert(names(body.tools!).includes(name), `${current.name}: every model must retain native ${name}`);
       const read = original.find(tool => tool.function.name === "read")!;
       const description = body.tools!.find(tool => tool.function.name === "eval")!.function.description ?? "";
       assert(description.includes("<omp-code-mode>") && description.includes("</omp-code-mode>"), `${current.name}: native eval must carry the catalog`);
       assert(description.includes("await tool.read(args)"), `${current.name}: catalog must advertise native read`);
+      for (const name of ["task", "todo"]) assert(description.includes(`await tool.${name}(args)`), `${current.name}: catalog must advertise native ${name}`);
+      assert(description.includes(`await tool[${JSON.stringify(mountedProbe.name)}](args)`), `${current.name}: catalog must advertise the discoverable accessor`);
+      assert(description.includes("Use eval to call listed tools"), `${current.name}: compact invocation guidance must reach the provider`);
+      const guidance = description.split("<omp-code-mode>")[1]!.split("\n\nawait tool")[0]!;
+      assert(!/parallel|sequential|Promise\.all/.test(guidance), `${current.name}: code-mode guidance must not duplicate concurrency policy`);
       assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
       for (const name of directProbeNames) assert(!description.includes(`await tool.${name}(args)`), `${name}: must not advertise a reserved eval accessor`);
       const regions = [...systemText(body).matchAll(/<omp-model-preset>([\s\S]*?)<\/omp-model-preset>/g)];
@@ -275,9 +306,12 @@ try {
     assertions: ["full index installation", "unchanged native activation before/after hooks for every model",
       "actual wire projection for every model family", "native read schema in eval catalog",
       "real eval tool.read sentinel and missing-file diagnostic per model",
+      "real eval tool.edit applies native apply_patch input and reads back the created file",
       "advertised bracket accessor invokes a hidden hyphenated native tool",
+      "discoverable tool absent from the original wire catalog is documented via xd and invoked alongside native read",
       "defined and undefine invoke registered tools directly, never eval-local helpers",
-      "direct native task retained", "model switch back to the first model re-projects"],
+      "native task and todo use the code-mode catalog", "native todo completion readback",
+      "model switch back to the first model re-projects"],
     writeException: "Native write remains direct: its schema mixes ordinary files, plans and xd session-control; the public API cannot distinguish them.",
     promptIntegration: `${presetRegions} installed preset regions across ${requests} provider requests checked for absent eval steering`,
     limitations: ["Scripted loopback responses verify transport, not model obedience",

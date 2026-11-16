@@ -67,8 +67,10 @@ describe("model-neutral request-local code mode", () => {
 		]) {
 			const output = h.request(input, model);
 			expect(output.tools.map(tool => tool.name)).toEqual(["eval", "write"]);
-			expect(output.tools[0]!.description).toContain("Promise.allSettled");
-			expect(output.tools[0]!.description).toContain("tool-reported errors");
+			expect(output.tools[0]!.description).toContain("Use eval to call listed tools");
+			expect(output.tools[0]!.description).toContain("inspect results");
+			expect(output.tools[0]!.description).toContain("Native permissions apply");
+			expect(output.tools[0]!.description).not.toMatch(/parallel|sequential|Promise\.all/);
 		}
 		h.state.active = h.state.active.filter(name => name !== "eval");
 		expect(h.request(input)).toBe(input);
@@ -102,14 +104,14 @@ describe("model-neutral request-local code mode", () => {
 	test("Responses namespace/custom filtering retains metadata and never mutates incoming payload", () => {
 		const names = ["eval", "read", "edit", "write", "task", "checkpoint", "rewind", "new_context", "ask", "wait", "todo", "yield", "think", "defined", "undefine"];
 		const h = host(names);
-		const direct = names.filter(name => !["read", "edit"].includes(name));
+		const direct = names.filter(name => !["read", "edit", "task", "todo"].includes(name));
 		const kept = direct.filter(name => name !== "eval").map(name => ({ ...responseTool(name), cache_control: { type: "ephemeral" } }));
 		const custom = { type: "custom", name: "edit", description: "freeform edit", format: { type: "grammar", definition: "patch" }, vendor: 42 };
 		const unmatched = { type: "custom", name: "provider_patch", format: { type: "grammar", definition: "patch" } };
 		const input = {
 			...responses([]),
 			tools: [{ type: "namespace", name: "functions", description: "namespace metadata", tools: [
-				responseTool("eval", js), responseTool("read"), custom, ...kept, unmatched,
+				responseTool("eval", js), responseTool("read"), custom, responseTool("task"), responseTool("todo"), ...kept, unmatched,
 			] }],
 			parallel_tool_calls: true,
 		};
@@ -130,7 +132,12 @@ describe("model-neutral request-local code mode", () => {
 		expect(evaluation.description).toContain("await tool.read(args)");
 		expect(evaluation.description).toContain("await tool.edit(args)");
 		expect(evaluation.description).toContain('Direct custom wire format (bridge still takes JSON args): {"type":"grammar","definition":"patch"}');
-		expect(evaluation.description).not.toContain("await tool.task(args)");
+		expect(evaluation.description).toContain("await tool.task(args)");
+		expect(evaluation.description).toContain("await tool.todo(args)");
+		for (const name of ["ask", "wait", "yield", "think"]) {
+			expect(evaluation.description).not.toContain(`await tool.${name}(args)`);
+		}
+		expect(evaluation.description).not.toContain("Keep orchestration");
 		expect(evaluation.description).not.toContain("await tool.checkpoint(args)");
 		expect(evaluation.description).not.toContain("await tool.new_context(args)");
 		expect(evaluation.description).not.toContain("await tool.defined(args)");
@@ -138,9 +145,12 @@ describe("model-neutral request-local code mode", () => {
 		expect(h.warnings.some(message => message.includes("provider_patch"))).toBe(true);
 	});
 
-	test("native apply_patch stays direct without warning or an invented JSON bridge alias", () => {
+	test("native apply_patch stays direct while edit uses its registered JSON bridge schema", () => {
 		for (const api of ["openai-responses", "openai-codex-responses", "azure-openai-responses"]) {
 			const h = host(["eval", "read", "edit", "write"]);
+			h.state.tools.find(tool => tool.name === "edit")!.parameters = {
+				type: "object", properties: { input: { type: "string" } }, required: ["input"],
+			};
 			const patch = {
 				type: "custom", name: "apply_patch", description: "native freeform patch",
 				format: { type: "grammar", syntax: "lark", definition: "patch" },
@@ -152,9 +162,12 @@ describe("model-neutral request-local code mode", () => {
 			expect(output.tools.map(tool => tool.name)).toEqual(["eval", "apply_patch", "write"]);
 			expect(output.tools[1]).toBe(patch);
 			expect(output.tools[0]!.description).toContain("await tool.read(args)");
-			expect(output.tools[0]!.description).not.toContain("await tool.edit(args)");
+			expect(output.tools[0]!.description).toContain("await tool.edit(args)");
+			expect(output.tools[0]!.description).toContain("Read xd://edit for current documentation and JSON Schema before first use.");
 			expect(output.tools[0]!.description).not.toContain("await tool.apply_patch(args)");
 			expect(h.warnings).toEqual([]);
+			h.state.active = h.state.active.filter(name => name !== "edit");
+			expect(h.request(input, { ...gpt, api }).tools[0]!.description).not.toContain("await tool.edit(args)");
 		}
 	});
 
@@ -234,13 +247,14 @@ describe("model-neutral request-local code mode", () => {
 				expect(input).toEqual(before);
 				expect(projected.contents).toBe(body.contents);
 				expect(projected.tools.map(group => group.vendor)).toEqual(["eval group", "retained group"]);
-				expect(projected.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "write", "task"]);
-				expect(projected.tools[1]!.functionDeclarations).toEqual([write, task]);
+				expect(projected.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "write"]);
+				expect(projected.tools[1]!.functionDeclarations).toEqual([write]);
 				expect(projected.tools[1]!.functionDeclarations[0]).toBe(write);
 				const evaluation = projected.tools[0]!.functionDeclarations[0]!;
 				expect(evaluation[schemaKey]).toBe(js);
 				expect(evaluation.description).toContain(`JSON Schema: ${JSON.stringify(args)}`);
 				expect(evaluation.description).toContain("await tool.read(args)");
+				expect(evaluation.description).toContain("await tool.task(args)");
 				expect(h.warnings).toEqual([]);
 
 				const forcedBody = { ...body, toolConfig: {
@@ -249,10 +263,10 @@ describe("model-neutral request-local code mode", () => {
 				const forced = h.request(wrap(forcedBody), { ...gpt, api });
 				const forcedResult = ("config" in forced ? forced.config : "request" in forced ? forced.request : forced) as typeof forcedBody;
 				expect(forcedResult.toolConfig).toBe(forcedBody.toolConfig);
-				expect(forcedResult.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "read", "write", "task"]);
+				expect(forcedResult.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "read", "write"]);
 				const again = h.request(input, { ...gpt, api });
 				const next = ("config" in again ? again.config : "request" in again ? again.request : again) as typeof body;
-				expect(next.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "write", "task"]);
+				expect(next.tools.flatMap(group => group.functionDeclarations.map(tool => tool.name))).toEqual(["eval", "write"]);
 			}
 		}
 	});
@@ -332,14 +346,19 @@ describe("model-neutral request-local code mode", () => {
 		expect(h.warnings.some(message => message.includes("unprojected tools: read"))).toBe(true);
 	});
 
-	test("catalog follows live active/schema/description/policy changes, not mounted-only tools or old renders", () => {
+	test("catalog follows live active/schema/description/policy changes for direct and discoverable tools", () => {
 		const h = host();
 		h.state.tools.push(native("mounted_only"));
 		h.state.active.push("mounted_only");
 		const payload = responses();
 		const description = () => h.request(payload).tools[0].description;
 		expect(description()).toContain("await tool.read(args)");
+		expect(description()).toContain("await tool.mounted_only(args)");
+		expect(description()).toContain("Read xd://mounted_only for current documentation and JSON Schema before first use.");
+		h.state.active = h.state.active.filter(name => name !== "mounted_only");
 		expect(description()).not.toContain("await tool.mounted_only(args)");
+		h.state.active.push("mounted_only");
+		expect(description()).toContain("await tool.mounted_only(args)");
 		const read = payload.tools.find(tool => tool.name === "read")!;
 		read.description = "new wire docs";
 		read.parameters = structuredClone(args);
@@ -357,6 +376,33 @@ describe("model-neutral request-local code mode", () => {
 		expect(absent.tools[0].description).not.toContain("await tool.read(args)");
 		h.state.active.push("read");
 		expect(description()).toContain("await tool.read(args)");
+	});
+
+	test("discoverable tools share native accessors without duplicating schemas or advertising inactive and reserved tools", () => {
+		const names = ["lsp", "recall", "mcp:search", "task", "todo"];
+		const h = host(["eval", ...names, "checkpoint", "rewind", "new_context", "defined", "undefine"]);
+		const payload = responses(["eval"]);
+		const output = h.request(payload);
+		expect(output.tools.map(tool => tool.name)).toEqual(["eval"]);
+		const description = output.tools[0]!.description;
+		for (const name of names) {
+			const accessor = name.includes(":") ? `tool["${name}"]` : `tool.${name}`;
+			expect(description).toContain(`await ${accessor}(args)`);
+			expect(description).toContain(`Read xd://${name} for current documentation and JSON Schema before first use.`);
+			expect(description).not.toContain(`native ${name}`);
+			expect(description).not.toContain(`policy ${name}`);
+		}
+		expect(description).not.toContain("JSON Schema: ");
+		for (const name of ["checkpoint", "rewind", "new_context", "defined", "undefine"]) {
+			expect(description).not.toContain(`await tool.${name}(args)`);
+		}
+		expect(h.warnings).toEqual([]);
+		h.state.active = h.state.active.filter(name => name !== "recall");
+		expect(h.request(payload).tools[0]!.description).not.toContain("await tool.recall(args)");
+		h.state.active.push("recall");
+		expect(h.request(payload).tools[0]!.description).toContain("await tool.recall(args)");
+		h.state.tools.find(tool => tool.name === "recall")!.parameters = undefined;
+		expect(h.request(payload).tools[0]!.description).not.toContain("await tool.recall(args)");
 	});
 
 	test("dynamic forced choices remain direct and are never cached into the next request", () => {
