@@ -163,7 +163,7 @@ try {
     const [prompt] = await run(["/ulw validate the shared directive"], [], undefined, undefined, model);
     assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`));
   }
-  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon", "gpt-6.1-terra"]) {
+  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon", "gpt-6.1-terra", "gpt-6.2-astra", "gpt-6.2-sol"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
     const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] });
     assert(profile);

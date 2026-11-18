@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-18 GPT-6.2 Astra and Sol prompts
+
+- Both models use the [shared Senpi preset](https://github.com/code-yeongyu/senpi/blob/8f7ecd5b37a6bd29ec973ed77ee96221e72dda9b/packages/coding-agent/src/core/extensions/builtin/prompt-preset/gpt-6.2.ts) based on the [OpenAI guide](https://developers.openai.com/api/docs/guides/latest-model). Carry corrections through verification and explain material decisions and blockers in the final answer. Preserve caller behavior when editing code and follow the reference typography and imagery when building a UI.
+
 ### 2026-11-15 Model-neutral extension code mode
 
 - Project supported requests across model families through native JavaScript eval, session controls and required device/plan transports without changing OMP core, active tools or approvals. Require active, actually exposed JavaScript-capable eval and supported payload/schema metadata; retain the original request when these gates are not met.

@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-18 GPT-6.2 Astra·Sol 지침
+
+- 두 모델에 [OpenAI 가이드](https://developers.openai.com/api/docs/guides/latest-model) 기반의 [Senpi 공용 프리셋](https://github.com/code-yeongyu/senpi/blob/8f7ecd5b37a6bd29ec973ed77ee96221e72dda9b/packages/coding-agent/src/core/extensions/builtin/prompt-preset/gpt-6.2.ts)을 적용합니다. 후속 수정 요청은 검증까지 이어가고, 최종 답변에는 작업을 막은 제약과 결과에 영향을 준 판단을 명시합니다. 코드 변경은 호출자가 의존하는 동작을 보존하고, UI 작업은 레퍼런스의 서체와 이미지를 따릅니다.
+
 ### 2026-11-15 모델 중립 익스텐션 코드모드
 
 - OMP 본체·활성 도구·승인을 바꾸지 않고 모델 계열과 무관하게 지원 요청을 native JavaScript eval·세션 제어·필요한 장치/계획모드 전송 중심으로 투영합니다. 활성 상태로 실제 노출된 JavaScript 지원 eval과 지원 payload·스키마 메타데이터가 필요하며, 조건을 충족하지 않으면 원래 요청을 유지합니다.

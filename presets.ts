@@ -132,7 +132,22 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     prompt = prompt.replace(
       /## Writing\n\n[\s\S]*?(?=\n\n## Reporting)/,
       "## Writing\n\nUse plain, concise language suited to the reader. Lead with the main point, connect actions to purposes and findings to implications, and include useful supporting detail. Prefer connected prose; use lists for parallel, sequential, or comparative content. Avoid section headings and redundant concluding summaries. State intended actions directly; omit unsolicited descriptions of what you will not do, what stays unchanged, or how you will categorize results. Avoid filler, invented labels, canned transitions, and unprompted contrasts.",
+    );
+  }
+  if (preset.name === "gpt-6.2") {
+    prompt = prompt.replace(
+      "An earlier refusal or blocker does not decide a later request: before ruling an action out, asking again, or narrowing the work, name the permission rule or technical failure that still applies, and proceed once the user has clarified or approved or new evidence opens a permitted way.",
+      "Evaluate a new request on its own scope. A denial still binds the same action; new technical evidence alone cannot grant permission.",
     ).replace(
+      "Match the codebase's style.",
+      "Match the codebase's style. Preserve behavior that callers rely on unless the task changes it. Prefer readable names and control flow over dense one-liners. Add tests when requested, required by the repository, or needed to catch a regression the existing suite would miss.",
+    ).replace(
+      "Compare what you see with the reference or the stated intent",
+      "Follow the reference's typography and imagery. Keep interface copy that helps people understand, navigate, or act, or that the user requested. Compare what you see with the reference or the stated intent",
+    );
+  }
+  if (preset.name === "gpt-6-astra" || preset.name === "gpt-6.2") {
+    prompt = prompt.replace(
       'Disagree when you have a reason and give it; no flattery, no reassurance, no hedging with "it depends" when you have enough context to judge.',
       `Disagree when you have a reason and give it; no flattery or reassurance.
 

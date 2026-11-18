@@ -4,6 +4,7 @@ import { buildPreset, presetNames } from "../upstream/presets.js";
 
 const toolNames = ["eval", "ask", "task", "bash", "wait", "read", "grep", "glob", "write", "edit", "todo", "web_search"];
 const models: Record<string, string> = {
+  "gpt-6.2": "gpt-6.2-astra",
   "kimi-k2-6": "kimi-k2.6", "kimi-k2-7": "kimi-for-coding-highspeed", "kimi-k2-8": "kimi-for-coding",
 };
 
@@ -52,6 +53,8 @@ describe("faithful omo presets", () => {
   test("original ordering, aliases and version boundaries drive selection", () => {
     const cases: [string, string | undefined][] = [
       ["openai/gpt-6-astra", "gpt-6-astra"], ["gpt-6.1-sol", "gpt-6-astra"], ["gpt-61-luna", "gpt-6-astra"],
+      ["openai/gpt-6.2-sol", "gpt-6.2"], ["gpt-62-astra-fast", "gpt-6.2"],
+      ["gpt-6.2-luna", "gpt-6-astra"], ["gpt-6.20-sol", "gpt-6-astra"], ["gpt-6.2", undefined],
       ["gpt-6-astra-extra", "gpt-6-astra"], ["gpt-6-astral", undefined], ["gpt-6", undefined], ["gpt-7-astra", undefined],
       ["gpt-5.3", "gpt-5.3-codex"], ["gpt-5", undefined], ["gpt-5.7", undefined],
       ["swe-2-max", "kimi-k3"], ["swe-2-maximum", undefined], ["k3", "kimi-k3"],
@@ -71,13 +74,14 @@ describe("faithful omo presets", () => {
     ];
     for (const [id, name] of cases) expect(renderPreset({ id }, { surface: "terminal", toolNames })?.name).toBe(name);
     expect(renderPreset({ id: "opaque", name: "GPT 6.1 Luna" }, { surface: "app", toolNames })?.name).toBe("gpt-6-astra");
+    expect(renderPreset({ id: "opaque", name: "GPT 6.2 Sol" }, { surface: "app", toolNames })?.name).toBe("gpt-6.2");
     expect(renderPreset({ id: "opaque", name: "Gemini 4 Argon" }, { surface: "app", toolNames })?.name).toBe("gemini-4-argon");
     expect(renderPreset({ id: "opaque", name: "gpt-5.6" }, { surface: "app", toolNames })).toBeUndefined();
   });
 
   test("GPT profiles leave eval transport to the host while retaining action and evidence contracts", () => {
     const gptModels = [
-      ...presetNames.filter(name => name.startsWith("gpt-") && name !== "gpt-5").map(id => ({ id })),
+      ...presetNames.filter(name => name.startsWith("gpt-") && name !== "gpt-5").map(name => ({ id: models[name] ?? name })),
       { id: "openai/gpt-6.1-sol", provider: "openrouter" },
       { id: "opaque", name: "GPT 6.1 Luna", provider: "custom" },
       { id: "openai-codex/gpt-6.1-terra" },
