@@ -4,7 +4,7 @@
 
 ### 2026-11-18 GPT-6.2 Astra·Sol 지침
 
-- 두 모델에 [OpenAI 가이드](https://developers.openai.com/api/docs/guides/latest-model) 기반의 [Senpi 공용 프리셋](https://github.com/code-yeongyu/senpi/blob/8f7ecd5b37a6bd29ec973ed77ee96221e72dda9b/packages/coding-agent/src/core/extensions/builtin/prompt-preset/gpt-6.2.ts)을 적용합니다. 후속 수정 요청은 검증까지 이어가고, 최종 답변에는 작업을 막은 제약과 결과에 영향을 준 판단을 명시합니다. 코드 변경은 호출자가 의존하는 동작을 보존하고, UI 작업은 레퍼런스의 서체와 이미지를 따릅니다.
+- 두 모델은 Senpi 카탈로그로 판별하고, 본문은 [OpenAI 가이드](https://developers.openai.com/api/docs/guides/latest-model)에 맞춘 [독립 프리셋](prompts/gpt-6.2.ts)으로 생성합니다. 후속 질문과 리뷰에는 편집 없이 답하고, 요청한 변경과 진행 중인 작업에 대한 정정은 검증까지 이어갑니다. 필요한 비교, 미검증 항목, 진행 보고는 문체 규칙으로 생략하지 않습니다.
 
 ### 2026-11-15 모델 중립 익스텐션 코드모드
 

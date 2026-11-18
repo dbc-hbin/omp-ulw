@@ -1,4 +1,5 @@
 import { ASYNC_DEFAULT, MONITOR_CONDITIONS, TURN_END_IS_WAIT, buildPreset, resolvePresetName } from "./upstream/presets.js";
+import { gpt62Body } from "./prompts/gpt-6.2";
 
 export interface PresetModel { id: string; name?: string; provider?: string }
 export interface PresetOptions { surface: "terminal" | "app"; toolNames: string[]; subagent?: boolean }
@@ -23,16 +24,37 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     }
   }
   if (!name) return undefined;
-  // Upstream gates its question directive on its own tool name; transport is adapted below.
-  const selectedTools = options.toolNames.map(tool => tool === "ask" ? "request_user_input" : tool);
-  const preset = buildPreset(name, { surface: options.surface, selectedTools });
-  if (!preset) return undefined;
-  let prompt = preset.prompt;
   const hasAsk = options.toolNames.includes("ask");
   const hasTask = options.toolNames.includes("task");
   const hasTodo = options.toolNames.includes("todo");
   const hasBash = options.toolNames.includes("bash");
   const hasWait = options.toolNames.includes("wait");
+  const routingLine = "Open a new request with one short routing line in the user's language: state your reading of the request, the intended work, and the observable stop condition. On continuation or confirmation turns, keep the settled scope and act without repeating the opening.";
+  const progressReport = "Briefly connect the outcome so far to the user's requested result, include relevant evidence or blockers, and state the next action only while work remains. Use the user's language without fixed labels or a progress ledger; execute any stated next action in the same response with tool calls.";
+  const parallelRules = "Run independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
+  const todoRule = "Never make a todo-only turn: emit todo in the same response as the next real tool call.";
+  const shellRules = "## OMP shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
+  const refusals = `## Refusals are final\n\nA permission or approval denial, or a refusal by the user, is not a blocker to work around: it is final for what that call was meant to do. Never reach that result with another tool, command, path or host. Continue independent work, then ${options.subagent ? "report the refused step to the parent as a blocker" : "report the refused step as final or blocked; ask only if a new material scope decision is required"}.`;
+  const asyncRules = "Use async by default for finite calls that expose it, and keep working on everything that does not need their pending results."
+    + (hasBash ? " Bash async keeps the command deadline; choose a task-appropriate timeout. Named ready services use the service contract, with no async or timeout parameters." : "")
+    + (hasTask ? " Use task's advertised asynchronous, synchronous, or BLOCKING agent contract; never spawn a child just to watch another operation." : "");
+  const pendingResults = hasWait
+    ? "When the next step needs a pending result from work you started, call native `wait` with no arguments."
+    : "When only pending work remains, return the pending state to the parent or host for result delivery.";
+  const waitRules = `${pendingResults} With nothing pending and work still open, keep going. Do not poll, sleep, or repeatedly read status while waiting.`;
+  if (name === "gpt-6.2") {
+    const prompt = [
+      options.surface === "terminal" && !options.subagent && routingLine, gpt62Body(options),
+      !options.subagent && progressReport, hasTodo && !options.subagent && todoRule,
+      parallelRules, asyncRules, waitRules, hasBash && shellRules, refusals,
+    ].filter(Boolean).join("\n\n");
+    return { name, prompt };
+  }
+  // Upstream gates its question directive on its own tool name; transport is adapted below.
+  const selectedTools = options.toolNames.map(tool => tool === "ask" ? "request_user_input" : tool);
+  const preset = buildPreset(name, { surface: options.surface, selectedTools });
+  if (!preset) return undefined;
+  let prompt = preset.prompt;
   if (preset.name === "gemini-4-argon") {
     prompt = prompt.replace("a coding agent running on Gemini 4 Argon.", "a coding agent running on Gemini 4.");
   }
@@ -83,7 +105,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     .replace("Edits and result-dependent calls go one at a time, each compared with the state you meant to produce;", "Compare each action with the state you meant to produce;")
     .replace("Exploration: fire independent reads, searches, and listings as one parallel wave; go sequential only when a call needs a previous result, and", "Exploration:")
     .replace("Fire independent tool calls - reads, searches, listings, diagnostics - in one parallel wave; sequence only when a call needs a value another produced.", "");
-  prompt += "\n\nRun independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
+  prompt += "\n\n" + parallelRules;
   if (!hasTodo) {
     prompt = prompt.replace(/^Todo discipline:.*\n?/gm, "")
       .replace(/^On any multi-step task, write the todo list before the first edit.*\n?/gm, "");
@@ -93,18 +115,17 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       .replace("Todo discipline: for any non-trivial task", "Todo discipline: Never make a todo-only turn: send todo in the same response as the next real tool call. For any non-trivial task");
   }
   if (hasTodo && !prompt.includes("Never make a todo-only turn")) {
-    prompt += "\n\n## OMP todo updates\n\nNever make a todo-only turn: emit todo in the same response as the next real tool call.";
+    prompt += "\n\n## OMP todo updates\n\n" + todoRule;
   }
   // Keep scope visible on new requests without repeating a fixed template on steering turns.
   // Kimi K2 explicitly reinforces its per-turn routing line in model-specific tuning.
   if (!preset.name.startsWith("kimi-k2-")) {
     prompt = prompt.replace(
       /^(?:Open (?:every turn|a new request) with [^\n]+:\n\n)?I read this as \[intent\] - \[plan\]\.(?: I'll stop(?: right away)? when \[[^\]\n]+\]\.)?\n\n/m,
-      "Open a new request with one short routing line in the user's language: state your reading of the request, the intended work, and the observable stop condition. On continuation or confirmation turns, keep the settled scope and act without repeating the opening.\n\n",
+      routingLine + "\n\n",
     );
   }
   // Preserve upstream reporting moments and model-specific cadence, not fixed labels or ledgers.
-  const progressReport = "Briefly connect the outcome so far to the user's requested result, include relevant evidence or blockers, and state the next action only while work remains. Use the user's language without fixed labels or a progress ledger; execute any stated next action in the same response with tool calls.";
   prompt = prompt
     .replace(
       /## Handoff\n\n((?:A handoff is|Handoff moments:|At a handoff -)[^\n]+)\n\n[\s\S]*?(?=\n\n## |$)/,
@@ -132,22 +153,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     prompt = prompt.replace(
       /## Writing\n\n[\s\S]*?(?=\n\n## Reporting)/,
       "## Writing\n\nUse plain, concise language suited to the reader. Lead with the main point, connect actions to purposes and findings to implications, and include useful supporting detail. Prefer connected prose; use lists for parallel, sequential, or comparative content. Avoid section headings and redundant concluding summaries. State intended actions directly; omit unsolicited descriptions of what you will not do, what stays unchanged, or how you will categorize results. Avoid filler, invented labels, canned transitions, and unprompted contrasts.",
-    );
-  }
-  if (preset.name === "gpt-6.2") {
-    prompt = prompt.replace(
-      "An earlier refusal or blocker does not decide a later request: before ruling an action out, asking again, or narrowing the work, name the permission rule or technical failure that still applies, and proceed once the user has clarified or approved or new evidence opens a permitted way.",
-      "Evaluate a new request on its own scope. A denial still binds the same action; new technical evidence alone cannot grant permission.",
     ).replace(
-      "Match the codebase's style.",
-      "Match the codebase's style. Preserve behavior that callers rely on unless the task changes it. Prefer readable names and control flow over dense one-liners. Add tests when requested, required by the repository, or needed to catch a regression the existing suite would miss.",
-    ).replace(
-      "Compare what you see with the reference or the stated intent",
-      "Follow the reference's typography and imagery. Keep interface copy that helps people understand, navigate, or act, or that the user requested. Compare what you see with the reference or the stated intent",
-    );
-  }
-  if (preset.name === "gpt-6-astra" || preset.name === "gpt-6.2") {
-    prompt = prompt.replace(
       'Disagree when you have a reason and give it; no flattery, no reassurance, no hedging with "it depends" when you have enough context to judge.',
       `Disagree when you have a reason and give it; no flattery or reassurance.
 
@@ -287,15 +293,9 @@ Never invent evidence or claim unperformed checks passed.`,
   // Preserve the async preference without inventing capabilities or overriding tool lifecycles.
   const asyncDefault = options.toolNames.includes("eval") ? ASYNC_DEFAULT : ASYNC_DEFAULT
     .replace(", A LONG COMPUTATION DETACHES ITS EVAL CELL, AND A WAIT IS A `tool.monitor` SUBSCRIPTION - NEVER A CELL SITTING ON A `--watch` OR A SPAWNED PROCESS,", " AND A WAIT IS A `monitor` SUBSCRIPTION - NEVER A COMMAND SITTING ON A `--watch`,");
-  prompt = prompt.replace(asyncDefault,
-    "Use async by default for finite calls that expose it, and keep working on everything that does not need their pending results."
-    + (hasBash ? " Bash async keeps the command deadline; choose a task-appropriate timeout. Named ready services use the service contract, with no async or timeout parameters." : "")
-    + (hasTask ? " Use task's advertised asynchronous, synchronous, or BLOCKING agent contract; never spawn a child just to watch another operation." : ""));
+  prompt = prompt.replace(asyncDefault, asyncRules);
   prompt = prompt.replace("A child task never qualifies; it runs in the background and its completion delivers the result.", "");
-  const pendingResults = hasWait
-    ? "When the next step needs a pending result from work you started, call native `wait` with no arguments."
-    : "When only pending work remains, return the pending state to the parent or host for result delivery.";
-  prompt = prompt.replace(TURN_END_IS_WAIT, `${pendingResults} With nothing pending and work still open, keep going. Do not poll, sleep, or repeatedly read status while waiting.`);
+  prompt = prompt.replace(TURN_END_IS_WAIT, waitRules);
   const monitor = options.toolNames.includes("eval") ? MONITOR_CONDITIONS : MONITOR_CONDITIONS
     .replace("`tool.monitor({ description, command, filter })` FROM THE EVAL CELL THAT STARTS THE RUN", "A `monitor` CALL")
     .replace(" A cell that awaits the wait holds the js kernel until the cell limit kills it.", "");
@@ -308,8 +308,7 @@ Never invent evidence or claim unperformed checks passed.`,
     hasTask ? " A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; dispatch such tracks together using task's advertised async or blocking contract, each brief naming its output, allowed edit paths, stop condition, and returned evidence." : "",
   );
   if (hasBash) {
-    prompt += "\n\n## OMP shell execution";
-    prompt += "\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
+    prompt += "\n\n" + shellRules;
   }
   // Apply generic wording only after matching the intact upstream async directives.
   prompt = prompt.replaceAll("session tools", "available process controls");
@@ -340,6 +339,6 @@ Never invent evidence or claim unperformed checks passed.`,
       .replaceAll("Use it for symbols, files, and patterns", "Use it for literal text and known filename patterns, following each tool's contract");
   }
   // OMO refusal rule: generic "try another approach" guidance never applies to a denial.
-  prompt += `\n\n## Refusals are final\n\nA permission or approval denial, or a refusal by the user, is not a blocker to work around: it is final for what that call was meant to do. Never reach that result with another tool, command, path or host. Continue independent work, then ${options.subagent ? "report the refused step to the parent as a blocker" : "report the refused step as final or blocked; ask only if a new material scope decision is required"}.`;
+  prompt += "\n\n" + refusals;
   return { name: preset.name, prompt };
 }
