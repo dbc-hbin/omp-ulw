@@ -175,19 +175,19 @@ function replaceDescription(entry: unknown, kind: ToolList["kind"], tool: WireTo
 }
 
 function project(
-	tools: unknown[], kind: ToolList["kind"], hidden: Set<string>, description: string,
+	tools: unknown[], kind: ToolList["kind"], hidden: Set<string>, evaluation: { name: string; description: string },
 ): unknown[] {
 	const result: unknown[] = [];
 	for (const entry of tools) {
 		const group = toolGroup(entry, kind);
 		if (group) {
-			const nested = project(group.tools, kind, hidden, description);
+			const nested = project(group.tools, kind, hidden, evaluation);
 			if (nested.length) result.push({ ...group.entry, [group.key]: nested });
 			continue;
 		}
 		const tool = wireTool(entry, kind);
 		if (tool && hidden.has(tool.name)) continue;
-		result.push(tool?.name === "eval" ? replaceDescription(entry, kind, tool, description) : entry);
+		result.push(tool?.name === evaluation.name ? replaceDescription(entry, kind, tool, evaluation.description) : entry);
 	}
 	// Match native head caching: one tools-prefix anchor on a non-deferred tool.
 	// Keep existing anchors in place; restore only a native anchor lost to filtering.
@@ -255,13 +255,20 @@ export function registerCodeMode(pi: CodeModeApi): void {
 		}
 		const actual: WireTool[] = [];
 		collect(list.tools, list.kind, actual);
-		const evals = actual.filter(tool => tool.name === "eval");
 		const active = new Set(pi.getActiveTools());
 		const all = pi.getAllTools();
 		const native = new Map(all.filter(tool => active.has(tool.name)).map(tool => [tool.name, tool]));
-		const python = acceptsLanguage(evals[0]?.schema, "py");
-		const javascript = acceptsLanguage(evals[0]?.schema, "js");
-		if (evals.length !== 1 || !native.has("eval") || (!python && !javascript)) {
+		// Anthropic can prefix client tools on the wire. Detect it from this
+		// request, without treating a separately registered _eval as native eval.
+		const prefixed = list.kind === "anthropic" && !all.some(tool => tool.name === "_eval")
+			&& !actual.some(tool => tool.name === "eval");
+		const nativeName = (tool: WireTool): string =>
+			prefixed && tool.name.startsWith("_") && object(tool.schema) ? tool.name.slice(1) : tool.name;
+		const evals = actual.filter(tool => nativeName(tool) === "eval");
+		const evaluation = evals[0];
+		const python = acceptsLanguage(evaluation?.schema, "py");
+		const javascript = acceptsLanguage(evaluation?.schema, "js");
+		if (!evaluation || evals.length !== 1 || !native.has("eval") || (!python && !javascript)) {
 			warn("an active, actually exposed eval tool with py or js schema support is required");
 			return;
 		}
@@ -281,29 +288,30 @@ export function registerCodeMode(pi: CodeModeApi): void {
 		};
 		inspectUnknown(list.tools, list.kind);
 		for (const tool of actual) {
-			if (BRIDGE_EXCLUDED.has(tool.name)) continue;
-			const info = native.get(tool.name);
+			const name = nativeName(tool);
+			if (BRIDGE_EXCLUDED.has(name)) continue;
+			const info = native.get(name);
 			// Unmapped aliases and unknown/provider-hosted tools stay direct. ToolInfo
 			// has no customWireName; guessing an alias would advertise a false bridge.
 			const schema = tool.schema ?? (tool.format !== undefined ? info?.parameters : undefined);
 			if (!info || !object(schema) || typeof info.description !== "string") {
-				if (!DIRECT.has(tool.name)) unprojected.add(tool.name);
+				if (!DIRECT.has(name)) unprojected.add(tool.name);
 				continue;
 			}
 			entries.push({
-				name: tool.name,
+				name,
 				description: typeof tool.description === "string" ? tool.description : info.description,
 				nativeDescription: info.description,
 				guidelines: info.promptGuidelines ?? [], schema, format: tool.format,
 			});
-			if (!DIRECT.has(tool.name) && !forced.has(tool.name)) hidden.add(tool.name);
+			if (!DIRECT.has(name) && !forced.has(tool.name)) hidden.add(tool.name);
 		}
 		// Discoverable tools are active native tools too, but have no wire schema.
 		// Advertise their native accessor and defer docs/schema to the existing xd
 		// mount instead of duplicating the entire MCP/extension catalog in eval.
-		const wireNames = new Set(actual.map(tool => tool.name));
+		const onWire = new Set(actual.map(nativeName));
 		for (const info of native.values()) {
-			if (BRIDGE_EXCLUDED.has(info.name) || wireNames.has(info.name) || unprojected.has(info.name)) continue;
+			if (BRIDGE_EXCLUDED.has(info.name) || onWire.has(info.name) || unprojected.has(info.name)) continue;
 			if (!object(info.parameters) || typeof info.description !== "string") continue;
 			entries.push({
 				name: info.name, description: info.description, nativeDescription: info.description,
@@ -351,8 +359,8 @@ export function registerCodeMode(pi: CodeModeApi): void {
 			].join("\n\n");
 			catalog = { key, text };
 		}
-		const original = typeof evals[0].description === "string" ? evals[0].description : "";
+		const original = typeof evaluation.description === "string" ? evaluation.description : "";
 		const description = `${original.replace(REGION, "")}\n\n${catalog.text}`;
-		return list.replace(project(list.tools, list.kind, hidden, description));
+		return list.replace(project(list.tools, list.kind, hidden, { name: evaluation.name, description }));
 	});
 }

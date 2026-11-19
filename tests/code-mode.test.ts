@@ -273,6 +273,33 @@ describe("model-neutral request-local code mode", () => {
 		}
 	});
 
+	test("Anthropic prefixed tools project to native eval accessors without changing wire names", () => {
+		const h = host();
+		const choice = { type: "tool", name: "_bash" };
+		const anchor = { type: "ephemeral" };
+		const input = {
+			tools: [
+				{ name: "_eval", description: "eval", input_schema: js },
+				{ name: "_bash", description: "bash", input_schema: args },
+				{ name: "_write", description: "write", input_schema: args },
+				{ name: "_read", description: "read", input_schema: args, cache_control: anchor },
+			],
+			tool_choice: choice,
+		};
+		const model = { api: "anthropic-messages" };
+		const output = h.request(input, model);
+		expect(output.tools.map(tool => tool.name)).toEqual(["_eval", "_bash", "_write"]);
+		expect(output.tool_choice).toBe(choice);
+		expect(output.tools[0]?.input_schema).toBe(js);
+		expect(output.tools[0]?.description).toContain("await tool.read(args)");
+		expect(output.tools[0]?.description).not.toContain("await tool._read(args)");
+		expect(output.tools[2]?.cache_control).toBe(anchor);
+		expect(h.warnings).toEqual([]);
+		h.state.active = h.state.active.filter(name => name !== "eval");
+		expect(h.request(input, model)).toBe(input);
+		expect(host(["eval", "_eval", "read", "write", "bash"]).request(input, model)).toBe(input);
+	});
+
 	test("Anthropic retains its native tools-prefix anchor after hiding the anchored tool", () => {
 		const h = host(["eval", "read", "write"]);
 		const definition = (name: string): {
