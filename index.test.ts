@@ -27,7 +27,7 @@ test("unsupported models preserve native policy and tools at turn start and afte
       parameters: { type: "object", properties: { value: { type: "string" } } },
     },
   }));
-  for (const initialModel of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-4-carbon"]) {
+  for (const initialModel of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-3.5-flash"]) {
     const handlers = new Map<string, Handler[]>();
     let activeTools = ["eval", "todo", "bash"];
     ompUlw({
@@ -51,12 +51,14 @@ test("unsupported models preserve native policy and tools at turn start and afte
     const request = handlers.get("before_provider_request")?.[0];
     if (!request) throw new Error("Expected provider request hook");
     const payload = { messages: [{ role: "system", content: blocks[0] }], tools: nativeTools };
-    for (const id of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-4-carbon", "gemini-4-hydrogen-xhigh", "unknown-model"]) {
+    for (const id of ["unknown-model", "gpt-6.1-sol", "gpt-6.1-terra", "gemini-3.5-flash", "gemini-4-hydrogen-xhigh", "unknown-model"]) {
       ctx.model.id = id;
       const result: unknown = Reflect.apply(request, undefined, [{ payload }, ctx]);
       if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages) || !("tools" in result)) throw new Error("Expected provider payload");
       const message: unknown = result.messages[0];
       if (typeof message !== "object" || message === null || !("content" in message) || typeof message.content !== "string") throw new Error("Expected system content");
+      const tag = id.includes("gemini") ? "AGY_MODEL_PRESET" : "omp-model-preset";
+      expect(message.content.match(/<\/?(?:omp-model-preset|AGY_MODEL_PRESET)>/g)).toEqual([`<${tag}>`, `</${tag}>`]);
       if (id === "unknown-model") {
         expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).toBe(nativeRegion);
         expect(result.tools).toEqual(nativeTools);
@@ -191,11 +193,12 @@ test("child profiles follow their model while preserving role, assignment, tools
     const expected = renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
     const payload = { messages: [...blocks.map(content => ({ role: "system", content })), user], tools };
     const updated = hook({ payload } as never, ctx as never) as typeof payload;
-    expect(updated.messages[0].content).toContain(`<omp-model-preset>\n${expected}${scope}\n</omp-model-preset>`);
+    const tag = id.includes("gemini") ? "AGY_MODEL_PRESET" : "omp-model-preset";
+    expect(updated.messages[0].content).toContain(`<${tag}>\n${expected}${scope}\n</${tag}>`);
     expect(updated.messages.slice(1)).toEqual(payload.messages.slice(1));
     expect(updated.messages.at(-1)).toBe(user);
     expect(updated.tools).toBe(tools);
-    expect(updated.messages[0].content.match(/<omp-model-preset>/g)).toHaveLength(1);
+    expect(updated.messages[0].content.match(/<\/?(?:omp-model-preset|AGY_MODEL_PRESET)>/g)).toEqual([`<${tag}>`, `</${tag}>`]);
     expect(updated.messages[0].content).not.toContain("<omp-ulw-policy>");
     expect(hook({ payload: updated } as never, ctx as never)).toBe(updated);
   }

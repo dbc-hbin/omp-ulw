@@ -1,3 +1,6 @@
+import { isGeminiModel } from "./presets";
+import type { PresetModel } from "./presets";
+
 type ObjectValue = Record<string, unknown>;
 type ToolInfo = {
 	name: string;
@@ -6,7 +9,7 @@ type ToolInfo = {
 	promptGuidelines?: string[];
 };
 type RequestContext = {
-	model?: { api?: string };
+	model?: Partial<PresetModel> & { api?: string };
 	ui?: { notify(message: string, type?: "info" | "warning" | "error"): void };
 };
 type Lifecycle = "session_start" | "session_switch" | "session_branch" | "session_tree" | "session_shutdown";
@@ -242,7 +245,7 @@ export function registerCodeMode(pi: CodeModeApi): void {
 	}
 	pi.on("before_provider_request", (event, ctx) => {
 		const model = ctx.model;
-		if (!model) return;
+		if (!model || isGeminiModel(model)) return;
 		const warn = (reason: string): void => {
 			if (notices.has(reason)) return;
 			notices.add(reason);

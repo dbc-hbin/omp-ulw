@@ -44,7 +44,7 @@ omp -e ./omp-ulw
 
 受支持的模型提示词会适配到 OMP，并分别应用于主会话和受支持的子会话。专业角色、项目指令、权限与完成协议保持不变。自定义模板和不受支持的模型保留原生行为。明确的调查或仅规划请求会暂时抑制 prewalk；转入实现时，只恢复本扩展拥有的 override。
 
-代码模式依据请求能力启用，而不区分模型系列：
+所有 Gemini 模型均使用适配 OMP 的 AGY（Antigravity CLI）提示词，并保留原生工具的直接调用。其他模型依据请求能力启用代码模式：
 
 - 普通工作工具不再直接暴露 schema，而是在原生 JavaScript eval 中提供 `tool.<name>(args)` 调用说明。
 - 会话控制、`write`、`apply_patch`、bridge 保留名称（`defined`、`undefine`）、无法映射的工具及强制选择的工具保持直接调用。

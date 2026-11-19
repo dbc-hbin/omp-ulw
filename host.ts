@@ -3,6 +3,11 @@ export interface HostPrompt {
   originalBehavior: string;
 }
 
+export const AGY_PRESET_TAG = "AGY_MODEL_PRESET";
+const PRESET_TAGS = `om[op]-model-preset|${AGY_PRESET_TAG}`;
+export const PRESET_OPENING = new RegExp(`<(?:${PRESET_TAGS})>`);
+export const PRESET_REGION = new RegExp(`<(${PRESET_TAGS})>([\\s\\S]*?)</\\1>`, "g");
+
 /** Adapt known upstream routing rules, not task permissions or model assignments. */
 export function adaptResearchRouting(text: string): string {
   // Role selection supplements native task inputs and advertised agent contracts.
@@ -24,7 +29,7 @@ export function adaptResearchRouting(text: string): string {
 /** Replace only the known default template; custom prompts and agent blocks remain owned by their authors. */
 export function replaceHostBehavior(blocks: string[], behavior: string): HostPrompt | undefined {
   const base = blocks[0];
-  if (!base || /<om[op]-model-preset>/.test(base)) return undefined;
+  if (!base || PRESET_OPENING.test(base)) return undefined;
   const heading = /\n([§⁂]) Role\n/.exec(base);
   // OMP 18.20 removed the Role heading from its default template. Recognize
   // that exact native opening, not arbitrary custom text before Runtime.

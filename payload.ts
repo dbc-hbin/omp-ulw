@@ -1,7 +1,5 @@
-import { adaptResearchRouting } from "./host";
+import { adaptResearchRouting, PRESET_REGION } from "./host";
 import { adaptToolGuidance } from "./host-guidance";
-
-const PRESET_REGION = /<(om[op]-model-preset)>[\s\S]*?<\/\1>/g;
 
 type PayloadObject = Record<string, unknown>;
 type PromptReplacement = string | ((match: string) => string);

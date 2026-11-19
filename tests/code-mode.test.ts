@@ -48,14 +48,13 @@ function responses(names = ["eval", "read", "write", "bash"]) {
 	return { tools: names.map(name => responseTool(name, name === "eval" ? js : args)), input: [{ role: "user", content: "now" }] };
 }
 
-describe("model-neutral request-local code mode", () => {
-	test("all model families and unknown identities use the same live tool-capability gates", () => {
+describe("request-local code mode", () => {
+	test("non-Gemini model families and unknown identities use the same live tool-capability gates", () => {
 		const h = host();
 		const input = responses();
 		for (const model of [
 			gpt,
 			{ ...gpt, id: "claude-opus", identity: { class: "anthropic", family: "claude" } },
-			{ ...gpt, id: "gemini-4", identity: { class: "google", family: "gemini" } },
 			{ ...gpt, id: "deepseek-v4", identity: { class: "deepseek" } },
 			{ ...gpt, id: "kimi-k3", identity: { class: "moonshot" } },
 			{ ...gpt, id: "qwen3", identity: { class: "qwen" } },
@@ -63,6 +62,7 @@ describe("model-neutral request-local code mode", () => {
 			{ ...gpt, id: "llama", name: "Llama", identity: undefined },
 			{ ...gpt, id: "gpt-5.3-codex", identity: { class: "openai", family: "codex" } },
 			{ ...gpt, id: "gpt-oss-120b", provider: "openrouter", identity: { class: "gpt-oss", family: "120b" } },
+			{ ...gpt, id: "claude-opus-5.5", provider: "google-antigravity" },
 			{ api: gpt.api },
 		]) {
 			const output = h.request(input, model);
@@ -77,6 +77,21 @@ describe("model-neutral request-local code mode", () => {
 		h.state.active = h.state.active.filter(name => name !== "eval");
 		expect(h.request(input)).toBe(input);
 		h.state.active.push("eval");
+		expect(h.request(input).tools.map(tool => tool.name)).toEqual(["eval", "write"]);
+	});
+
+	test("Gemini keeps native tools on OpenAI-compatible transports without affecting subsequent models", () => {
+		const h = host();
+		const input = responses();
+		expect(h.request(input).tools.map(tool => tool.name)).toEqual(["eval", "write"]);
+		for (const model of [
+			{ ...gpt, id: "google/gemini-2.5-pro" },
+			{ ...gpt, id: "customGeMiNiGateway/preview" },
+			{ ...gpt, name: "PreviewGeMiNiPro" },
+			{ ...gpt, identity: { class: "gemini", family: "pro" } },
+			{ ...gpt, identity: { class: "unknown", logicalId: "gemini-4-argon" } },
+		]) expect(h.request(input, model)).toBe(input);
+		expect(h.warnings).toEqual([]);
 		expect(h.request(input).tools.map(tool => tool.name)).toEqual(["eval", "write"]);
 	});
 
@@ -240,8 +255,8 @@ describe("model-neutral request-local code mode", () => {
 					],
 					contents: [{ role: "user", parts: [{ text: "now" }] }],
 				};
-				const wrap = (value: typeof body) => surface === "config" ? { model: "gemini", config: value }
-					: surface === "request" ? { model: "gemini", request: value } : value;
+				const wrap = (value: typeof body) => surface === "config" ? { config: value }
+					: surface === "request" ? { request: value } : value;
 				const input = wrap(body);
 				const before = structuredClone(input);
 				const output = h.request(input, { ...gpt, api });
@@ -257,6 +272,7 @@ describe("model-neutral request-local code mode", () => {
 				expect(evaluation.description).toContain(`JSON Schema: ${JSON.stringify(args)}`);
 				expect(evaluation.description).toContain("await tool.read(args)");
 				expect(evaluation.description).toContain("await tool.task(args)");
+				expect(h.request(input, { id: "gemini-4-argon", api })).toBe(input);
 				expect(h.warnings).toEqual([]);
 
 				const forcedBody = { ...body, toolConfig: {

@@ -155,8 +155,8 @@ test.each([
 });
 
 test("an already-owned profile cannot be nested by a second installation", () => {
-  for (const prefix of ["omp", "omo"]) {
-    const first = replaceHostBehavior([base], `<${prefix}-model-preset>profile</${prefix}-model-preset>`);
+  for (const tag of ["omp-model-preset", "omo-model-preset", "AGY_MODEL_PRESET"]) {
+    const first = replaceHostBehavior([base], `<${tag}>profile</${tag}>`);
     expect(replaceHostBehavior(first?.blocks ?? [], "<omp-model-preset>other</omp-model-preset>")).toBeUndefined();
   }
 });

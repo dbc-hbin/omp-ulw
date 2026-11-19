@@ -319,12 +319,14 @@ const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = 
 ];
 
 describe("rewritePresetPayload", () => {
-	test("legacy markers migrate only in system fields and mismatched tags stay untouched", () => {
-		const legacy = "<omo-model-preset>old profile</omo-model-preset>";
-		const payload = { instructions: legacy, input: [{ role: "user", content: legacy }] };
-		expect(rewritePresetPayload(payload, "openai-responses", newPreset)).toEqual({ ...payload, instructions: newPreset });
-		const malformed = { instructions: "<omo-model-preset>old profile</omp-model-preset>" };
-		expect(rewritePresetPayload(malformed, "openai-responses", newPreset)).toBe(malformed);
+	test("legacy and AGY markers refresh only in system fields and mismatched tags stay untouched", () => {
+		for (const tag of ["omo-model-preset", "AGY_MODEL_PRESET"]) {
+			const previous = `<${tag}>old profile</${tag}>`;
+			const payload = { instructions: previous, input: [{ role: "user", content: previous }] };
+			expect(rewritePresetPayload(payload, "openai-responses", newPreset)).toEqual({ ...payload, instructions: newPreset });
+			const malformed = { instructions: `<${tag}>old profile</omp-model-preset>` };
+			expect(rewritePresetPayload(malformed, "openai-responses", newPreset)).toBe(malformed);
+		}
 	});
 
 	for (const [index, shape] of realisticShapes.entries()) {

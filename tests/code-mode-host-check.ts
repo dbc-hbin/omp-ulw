@@ -4,7 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { bridgeProbe, directProbeNames, models, mountedProbe, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
+import { agyBody } from "../prompts/agy";
+import { bridgeProbe, directProbeNames, geminiModel, models, mountedProbe, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
 
 interface Message { role: string; content?: unknown; tool_call_id?: string }
 interface Payload { model: string; messages: Message[]; tools?: WireTool[] }
@@ -22,7 +23,7 @@ const direct = new Set(["eval", "ask", "wait", "yield", "think", "checkpoint", "
 const sentinel = "NATIVE_CODE_MODE_READ_47A9";
 const present = "native-code-mode-present.txt";
 const missing = "native-code-mode-missing-47a9.txt";
-// Python for every model family, a JavaScript round trip, then back to Python.
+// Switch between code-mode families and direct Gemini, then exercise JavaScript and switch back to Python.
 const scenarios = [
   ...models.map((model, index) => ({ name: `model-${index}`, model, language: "py" as const })),
   { name: "model-0-javascript", model: models[0]!, language: "js" as const },
@@ -86,6 +87,17 @@ const server = Bun.serve({
       assert.equal(body.model, turn.model);
       assert(Array.isArray(body.messages) && Array.isArray(body.tools));
       turn.calls.push(body);
+      if (turn.model === geminiModel) {
+        if (turn.calls.length === 1) {
+          assert(body.tools.some(tool => tool.function.name === "read"), "Gemini must be offered native read directly");
+          return stream({ name: "read", id: turn.evalCall, args: { path: present } });
+        }
+        assert.equal(turn.calls.length, 2, "Gemini must finish after one native tool round trip");
+        const result = body.messages.find(message => message.role === "tool" && message.tool_call_id === turn.evalCall);
+        assert(JSON.stringify(result?.content)?.includes(sentinel), "Gemini must receive the direct native read result");
+        turn.finalSent = true;
+        return stream(`CODE_MODE_COMPLETE:${turn.name}`);
+      }
       assert(turn.calls.length <= 2 + directProbeNames.length, "unexpected retry, continuation or auxiliary request");
       if (turn.calls.length === 1) {
         assert(body.tools.some(tool => tool.function.name === "eval"), "native eval must be directly callable");
@@ -279,8 +291,12 @@ try {
     ended = Promise.withResolvers<void>();
     send({ type: "prompt", id: `prompt-${index}`, message: `Code-mode deterministic host contract: ${scenario.name}.` });
     await Promise.race([ended.promise, failed.promise]);
-    assert.equal(readFileSync(join(cwd, `${turn.evalCall}.txt`), "utf8"), `NATIVE_PATCH:${turn.evalCall}\n`, "native patch must reach the scratch filesystem");
-    assert.equal(turn.calls.length, 2 + directProbeNames.length, `${scenario.name}: every model must complete eval and reserved-name direct tool round trips`);
+    if (turn.model === geminiModel) {
+      assert.equal(turn.calls.length, 2, "Gemini must complete the native read round trip");
+    } else {
+      assert.equal(readFileSync(join(cwd, `${turn.evalCall}.txt`), "utf8"), `NATIVE_PATCH:${turn.evalCall}\n`, "native patch must reach the scratch filesystem");
+      assert.equal(turn.calls.length, 2 + directProbeNames.length, `${scenario.name}: every code-mode model must complete eval and reserved-name direct tool round trips`);
+    }
   }
   let presetRegions = 0;
   const baseline = turns[0]!.observations.find(item => item.stage === "provider" && item.phase === "before")!;
@@ -306,6 +322,17 @@ try {
       const original = current.observations.filter(item => item.stage === "provider" && item.phase === "before")[index]!.tools!;
       const projected = current.observations.filter(item => item.stage === "provider" && item.phase === "after")[index]!.tools!;
       assert.deepEqual(body.tools, projected, "observed final schemas must reach the actual provider");
+      const regions = [...systemText(body).matchAll(/<(omp-model-preset|AGY_MODEL_PRESET)>([\s\S]*?)<\/\1>/g)];
+      assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one installed model preset`);
+      assert.equal(regions[0]?.[1], current.model === geminiModel ? "AGY_MODEL_PRESET" : "omp-model-preset");
+      presetRegions++;
+      if (current.model === geminiModel) {
+        assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original), "Gemini must retain every native wire schema");
+        const description = body.tools!.find(tool => tool.function.name === "eval")?.function.description;
+        assert(!description?.includes("<omp-code-mode>"), "any native eval description must omit the code-mode catalog");
+        assert(regions[0]?.[2]?.includes(agyBody), "Gemini must receive the shipped AGY prompt");
+        return;
+      }
       assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), `${current.name}: every model must expose exactly the conservative direct set`);
       assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), `${current.name}: projection must preserve every retained native tool's parameters`);
       for (const name of ["read", "grep", "bash", "edit", "task", "todo", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide code-mode ${name}`);
@@ -322,23 +349,19 @@ try {
       assert(!/parallel|sequential|Promise\.all/.test(guidance), `${current.name}: code-mode guidance must not duplicate concurrency policy`);
       assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
       for (const name of directProbeNames) assert(!description.includes(`await tool.${name}(args)`), `${name}: must not advertise a reserved eval accessor`);
-      const regions = [...systemText(body).matchAll(/<omp-model-preset>([\s\S]*?)<\/omp-model-preset>/g)];
-      assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one installed model preset`);
-      for (const region of regions) {
-        presetRegions++;
-        assert(!/\beval\b|await tool\./i.test(region[1]!), `${current.name}: any installed preset region must have no eval steering`);
-      }
+      assert(!/\beval\b|await tool\./i.test(regions[0]![2]!), `${current.name}: the preset must leave eval steering to the tool catalog`);
     });
   }
   if (failure) throw failure;
   const requests = turns.reduce((sum, item) => sum + item.calls.length, 0);
   console.log(JSON.stringify({
     status: "PASS", requests,
-    scenarios: turns.map(item => ({ name: item.name, model: item.model, language: item.language, requests: item.calls.length })),
+    scenarios: turns.map(item => ({ name: item.name, model: item.model, mode: item.model === geminiModel ? "direct" : item.language, requests: item.calls.length })),
     assertions: ["full index installation", "unchanged native activation before/after hooks for every model",
-      "actual wire projection for every model family", "native read schema in eval catalog",
-      "Python-first guidance for every model with real Python eval round trips and a retained JavaScript alternative",
-      "real eval tool.read sentinel and missing-file diagnostic per model",
+      "Gemini receives the AGY prompt and original tool schemas and runs native read directly",
+      "actual wire projection for the other model families", "native read schema in eval catalog",
+      "Python-first guidance for code-mode models with real Python eval round trips and a retained JavaScript alternative",
+      "real eval tool.read sentinel and missing-file diagnostic per code-mode model",
       "real eval tool.edit applies native apply_patch input and reads back the created file",
       "advertised bracket accessor invokes a hidden hyphenated native tool",
       "discoverable tool absent from the original wire catalog is documented via xd and invoked alongside native read",
@@ -346,7 +369,7 @@ try {
       "native task and todo use the code-mode catalog", "native todo completion readback",
       "model switch back to the first model re-projects"],
     writeException: "Native write remains direct: its schema mixes ordinary files, plans and xd session-control; the public API cannot distinguish them.",
-    promptIntegration: `${presetRegions} installed preset regions across ${requests} provider requests checked for absent eval steering`,
+    promptIntegration: `${presetRegions} installed preset regions across ${requests} provider requests checked`,
     limitations: ["Scripted loopback responses verify transport, not model obedience",
       "No-eval authoritative selection and cache mutation belong to unit checks; this smoke does not claim those scenarios"],
   }, null, 2));

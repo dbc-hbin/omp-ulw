@@ -1,13 +1,16 @@
+import { PRESET_OPENING, PRESET_REGION } from "./host";
+
 /** Project the recognized host's behavioral defaults without changing its capability or permission contracts. */
 export function projectHostGuidance(text: string, source: string, modelGuidance: boolean): string {
   const role = /\n([§⁂]) Role\n/.exec(source);
   // Headerless native templates reach here only after replaceHostBehavior has
   // recognized their opening and installed our marker at the start.
-  const headerless = /^<(?:omp|omo)-model-preset>/.test(source);
+  const headerless = source.search(PRESET_OPENING) === 0;
   if (!role && !headerless) return text;
   const roleBodyStart = role ? role.index + role[0].length : 0;
   if (!text.startsWith(source.slice(0, roleBodyStart))) return text;
-  if (!/^<(?:omp|omo)-model-preset>/.test(text.slice(roleBodyStart))) return text;
+  const [region] = text.slice(roleBodyStart).matchAll(PRESET_REGION);
+  if (region?.index !== 0) return text;
   const marker = role?.[1] ?? "⁂";
   const policyAt = source.indexOf(`\n${marker} Tool Policy\n`);
   const workflowAt = source.indexOf(`\n${marker} Workflow\n`, policyAt);
@@ -17,7 +20,7 @@ export function projectHostGuidance(text: string, source: string, modelGuidance:
   let workflow = deliveryAt > workflowAt ? source.slice(workflowAt, deliveryAt) : undefined;
   if (modelGuidance) {
     policy = policy.replace(/(^|\n)# (?:General|Exploration|Delegation)\n[\s\S]*?(?=\n# |$)/g, "$1");
-    const profile = /<(?:omp|omo)-model-preset>([\s\S]*?)<\/(?:omp|omo)-model-preset>/.exec(text)?.[1] ?? "";
+    const profile = region[2];
     if (profile.includes("For text or filename search")) {
       policy = policy.replace(/^- File structure\/names:[^\n]*(?:\n|$)/m, "");
     }

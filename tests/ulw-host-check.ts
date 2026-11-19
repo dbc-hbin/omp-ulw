@@ -167,7 +167,8 @@ try {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
     const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] });
     assert(profile);
-    assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
+    const tag = model === "gemini-4-argon" ? "AGY_MODEL_PRESET" : "omp-model-preset";
+    assert(prompt.includes(`<${tag}>\n${profile.prompt}\n</${tag}>`), `actual provider request must contain the shipped ${model} profile`);
     if (model === "gpt-6.1-terra") {
       const request = requests.at(-1);
       assert(typeof request === "object" && request !== null && "model" in request);

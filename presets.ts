@@ -1,11 +1,23 @@
 import { ASYNC_DEFAULT, MONITOR_CONDITIONS, TURN_END_IS_WAIT, buildPreset, resolvePresetName } from "./upstream/presets.js";
+import { agyBody } from "./prompts/agy";
 import { gpt62Body } from "./prompts/gpt-6.2";
 
-export interface PresetModel { id: string; name?: string; provider?: string }
+export interface PresetModel {
+  readonly id: string;
+  readonly name?: string;
+  readonly provider?: string;
+  readonly identity?: { readonly class?: string; readonly logicalId?: string };
+}
 export interface PresetOptions { surface: "terminal" | "app"; toolNames: string[]; subagent?: boolean }
 
+export function isGeminiModel({ id, name, identity }: Partial<PresetModel>): boolean {
+  return [id, name, identity?.logicalId, identity?.class].some(value => value?.toLowerCase().includes("gemini"));
+}
+
 export function renderPreset(model: PresetModel, options: PresetOptions): { name: string; prompt: string } | undefined {
-  let name = resolvePresetName({ id: model.id, name: model.name, provider: model.provider }, { promptPreset: "auto" });
+  let name = isGeminiModel(model)
+    ? "agy"
+    : resolvePresetName({ id: model.id, name: model.name, provider: model.provider }, { promptPreset: "auto" });
   // GPT-6.1 Terra shares Astra's profile in main and child sessions.
   if (!name) {
     const terra = /(^|[/@:._-])gpt[._-]?6(?:[._-]1|1)[._-]terra(?=$|[/@:._-])/i;
@@ -14,14 +26,6 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
       name: model.name?.replace(/\s+/g, "-").replace(terra, "$1gpt-6-astra"),
       provider: model.provider,
     }, { promptPreset: "auto" });
-  }
-  // Carbon/Argon/Hydrogen: https://aistudio.google.com/docs/models#all-gemini-4-models
-  // Share Argon's profile by generation without overriding upstream matches.
-  if (!name) {
-    const gemini4 = /(^|[/@:._-])gemini[._-]?4(?=$|[/@:._-])/i;
-    if (gemini4.test(model.id.replace(/\s+/g, "-")) || (model.name !== undefined && gemini4.test(model.name.replace(/\s+/g, "-")))) {
-      name = "gemini-4-argon";
-    }
   }
   if (!name) return undefined;
   const hasAsk = options.toolNames.includes("ask");
@@ -33,7 +37,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const progressReport = "Briefly connect the outcome so far to the user's requested result, include relevant evidence or blockers, and state the next action only while work remains. Use the user's language without fixed labels or a progress ledger; execute any stated next action in the same response with tool calls.";
   const parallelRules = "Run independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
   const todoRule = "Never make a todo-only turn: emit todo in the same response as the next real tool call.";
-  const shellRules = "## OMP shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
+  const shellRules = `## ${name === "agy" ? "agy" : "OMP"} shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.`;
   const refusals = `## Refusals are final\n\nA permission or approval denial, or a refusal by the user, is not a blocker to work around: it is final for what that call was meant to do. Never reach that result with another tool, command, path or host. Continue independent work, then ${options.subagent ? "report the refused step to the parent as a blocker" : "report the refused step as final or blocked; ask only if a new material scope decision is required"}.`;
   const asyncRules = "Use async by default for finite calls that expose it, and keep working on everything that does not need their pending results."
     + (hasBash ? " Bash async keeps the command deadline; choose a task-appropriate timeout. Named ready services use the service contract, with no async or timeout parameters." : "")
@@ -42,9 +46,10 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     ? "When the next step needs a pending result from work you started, call native `wait` with no arguments."
     : "When only pending work remains, return the pending state to the parent or host for result delivery.";
   const waitRules = `${pendingResults} With nothing pending and work still open, keep going. Do not poll, sleep, or repeatedly read status while waiting.`;
-  if (name === "gpt-6.2") {
+  if (name === "gpt-6.2" || name === "agy") {
     const prompt = [
-      options.surface === "terminal" && !options.subagent && routingLine, gpt62Body(options),
+      options.surface === "terminal" && !options.subagent && routingLine,
+      name === "agy" ? agyBody : gpt62Body(options),
       !options.subagent && progressReport, hasTodo && !options.subagent && todoRule,
       parallelRules, asyncRules, waitRules, hasBash && shellRules, refusals,
     ].filter(Boolean).join("\n\n");
@@ -55,9 +60,6 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const preset = buildPreset(name, { surface: options.surface, selectedTools });
   if (!preset) return undefined;
   let prompt = preset.prompt;
-  if (preset.name === "gemini-4-argon") {
-    prompt = prompt.replace("a coding agent running on Gemini 4 Argon.", "a coding agent running on Gemini 4.");
-  }
   if (preset.name === "claude-fable-5-2") {
     prompt = prompt.replace(
       "Make routine judgment calls yourself; ask only when different readings would lead to materially different work, and ask after doing everything that does not depend on the answer, through ask_user_question when it is available (waitForAnswer true when the next step depends on the answer).",
