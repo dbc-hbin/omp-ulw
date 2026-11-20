@@ -36,6 +36,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const routingLine = "Open a new request with one short routing line in the user's language: state your reading of the request, the intended work, and the observable stop condition. On continuation or confirmation turns, keep the settled scope and act without repeating the opening.";
   const progressReport = "Briefly connect the outcome so far to the user's requested result, include relevant evidence or blockers, and state the next action only while work remains. Use the user's language without fixed labels or a progress ledger; execute any stated next action in the same response with tool calls.";
   const parallelRules = "Run independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
+  const delegationRule = "A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; dispatch such tracks together using task's advertised async or blocking contract, each brief naming its output, allowed edit paths, stop condition, and returned evidence.";
   const todoRule = "Never make a todo-only turn: emit todo in the same response as the next real tool call.";
   const shellRules = `## ${name === "agy" ? "agy" : "OMP"} shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.`;
   const refusals = `## Refusals are final\n\nA permission or approval denial, or a refusal by the user, is not a blocker to work around: it is final for what that call was meant to do. Never reach that result with another tool, command, path or host. Continue independent work, then ${options.subagent ? "report the refused step to the parent as a blocker" : "report the refused step as final or blocked; ask only if a new material scope decision is required"}.`;
@@ -50,6 +51,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     const prompt = [
       options.surface === "terminal" && !options.subagent && routingLine,
       name === "agy" ? agyBody : gpt62Body(options),
+      name === "gpt-6.2" && hasTask && `Do short or tightly coupled work and checks on your own changes yourself. ${delegationRule}`,
       !options.subagent && progressReport, hasTodo && !options.subagent && todoRule,
       parallelRules, asyncRules, waitRules, hasBash && shellRules, refusals,
     ].filter(Boolean).join("\n\n");
@@ -305,7 +307,7 @@ Never invent evidence or claim unperformed checks passed.`,
     : "");
   prompt = prompt.replace(
     " A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; spawn such tracks together in the background, each brief naming its output, allowed edit paths, stop condition, and returned evidence.",
-    hasTask ? " A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; dispatch such tracks together using task's advertised async or blocking contract, each brief naming its output, allowed edit paths, stop condition, and returned evidence." : "",
+    hasTask ? ` ${delegationRule}` : "",
   );
   if (hasBash) {
     prompt += "\n\n" + shellRules;
