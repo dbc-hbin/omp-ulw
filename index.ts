@@ -65,7 +65,7 @@ function markPreset(prompt: string, subagent: boolean, presetName?: string): str
 }
 
 export default function ompUlw(pi: ExtensionApi): void {
-  pi.setLabel("omp-ulw");
+  pi.setLabel("omp-superkit");
   registerUlw(pi);
   let originalBehavior: string | undefined;
   let originalHost: string | undefined;

@@ -1,4 +1,4 @@
-# omp-ulw
+# omp-superkit
 
 English | [한국어](README.ko.md) | [简体中文](README.zh-CN.md)
 
@@ -9,9 +9,9 @@ Model-specific prompts, code mode and native ULW workflows for [Oh My Pi (OMP)](
 With Git, Bun and OMP installed:
 
 ```bash
-git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
-bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-superkit.git
+bun ./omp-superkit/upstream/materialize-frontend-refs.mjs
+omp -e ./omp-superkit
 ```
 
 In the interactive TUI, enter `/ulw <task>` or `ulw <task>` to activate ULW and a native goal. Existing goals, including paused or budget-limited ones, are preserved. RPC clients must create native goals separately.

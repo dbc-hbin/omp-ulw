@@ -1,4 +1,4 @@
-# omp-ulw
+# omp-superkit
 
 [English](README.md) | [한국어](README.ko.md) | 简体中文
 
@@ -9,9 +9,9 @@
 安装 Git、Bun 和 OMP 后运行：
 
 ```bash
-git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
-bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-superkit.git
+bun ./omp-superkit/upstream/materialize-frontend-refs.mjs
+omp -e ./omp-superkit
 ```
 
 在交互式 TUI 中输入 `/ulw <任务>` 或 `ulw <任务>`，即可启用 ULW 和原生目标。已有目标（包括暂停或达到预算限制的目标）保持不变。RPC 客户端须单独创建原生目标。

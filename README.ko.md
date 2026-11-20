@@ -1,4 +1,4 @@
-# omp-ulw
+# omp-superkit
 
 [English](README.md) | 한국어 | [简体中文](README.zh-CN.md)
 
@@ -9,9 +9,9 @@
 Git·Bun·OMP가 설치된 환경에서 실행합니다.
 
 ```bash
-git clone --recurse-submodules https://github.com/dbc-hbin/omp-ulw.git
-bun ./omp-ulw/upstream/materialize-frontend-refs.mjs
-omp -e ./omp-ulw
+git clone --recurse-submodules https://github.com/dbc-hbin/omp-superkit.git
+bun ./omp-superkit/upstream/materialize-frontend-refs.mjs
+omp -e ./omp-superkit
 ```
 
 대화형 TUI에서 `/ulw <작업>` 또는 `ulw <작업>`을 입력하면 ULW와 native goal을 활성화합니다. 일시정지·예산 제한 상태를 포함해 기존 goal은 유지합니다. RPC 클라이언트는 native goal을 별도로 생성해야 합니다.
