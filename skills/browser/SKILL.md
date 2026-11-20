@@ -63,7 +63,8 @@ console.log(await tab.observe({ compact: true }));
 `tab.ref("eN")`. Use IDs or refs from the current observation in the same cell, never guessed values.
 Navigation, rerendering and another snapshot can invalidate them. Read again after a state-changing
 action and verify the semantic postcondition; successful transport is not proof that a submit worked.
-Prefer `fill` for replacing text and `select` for `<select>` elements.
+Prefer `fill` for replacing text and `select` for `<select>` elements. If the value changes but a
+search or autocomplete does not react, check whether it needs [keyboard events](references/commands.md#actions-and-waits).
 
 Use direct helpers for ordinary work and `tab.run` when several dependent actions must share one
 worker call, including subscribing to a response before the click that triggers it. A run receives
