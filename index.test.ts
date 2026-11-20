@@ -57,9 +57,8 @@ test("unsupported models preserve native policy and tools at turn start and afte
       if (typeof result !== "object" || result === null || !("messages" in result) || !Array.isArray(result.messages) || !("tools" in result)) throw new Error("Expected provider payload");
       const message: unknown = result.messages[0];
       if (typeof message !== "object" || message === null || !("content" in message) || typeof message.content !== "string") throw new Error("Expected system content");
-      const tag = id.includes("gemini") ? "AGY_MODEL_PRESET" : "omp-model-preset";
-      expect(message.content.match(/<\/?(?:omp-model-preset|AGY_MODEL_PRESET)>/g)).toEqual([`<${tag}>`, `</${tag}>`]);
-      if (id === "unknown-model") {
+      expect(message.content.match(/<\/?omp-model-preset>/g)).toEqual(["<omp-model-preset>", "</omp-model-preset>"]);
+      if (id === "unknown-model" || id.startsWith("gemini-")) {
         expect(message.content.slice(message.content.indexOf("\n§ Tool Policy\n"))).toBe(nativeRegion);
         expect(result.tools).toEqual(nativeTools);
       } else {
@@ -190,15 +189,17 @@ test("child profiles follow their model while preserving role, assignment, tools
   for (const id of ["claude-haiku-5.5", "gpt-6.1-terra-fast", "gemini-4", "google/gemini-4-hydrogen", "gemini-4-hydrogen-xhigh", "deepseek-v4.1-flash", "unknown-model", "gpt-6-astra"]) {
     ctx.model.id = id;
     ctx.model.name = id;
-    const expected = renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })?.prompt ?? base.slice(base.indexOf("\n§ Role\n") + "\n§ Role\n".length, base.indexOf("\n§ Runtime\n"));
+    const expected = id.includes("gemini") || id === "unknown-model"
+      ? "Original host role"
+      : renderPreset(ctx.model, { surface: "app", toolNames: activeTools, subagent: true })?.prompt;
+    expect(expected).toBeDefined();
     const payload = { messages: [...blocks.map(content => ({ role: "system", content })), user], tools };
     const updated = hook({ payload } as never, ctx as never) as typeof payload;
-    const tag = id.includes("gemini") ? "AGY_MODEL_PRESET" : "omp-model-preset";
-    expect(updated.messages[0].content).toContain(`<${tag}>\n${expected}${scope}\n</${tag}>`);
+    expect(updated.messages[0].content).toContain(`<omp-model-preset>\n${expected}${scope}\n</omp-model-preset>`);
     expect(updated.messages.slice(1)).toEqual(payload.messages.slice(1));
     expect(updated.messages.at(-1)).toBe(user);
     expect(updated.tools).toBe(tools);
-    expect(updated.messages[0].content.match(/<\/?(?:omp-model-preset|AGY_MODEL_PRESET)>/g)).toEqual([`<${tag}>`, `</${tag}>`]);
+    expect(updated.messages[0].content.match(/<\/?omp-model-preset>/g)).toEqual(["<omp-model-preset>", "</omp-model-preset>"]);
     expect(updated.messages[0].content).not.toContain("<omp-ulw-policy>");
     expect(hook({ payload: updated } as never, ctx as never)).toBe(updated);
   }

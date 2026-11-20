@@ -1,5 +1,4 @@
 import { ASYNC_DEFAULT, MONITOR_CONDITIONS, TURN_END_IS_WAIT, buildPreset, resolvePresetName } from "./upstream/presets.js";
-import { agyBody } from "./prompts/agy";
 import { gpt62Body } from "./prompts/gpt-6.2";
 
 export interface PresetModel {
@@ -15,9 +14,8 @@ export function isGeminiModel({ id, name, identity }: Partial<PresetModel>): boo
 }
 
 export function renderPreset(model: PresetModel, options: PresetOptions): { name: string; prompt: string } | undefined {
-  let name = isGeminiModel(model)
-    ? "agy"
-    : resolvePresetName({ id: model.id, name: model.name, provider: model.provider }, { promptPreset: "auto" });
+  if (isGeminiModel(model)) return undefined;
+  let name = resolvePresetName({ id: model.id, name: model.name, provider: model.provider }, { promptPreset: "auto" });
   // GPT-6.1 Terra shares Astra's profile in main and child sessions.
   if (!name) {
     const terra = /(^|[/@:._-])gpt[._-]?6(?:[._-]1|1)[._-]terra(?=$|[/@:._-])/i;
@@ -38,7 +36,7 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
   const parallelRules = "Run independent reads, searches, and lookups in parallel. Inspect every tool result. Keep edits, side effects, deploys, approvals, native waits, state-dependent shell calls, and result-dependent calls sequential; inspect each before the next. Preserve live schemas, specialized-tool routing, permissions, and job lifecycles. Keep call identities, failures, tool-reported errors, and missing or truncated results visible in the evidence.";
   const delegationRule = "A subagent is for a track that runs beside yours and lands the task sooner - a wide investigation across many files, or an implementation unit beyond one coherent edit in files you are not touching; dispatch such tracks together using task's advertised async or blocking contract, each brief naming its output, allowed edit paths, stop condition, and returned evidence.";
   const todoRule = "Never make a todo-only turn: emit todo in the same response as the next real tool call.";
-  const shellRules = `## ${name === "agy" ? "agy" : "OMP"} shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.`;
+  const shellRules = "## OMP shell execution\n\nSequence bash calls that depend on shell state; overlapping calls do not provide state handoffs. When the host reports a call running in a copy of the busy session shell, it sees variables, functions, options and working directory from the last completed command boundary; changes in that copy do not persist in the original shell.";
   const refusals = `## Refusals are final\n\nA permission or approval denial, or a refusal by the user, is not a blocker to work around: it is final for what that call was meant to do. Never reach that result with another tool, command, path or host. Continue independent work, then ${options.subagent ? "report the refused step to the parent as a blocker" : "report the refused step as final or blocked; ask only if a new material scope decision is required"}.`;
   const asyncRules = "Use async by default for finite calls that expose it, and keep working on everything that does not need their pending results."
     + (hasBash ? " Bash async keeps the command deadline; choose a task-appropriate timeout. Named ready services use the service contract, with no async or timeout parameters." : "")
@@ -47,11 +45,11 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     ? "When only pending work remains, follow the native `wait` guidance for this session, including when to end the turn for automatic result delivery."
     : "When only pending work remains, leave it pending for result delivery by the host or parent and do not declare it complete.";
   const waitRules = `${pendingResults} With nothing pending and work still open, keep going. Do not poll, sleep, or repeatedly read status while waiting.`;
-  if (name === "gpt-6.2" || name === "agy") {
+  if (name === "gpt-6.2") {
     const prompt = [
       options.surface === "terminal" && !options.subagent && routingLine,
-      name === "agy" ? agyBody : gpt62Body(options),
-      name === "gpt-6.2" && hasTask && `Do short or tightly coupled work and checks on your own changes yourself. ${delegationRule}`,
+      gpt62Body(options),
+      hasTask && `Do short or tightly coupled work and checks on your own changes yourself. ${delegationRule}`,
       !options.subagent && progressReport, hasTodo && !options.subagent && todoRule,
       parallelRules, asyncRules, waitRules, hasBash && shellRules, refusals,
     ].filter(Boolean).join("\n\n");

@@ -43,6 +43,40 @@ test("generation pins every source read and produces a self-contained catalog", 
   expect(module.buildPreset("fixture", { surface: "terminal", selectedTools: [] }).name).toBe("fixture");
 });
 
+test("generation excludes Gemini from the bundled catalog, routing and renderer", async () => {
+  const overrides = new Map([
+    ["settings.ts", 'export const VALID_PRESETS = new Set([\n\t"auto",\n\t"fixture",\n\t"gemini-4-argon",\n]);'],
+    ["model-patterns.ts", 'export const isGemini4ArgonModel = model => model.id === "gemini-4-argon"; export const isFixtureModel = model => model.id === "fixture";'],
+    ["gemini-4-argon.ts", 'export const buildGemini4ArgonPrompt = () => "x".repeat(1100);'],
+    ["contract.ts", `import {
+	isGemini4ArgonModel,
+	isFixtureModel,
+} from "./model-patterns.ts";
+export function resolvePresetName(model) {
+	if (isGemini4ArgonModel(model)) {
+		return "gemini-4-argon";
+	}
+	return isFixtureModel(model) ? "fixture" : undefined;
+}`],
+    ["presets.ts", `import { buildGemini4ArgonPrompt } from "./gemini-4-argon.ts";
+export { resolvePresetName } from "./contract.ts";
+export function buildPreset(name, options) {
+	switch (name) {
+		case "gemini-4-argon":
+			return { name, prompt: buildGemini4ArgonPrompt(options) };
+		case "fixture":
+			return { name, prompt: "x".repeat(1100) };
+	}
+}`],
+  ]);
+  const generated = await generate("main", sourceRequest(overrides));
+  const module = await import(`data:text/javascript;base64,${Buffer.from(generated.content).toString("base64")}`);
+  expect(module.presetNames).toEqual(["fixture"]);
+  expect(module.resolvePresetName({ id: "fixture" }, { promptPreset: "auto" })).toBe("fixture");
+  expect(module.resolvePresetName({ id: "gemini-4-argon" }, { promptPreset: "auto" })).toBeUndefined();
+  expect(module.buildPreset("gemini-4-argon", { surface: "terminal", selectedTools: [] })).toBeUndefined();
+});
+
 test("failed requests, invalid revisions and missing source contracts fail generation", async () => {
   await expect(generate("main", async () => new Response("denied", { status: 403 }))).rejects.toThrow("revision lookup failed");
   await expect(generate("main", async () => Response.json({ sha: "main" }))).rejects.toThrow("invalid commit SHA");

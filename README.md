@@ -44,7 +44,7 @@ See [skills/](skills/) for individual instructions. Cross-product session discov
 
 Supported model profiles are adapted to OMP and applied independently to main and supported child sessions. Specialist roles, project instructions, permissions and completion protocols remain intact. Custom templates and unsupported models retain native behavior. Explicit investigation and planning-only requests temporarily suppress prewalk; implementation requests restore only overrides owned by this extension.
 
-All Gemini models use the AGY (Antigravity CLI) prompt adapted for OMP and keep their native tool calls. For other models, code mode depends on request capabilities:
+This extension does not apply model presets or code mode to Gemini models. For other models, code mode depends on request capabilities:
 
 - Ordinary work tools are documented in native JavaScript eval for `tool.<name>(args)` calls instead of exposed as direct schemas.
 - Session controls, `write`, `apply_patch`, reserved bridge names (`defined`, `undefine`), unmapped tools and forced tool choices stay direct.

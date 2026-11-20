@@ -3,10 +3,8 @@ export interface HostPrompt {
   originalBehavior: string;
 }
 
-export const AGY_PRESET_TAG = "AGY_MODEL_PRESET";
-const PRESET_TAGS = `om[op]-model-preset|${AGY_PRESET_TAG}`;
-export const PRESET_OPENING = new RegExp(`<(?:${PRESET_TAGS})>`);
-export const PRESET_REGION = new RegExp(`<(${PRESET_TAGS})>([\\s\\S]*?)</\\1>`, "g");
+export const PRESET_OPENING = /<om[op]-model-preset>/;
+export const PRESET_REGION = /<(om[op]-model-preset)>([\s\S]*?)<\/\1>/g;
 
 /** Adapt known upstream routing rules, not task permissions or model assignments. */
 export function adaptResearchRouting(text: string): string {

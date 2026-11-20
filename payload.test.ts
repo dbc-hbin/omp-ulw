@@ -78,7 +78,7 @@ test("native todo deduplication keeps every mechanism and requires complete acti
 });
 
 test("native eval retains helper and lifecycle contracts regardless of active profile", () => {
-	const profiles = ["gpt-6.1-terra", "gemini-4-argon", "claude-opus-5.5", "kimi-k3", "grok-4.5"]
+	const profiles = ["gpt-6.1-terra", "claude-opus-5.5", "kimi-k3", "grok-4.5"]
 		.map(id => renderPreset({ id }, { surface: "app", toolNames: ["todo", "eval", "bash"] })!.prompt);
 	for (const sh of nativeShBlocks) {
 		const description = nativeEval(sh);
@@ -319,14 +319,12 @@ const realisticShapes: { api: string; payload: unknown; expected: unknown }[] = 
 ];
 
 describe("rewritePresetPayload", () => {
-	test("legacy and AGY markers refresh only in system fields and mismatched tags stay untouched", () => {
-		for (const tag of ["omo-model-preset", "AGY_MODEL_PRESET"]) {
-			const previous = `<${tag}>old profile</${tag}>`;
-			const payload = { instructions: previous, input: [{ role: "user", content: previous }] };
-			expect(rewritePresetPayload(payload, "openai-responses", newPreset)).toEqual({ ...payload, instructions: newPreset });
-			const malformed = { instructions: `<${tag}>old profile</omp-model-preset>` };
-			expect(rewritePresetPayload(malformed, "openai-responses", newPreset)).toBe(malformed);
-		}
+	test("legacy OMO markers refresh only in system fields and mismatched tags stay untouched", () => {
+		const previous = "<omo-model-preset>old profile</omo-model-preset>";
+		const payload = { instructions: previous, input: [{ role: "user", content: previous }] };
+		expect(rewritePresetPayload(payload, "openai-responses", newPreset)).toEqual({ ...payload, instructions: newPreset });
+		const malformed = { instructions: "<omo-model-preset>old profile</omp-model-preset>" };
+		expect(rewritePresetPayload(malformed, "openai-responses", newPreset)).toBe(malformed);
 	});
 
 	for (const [index, shape] of realisticShapes.entries()) {

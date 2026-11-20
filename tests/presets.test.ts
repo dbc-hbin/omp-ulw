@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import { renderPreset } from "../presets";
-import { agyBody } from "../prompts/agy";
 import { buildPreset, presetNames } from "../upstream/presets.js";
 
 const toolNames = ["eval", "ask", "task", "bash", "wait", "read", "grep", "glob", "write", "edit", "todo", "web_search"];
@@ -17,8 +16,8 @@ describe("faithful omo presets", () => {
           const original = buildPreset(name, { surface, selectedTools: activeTools });
           expect(original?.name).toBe(name);
           expect(original?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
-          // gpt-5 is explicit-only upstream; Gemini uses the local AGY prompt.
-          if (name === "gpt-5" || name === "gemini-4-argon") continue;
+          // gpt-5 is explicit-only upstream.
+          if (name === "gpt-5") continue;
           const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames: activeTools });
           expect(rendered?.name).toBe(name);
           expect(rendered?.prompt).not.toMatch(/\$\{|\bundefined\b|\[object Object\]/);
@@ -131,7 +130,7 @@ describe("faithful omo presets", () => {
         for (const subagent of [false, true]) {
           for (const activeTools of [toolNames, toolNames.filter(tool => tool !== "eval"), ["eval"], []]) {
             const rendered = renderPreset({ id: models[name] ?? name }, { surface, toolNames: activeTools, subagent });
-            expect(rendered?.name).toBe(name === "gemini-4-argon" ? "agy" : name);
+            expect(rendered?.name).toBe(name);
             const prompt = rendered!.prompt;
             expect(prompt).not.toMatch(/`eval`|Promise\.all(?:Settled)?|parallel\(thunks\)|code-execution tool|`tool\.\*`/i);
             expect(prompt).not.toMatch(/(?:skip|use|running|write) the cell|cell strateg|standalone calls direct|direct tool call|call tools directly instead/i);
@@ -153,7 +152,7 @@ describe("faithful omo presets", () => {
     }
   });
 
-  test("model IDs and names containing Gemini use the shipped AGY prompt", () => {
+  test("Gemini models do not receive a preset on any surface", () => {
     const familyModels = [
       ...[
         "gemini-2.5-pro", "gemini-3.5-flash", "gemini-4-carbon", "gemini-4-argon",
@@ -170,15 +169,13 @@ describe("faithful omo presets", () => {
       for (const subagent of [false, true]) {
         const options = { surface, toolNames, subagent };
         for (const model of familyModels) {
-          const preset = renderPreset(model, options);
-          expect(preset?.name).toBe("agy");
-          expect(preset?.prompt).toContain(agyBody);
+          expect(renderPreset(model, options)).toBeUndefined();
         }
       }
     }
   });
 
-  test("the AGY prompt does not capture other models on the Antigravity provider", () => {
+  test("the Antigravity provider alone does not determine the model preset", () => {
     const options = { surface: "terminal" as const, toolNames };
     for (const [id, expected] of [
       ["claude-opus-5.5", "claude-opus-5-5"], ["gpt-6.1-terra", "gpt-6-astra"],

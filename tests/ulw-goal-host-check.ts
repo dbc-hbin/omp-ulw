@@ -65,7 +65,8 @@ try {
   const agentDir = join(configRoot, "agent");
   for (const path of [cwd, sessions, agentDir]) mkdirSync(path, { recursive: true });
   const config = join(root, "probe.yml");
-  writeFileSync(config, "goal:\n  enabled: true\ncompaction:\n  enabled: false\nstartup:\n  setupWizard: false\n  quiet: true\n");
+  // The scripted provider handles goal turns, not the editor's side-channel predictions.
+  writeFileSync(config, "goal:\n  enabled: true\ncomposer:\n  predictions: false\ncompaction:\n  enabled: false\nstartup:\n  setupWizard: false\n  quiet: true\n");
   watcher = watch(sessions, { recursive: true }, () => {
     try { events.emit("journal", { rows: journal() }); } catch (error) { fail(error); }
   });

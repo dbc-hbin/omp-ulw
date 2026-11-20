@@ -1235,12 +1235,6 @@ function isClaudeHaiku55Model(modelId) {
   const normalized = normalizeModelId(modelId);
   return CLAUDE_HAIKU_55_MARKERS.some((marker) => normalized.includes(marker));
 }
-function hasGemini4ArgonSignal(value) {
-  return /(?:^|[/@:._-])gemini[._-]?4[._-]argon(?:$|[/@:._-])/.test(normalizeModelId(value));
-}
-function isGemini4ArgonModel(model) {
-  return hasGemini4ArgonSignal(model.id) || model.name !== undefined && hasGemini4ArgonSignal(model.name);
-}
 function extractClaudeOpusVersion(modelId) {
   const normalized = normalizeModelId(modelId);
   if (normalized.includes("opus-4-8")) {
@@ -1337,9 +1331,6 @@ function resolvePresetName(input) {
   }
   if (isGrok45Model(model)) {
     return "grok-4.5";
-  }
-  if (isGemini4ArgonModel(model)) {
-    return "gemini-4-argon";
   }
   return;
 }
@@ -1545,52 +1536,6 @@ function buildDeepseekV4ProPrompt(options) {
     ...options,
     tuningSection: buildDeepseekV4Tuning("deepseek-v4-pro", PRO_INTRO),
     workstationDialect: "claude"
-  });
-}
-
-// github:packages/coding-agent/src/core/extensions/builtin/prompt-preset/gemini-4-argon.ts
-var GEMINI_4_ARGON_ROUTING_LINE_RULE = "The line is plain prose, and the tool calls that start the work follow it in the same response";
-var GEMINI_4_ARGON_WORKING_TASK_OPENING = `Writing code is your superpower. A step is solved by writing one \`eval\` cell that does the work, not by a parade of one-off tool calls: every session tool is reachable from the cell as \`tool.<name>(...)\`, so the cell reads, searches, inspects, runs commands, and edits files with real control flow - a \`for\` over every target, an \`if\`/\`else\` per case, a \`try\`/\`catch\` per item - and fires every independent lookup AT ONCE through \`parallel(thunks)\`. Bias toward breadth when context is thin: pull in anything even loosely relevant in that wave instead of serially later, since wasted reads cost almost nothing and stale assumptions cost the turn. Reduce in the kernel to the facts the decision needs, keeping every failed or missing item verbatim; a result that hides a failure or a truncated tail is not evidence.
-
-Sort the step before you write the cell: independent reads, searches, probes, and edits share one cell; a call whose input is a result you have not seen yet, a deploy, an approval, or a destructive command runs ONE ACTION AT A TIME, each observed before the next. Name the state a cell should produce before it runs and compare the return with that state. When the result must be SEEN rather than read - a page, an image, a layout - make one change, render it, look, then make the next. A direct tool call is the exception, for a single call that settles the step or an action that needs approval; files are read, searched, and edited through the cell's tool calls, never through shell text processing or inline scripts inside a command. Never fill missing parameters with placeholders.`;
-var GEMINI_4_ARGON_ERROR_RULE = 'Never silently swallow errors. Retry a transient failure (timeout, rate limit, "try again") as is; on any other failure change the strategy or the arguments - never repeat the same failed call, and never shotgun-debug with unrelated edits.';
-var GEMINI_4_ARGON_SEARCH_GROUNDING = `## Search Grounding
-
-Today's date is in the environment context and your training data ends before it: when a query is time-sensitive, form search queries from that date, and search before answering about anything "latest"; facts that cannot change need no search.`;
-function hasTool(context, name) {
-  return context.tools.some((tool) => tool.name === name);
-}
-function buildGemini4ArgonCore(context) {
-  const appName = context.appName ?? APP_NAME;
-  return [
-    `You are ${appName}, a coding agent running on Gemini 4 Argon. Your work should be indistinguishable from a careful senior engineer's.`,
-    "",
-    buildIntentGate({
-      tools: context.tools,
-      surface: context.surface,
-      routingLineRule: GEMINI_4_ARGON_ROUTING_LINE_RULE
-    }),
-    "",
-    buildWorkingTaskSection(hasTool(context, "eval") ? { opening: GEMINI_4_ARGON_WORKING_TASK_OPENING } : {}),
-    "",
-    buildVerificationSection({ surface: context.surface }),
-    "",
-    context.toolSection,
-    "",
-    buildPoliciesSection({ errorRule: GEMINI_4_ARGON_ERROR_RULE }),
-    "",
-    buildHandoffSection({ surface: context.surface }),
-    "",
-    buildStyleSection({ surface: context.surface })
-  ].join(`
-`);
-}
-function buildGemini4ArgonPrompt(options) {
-  return buildDynamicSystemPrompt({
-    ...options,
-    corePrompt: buildGemini4ArgonCore,
-    ...options.selectedTools.includes("web_search") ? { tuningSection: GEMINI_4_ARGON_SEARCH_GROUNDING } : {},
-    workstationDialect: "gemini"
   });
 }
 
@@ -2624,7 +2569,6 @@ var VALID_PRESETS = new Set([
   "deepseek-v4-pro",
   "glm-5.2",
   "glm-5.3",
-  "gemini-4-argon",
   "grok-4.5",
   "grok-4.6",
   "grok-4.7",
@@ -2711,8 +2655,6 @@ function renderPreset(name, options) {
       return { name, prompt: buildGrok46Prompt(options) };
     case "grok-4.5":
       return { name, prompt: buildGrok45Prompt(options) };
-    case "gemini-4-argon":
-      return { name, prompt: buildGemini4ArgonPrompt(options) };
     case "kimi-k3-1":
       return { name, prompt: buildKimiK31Prompt(options) };
     case "kimi-k3":

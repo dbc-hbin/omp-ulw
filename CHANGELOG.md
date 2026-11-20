@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-20 Gemini model support removed
+
+- Remove the AGY prompt and the bundled Gemini Argon preset. Superkit no longer applies model presets or code mode to Gemini; OMP provider registration is unchanged.
+
 ### 2026-11-20 OMP 19 host contracts
 
 - Route OMP session history through native Eval [`archive`](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/archive.md); stop advertising the [removed `seance` role and `sourceSession` input](https://github.com/can1357/oh-my-pi/commit/db5d932058).

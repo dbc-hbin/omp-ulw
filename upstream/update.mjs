@@ -66,7 +66,22 @@ export const MONITOR_CONDITIONS = rules.get("monitor-conditions");
           if (!sources.has(path)) sources.set(path, (async () => {
             const response = await request(`https://raw.githubusercontent.com/${repository}/${revision}/${path}`);
             if (!response.ok) throw new Error(`Upstream source ${path}: HTTP ${response.status}`);
-            return response.text();
+            const source = await response.text();
+            // Drop the upstream Gemini profile before bundling so it isn't shipped or routable.
+            switch (path) {
+              case `${presetRoot}contract.ts`:
+                return source
+                  .replace(/^\tif \(isGemini4ArgonModel\(model\)\) \{\n\t\treturn "gemini-4-argon";\n\t\}\n/m, "")
+                  .replace(/^\t(?:isGemini4ArgonModel,|.*"gemini-4-argon".*)\n/gm, "");
+              case `${presetRoot}presets.ts`:
+                return source
+                  .replace(/^import .* from "\.\/gemini-4-argon\.ts";\n/m, "")
+                  .replace(/^\t\tcase "gemini-4-argon":\n\t\t\treturn .*;\n/m, "");
+              case `${presetRoot}settings.ts`:
+                return source.replace(/^\t(?:\| )?"gemini-4-argon",?\n/gm, "");
+              default:
+                return source;
+            }
           })());
           return { loader: "ts", contents: await sources.get(path) };
         });

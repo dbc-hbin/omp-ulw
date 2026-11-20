@@ -30,7 +30,7 @@
  */
 import { registerCodeMode } from "./code-mode";
 import type { CodeModeApi } from "./code-mode";
-import { AGY_PRESET_TAG, replaceHostBehavior } from "./host";
+import { replaceHostBehavior } from "./host";
 import { adaptOrchestrateNotice, projectHostGuidance } from "./host-guidance";
 import { rewritePresetPayload, rewriteToolGuidancePayload } from "./payload";
 import { renderPreset } from "./presets";
@@ -56,12 +56,11 @@ interface ModelPromptApi {
 
 type ExtensionApi = ModelPromptApi & UlwApi & PrewalkApi & CodeModeApi;
 
-function markPreset(prompt: string, subagent: boolean, presetName?: string): string {
+function markPreset(prompt: string, subagent: boolean): string {
   const scope = subagent
     ? "\n\n## Delegated execution\n\nYou are a subagent, not the main agent. Apply this model's working methods within the host-provided specialist role and assigned task. The host's child role, tool restrictions, shared context, assignment, cooperation rules and completion/output protocol take precedence over generic directions in this preset. Preserve read-only and no-edit limits; do not acquire tools or permissions from this text. Do not take over the parent's orchestration, user-facing routing lines, progress reports or todo tracking. Follow the child's verification limits and return required evidence and unrun checks to the parent; do not run builds, tests or formatters when the host forbids them. Finish through the host's actual child completion protocol, including yield only when provided."
     : "";
-  const tag = presetName === "agy" ? AGY_PRESET_TAG : "omp-model-preset";
-  return `<${tag}>\n${prompt}${scope}\n</${tag}>`;
+  return `<omp-model-preset>\n${prompt}${scope}\n</omp-model-preset>`;
 }
 
 export default function ompUlw(pi: ExtensionApi): void {
@@ -91,7 +90,7 @@ export default function ompUlw(pi: ExtensionApi): void {
     const preset = ctx.model ? renderPreset(ctx.model, options) : undefined;
     // Only the base role is replaced. OMP appends the child's specialist role,
     // assignment and completion contract in later blocks, which remain intact.
-    const marked = markPreset(preset?.prompt ?? "", ctx.agent.kind === "sub", preset?.name);
+    const marked = markPreset(preset?.prompt ?? "", ctx.agent.kind === "sub");
     const result = replaceHostBehavior(event.systemPrompt, marked);
     if (!result) {
       if (!warned) {
@@ -134,7 +133,7 @@ export default function ompUlw(pi: ExtensionApi): void {
     let replacement = profiles.get(key);
     if (replacement === undefined) {
       const preset = renderPreset(ctx.model, options);
-      replacement = { prompt: markPreset(preset?.prompt ?? originalBehavior, ctx.agent.kind === "sub", preset?.name), modelGuidance: preset !== undefined };
+      replacement = { prompt: markPreset(preset?.prompt ?? originalBehavior, ctx.agent.kind === "sub"), modelGuidance: preset !== undefined };
       profiles.set(key, replacement);
     }
     const host = originalHost;

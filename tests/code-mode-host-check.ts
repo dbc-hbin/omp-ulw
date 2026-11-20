@@ -4,7 +4,6 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "nod
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { agyBody } from "../prompts/agy";
 import { bridgeProbe, directProbeNames, geminiModel, models, mountedProbe, provider, type Observation, type WireTool } from "./fixtures/code-mode-provider";
 
 interface Message { role: string; content?: unknown; tool_call_id?: string }
@@ -322,17 +321,17 @@ try {
       const original = current.observations.filter(item => item.stage === "provider" && item.phase === "before")[index]!.tools!;
       const projected = current.observations.filter(item => item.stage === "provider" && item.phase === "after")[index]!.tools!;
       assert.deepEqual(body.tools, projected, "observed final schemas must reach the actual provider");
-      const regions = [...systemText(body).matchAll(/<(omp-model-preset|AGY_MODEL_PRESET)>([\s\S]*?)<\/\1>/g)];
-      assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one installed model preset`);
-      assert.equal(regions[0]?.[1], current.model === geminiModel ? "AGY_MODEL_PRESET" : "omp-model-preset");
-      presetRegions++;
+      const regions = [...systemText(body).matchAll(/<omp-model-preset>\n([\s\S]*?)\n<\/omp-model-preset>/g)];
+      assert.equal(regions.length, 1, `${current.name}: actual request must contain exactly one marked role`);
       if (current.model === geminiModel) {
-        assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original), "Gemini must retain every native wire schema");
-        const description = body.tools!.find(tool => tool.function.name === "eval")?.function.description;
-        assert(!description?.includes("<omp-code-mode>"), "any native eval description must omit the code-mode catalog");
-        assert(regions[0]?.[2]?.includes(agyBody), "Gemini must receive the shipped AGY prompt");
+        assert.deepEqual(body.tools, original, "Gemini must retain every native tool schema and description");
+        const nativePrompt = current.observations.find(item => item.stage === "agent" && item.phase === "before")?.blocks?.[0];
+        assert(nativePrompt);
+        const nativeRole = nativePrompt.split(/\n[§⁂] Runtime\n/, 1)[0]?.split(/\n[§⁂] Role\n/).at(-1);
+        assert.equal(regions[0]?.[1], nativeRole, "Gemini must receive the native role rather than a model preset");
         return;
       }
+      presetRegions++;
       assert.deepEqual(names(body.tools!), names(original.filter(tool => direct.has(tool.function.name))), `${current.name}: every model must expose exactly the conservative direct set`);
       assert.deepEqual(toolSchemas(body.tools!), toolSchemas(original.filter(tool => direct.has(tool.function.name))), `${current.name}: projection must preserve every retained native tool's parameters`);
       for (const name of ["read", "grep", "bash", "edit", "task", "todo", bridgeProbe.name]) assert(!names(body.tools!).includes(name), `${current.name}: every model must hide code-mode ${name}`);
@@ -349,7 +348,7 @@ try {
       assert(!/parallel|sequential|Promise\.all/.test(guidance), `${current.name}: code-mode guidance must not duplicate concurrency policy`);
       assert(description.includes(`JSON Schema: ${JSON.stringify(read.function.parameters)}`), `${current.name}: catalog must contain the actual native read wire schema`);
       for (const name of directProbeNames) assert(!description.includes(`await tool.${name}(args)`), `${name}: must not advertise a reserved eval accessor`);
-      assert(!/\beval\b|await tool\./i.test(regions[0]![2]!), `${current.name}: the preset must leave eval steering to the tool catalog`);
+      assert(!/\beval\b|await tool\./i.test(regions[0]![1]!), `${current.name}: the preset must leave eval steering to the tool catalog`);
     });
   }
   if (failure) throw failure;
@@ -358,7 +357,7 @@ try {
     status: "PASS", requests,
     scenarios: turns.map(item => ({ name: item.name, model: item.model, mode: item.model === geminiModel ? "direct" : item.language, requests: item.calls.length })),
     assertions: ["full index installation", "unchanged native activation before/after hooks for every model",
-      "Gemini receives the AGY prompt and original tool schemas and runs native read directly",
+      "Gemini receives the native role and original tools and runs native read directly",
       "actual wire projection for the other model families", "native read schema in eval catalog",
       "Python-first guidance for code-mode models with real Python eval round trips and a retained JavaScript alternative",
       "real eval tool.read sentinel and missing-file diagnostic per code-mode model",

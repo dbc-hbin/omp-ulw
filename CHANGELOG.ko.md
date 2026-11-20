@@ -2,6 +2,10 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-20 Gemini 모델 지원 제거
+
+- AGY 프롬프트와 번들에 포함된 Gemini Argon 프리셋을 제거합니다. Superkit은 Gemini 모델에 프리셋과 코드모드를 적용하지 않으며, OMP의 provider 등록은 바꾸지 않습니다.
+
 ### 2026-11-20 OMP 19 호스트 규약
 
 - OMP 세션 기록은 네이티브 Eval [`archive`](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/archive.md)로 안내하고, [제거된 `seance` 역할과 `sourceSession` 입력](https://github.com/can1357/oh-my-pi/commit/db5d932058)은 더 이상 안내하지 않습니다.

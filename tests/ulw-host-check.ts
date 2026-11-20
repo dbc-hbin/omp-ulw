@@ -110,7 +110,9 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
           failure = event;
           signal.reject(new Error(JSON.stringify(event)));
         } else if (expected === "ready" && "id" in event && event.id === expected) signal.resolve();
-        else if (expected === "agent_end" && event.type === "agent_end" && !("willContinue" in event && event.willContinue === true)) {
+        // A stop hook can start another run after an RPC agent_end. Count requests
+        // only when the host confirms that nothing remains scheduled.
+        else if (expected === "session_settled" && event.type === "session_settled") {
           if (scenarioRequests !== expectedRequests) {
             failure = new Error(`OMP settled with requests=${scenarioRequests}/${expectedRequests}; model=${model}; continuation=${continuation ?? "ordinary"}; prompts=${JSON.stringify(prompts)}`);
             signal.reject(failure);
@@ -125,7 +127,7 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
     await signal.promise;
     for (const [index, prompt] of prompts.entries()) {
       signal = Promise.withResolvers<void>();
-      expected = "agent_end";
+      expected = "session_settled";
       expectedRequests = continuation === "execute" || continuation === "execute-mixed" || continuation === "execute-native" ? 3 : continuation === "loop" ? 2 : index + 1;
       child.stdin.write(JSON.stringify({ type: "prompt", id: `prompt-${index}`, message: prompt, ...(streamingBehavior ? { streamingBehavior } : {}) }) + "\n");
       await signal.promise;
@@ -159,16 +161,15 @@ async function run(prompts: string[], flags: string[] = [], continuation?: "loop
 
 try {
   const directive = readFileSync(new URL("../skills/ultrawork/SKILL.md", import.meta.url), "utf8").split("<ultrawork-mode>")[1].split("</ultrawork-mode>")[0];
-  for (const model of ["gpt-6-astra", "gpt-6-astra-fast", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna-fast", "claude-haiku-5.5"]) {
+  for (const model of ["gpt-6-astra", "gpt-6-astra-fast", "gpt-6.1-sol", "gpt-6-sol", "gpt-6-luna-fast", "claude-haiku-5.5", "gemini-4-argon"]) {
     const [prompt] = await run(["/ulw validate the shared directive"], [], undefined, undefined, model);
     assert(prompt.includes(`<ultrawork-mode>${directive}</ultrawork-mode>`));
   }
-  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gemini-4-argon", "gpt-6.1-terra", "gpt-6.2-astra", "gpt-6.2-sol"]) {
+  for (const model of ["claude-haiku-5.5", "claude-fable-5.2", "gpt-6.1-terra", "gpt-6.2-astra", "gpt-6.2-sol"]) {
     const [prompt] = await run(["verify the selected model profile"], [], undefined, undefined, model);
     const profile = renderPreset({ provider: "omo-ulw-probe", id: model, name: model }, { surface: "app", toolNames: [] });
     assert(profile);
-    const tag = model === "gemini-4-argon" ? "AGY_MODEL_PRESET" : "omp-model-preset";
-    assert(prompt.includes(`<${tag}>\n${profile.prompt}\n</${tag}>`), `actual provider request must contain the shipped ${model} profile`);
+    assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), `actual provider request must contain the shipped ${model} profile`);
     if (model === "gpt-6.1-terra") {
       const request = requests.at(-1);
       assert(typeof request === "object" && request !== null && "model" in request);
@@ -293,41 +294,33 @@ try {
     assert(profile);
     assert(prompt.includes(`<omp-model-preset>\n${profile.prompt}\n</omp-model-preset>`), "actual provider request must contain the provider-specific shipped profile");
   }
-  const [toolPrompt] = await run(["inspect the native task and helper contracts"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait", "todo", "eval", "bash"]);
-  const taskRequest = requests.at(-1);
-  assert(typeof taskRequest === "object" && taskRequest !== null && "tools" in taskRequest && Array.isArray(taskRequest.tools));
-  const toolDefinitions = taskRequest.tools;
-  const description = (name: string): string => {
-    const tool: unknown = toolDefinitions.find((entry: unknown) =>
+  const definition = (request: unknown, name: string) => {
+    assert(typeof request === "object" && request !== null && "tools" in request && Array.isArray(request.tools));
+    const tool: unknown = request.tools.find((entry: unknown) =>
       typeof entry === "object" && entry !== null && "function" in entry && typeof entry.function === "object"
       && entry.function !== null && "name" in entry.function && entry.function.name === name,
     );
-    assert(typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object"
-      && tool.function !== null && "description" in tool.function && typeof tool.function.description === "string");
-    return tool.function.description;
+    assert(typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" && tool.function !== null,
+      `provider request must expose ${name} directly`);
+    const spec = tool.function;
+    assert("description" in spec && typeof spec.description === "string", `${name} must have a native description`);
+    return { description: spec.description, parameters: "parameters" in spec ? spec.parameters : undefined };
   };
-  const todoDescription = description("todo");
+  // Activating eval moves task and todo into its catalog, so check the direct
+  // wire contract in a request that does not have eval.
+  const [toolPrompt] = await run(["inspect the direct task and todo contracts"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait", "todo", "bash"]);
+  const directRequest = requests.at(-1);
+  const { description: todoDescription } = definition(directRequest, "todo");
   assert(toolPrompt.includes("Never make a todo-only turn: emit todo in the same response as the next real tool call."));
   assert(!todoDescription.includes("`todo` NEVER takes a turn of its own:"));
   assert(todoDescription.includes("`init` beside the first read or action"));
   assert(todoDescription.includes("`done`/`start` beside the next action or check"));
   assert(todoDescription.includes("Tasks identified by verbatim content"));
   assert(todoDescription.includes("Before work, init for 3+ steps"));
-  const evalDescription = description("eval");
-  assert(!toolPrompt.includes("Use `sh()`"), "model presets must leave shell-helper contracts to native eval documentation");
-  const shSignature = evalDescription.split("\n").find(line => line.includes("sh(command,") && line.includes("embedded bash engine"));
-  assert(shSignature?.includes("runs to completion (never backgrounded)"), "native eval must retain the shell helper's completion contract");
-  assert(evalDescription.includes("stdout+stderr") && evalDescription.includes("ShellError"));
-  const taskDescription = description("task");
+  const { description: taskDescription, parameters: taskParameters } = definition(directRequest, "task");
   assert(taskDescription.includes("Supply authoritative inputs, numbered must-do steps, allowed write scope, forbidden deviations and concrete success criteria."));
   assert(taskDescription.includes("Supply the diff, affected contracts and existing QA evidence."));
   assert(taskDescription.includes("Supply the scope and trust boundaries."));
-  const taskTool = taskRequest.tools.find((tool: unknown): tool is { function: { name: "task"; parameters?: unknown } } =>
-    typeof tool === "object" && tool !== null && "function" in tool && typeof tool.function === "object" &&
-    tool.function !== null && "name" in tool.function && tool.function.name === "task",
-  );
-  assert(taskTool, "actual provider request must expose the native task tool");
-  const taskParameters = taskTool.function.parameters;
   assert(typeof taskParameters === "object" && taskParameters !== null && "properties" in taskParameters && typeof taskParameters.properties === "object" && taskParameters.properties !== null);
   assert("context" in taskParameters.properties && "tasks" in taskParameters.properties);
   assert("required" in taskParameters && Array.isArray(taskParameters.required) && taskParameters.required.includes("context") && taskParameters.required.includes("tasks"));
@@ -339,6 +332,12 @@ try {
   for (const forbidden of ["category", "subagent_type", "prompt", "load_skills", "run_in_background"]) {
     assert(!(forbidden in taskParameters.properties), `native task schema must not expose legacy field: ${forbidden}`);
   }
+  const [evalPrompt] = await run(["inspect the native eval shell-helper contract"], [], undefined, undefined, "gpt-6.1-sol", false, ["task", "wait", "todo", "eval", "bash"]);
+  const { description: evalDescription } = definition(requests.at(-1), "eval");
+  assert(!evalPrompt.includes("Use `sh()`"), "model presets must leave shell-helper contracts to native eval documentation");
+  const shSignature = evalDescription.split("\n").find(line => line.includes("sh(command,") && line.includes("embedded bash engine"));
+  assert(shSignature?.includes("runs to completion (never backgrounded)"), "native eval must retain the shell helper's completion contract");
+  assert(evalDescription.includes("stdout+stderr") && evalDescription.includes("ShellError"));
 } finally {
   await server.stop(true);
   rmSync(root, { recursive: true, force: true });
