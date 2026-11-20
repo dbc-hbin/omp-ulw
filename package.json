@@ -1,5 +1,5 @@
 {
-  "name": "omp-ulw",
+  "name": "omp-superkit",
   "version": "0.1.0",
   "description": "Model-specific prompts, code mode, and native ULW workflows for Oh My Pi (OMP).",
   "type": "module",
