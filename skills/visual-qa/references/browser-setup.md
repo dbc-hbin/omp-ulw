@@ -4,10 +4,11 @@ Read `skill://browser` and its lifecycle/commands references, then use the nativ
 
 Public QA can select `browser.open({name:"visual-qa",url:appUrl,app:"chromium"})` when permitted. `app: "chromium"` selects managed Chromium; record the actual backend. Managed Chromium is project-shared, not a guaranteed clean profile. Authenticated rows require an authorized real-session relay/CDP route from the lifecycle reference; never copy a live profile, extract cookies or erase user state. An unavailable authenticated route blocks that row, even if the public page renders.
 
-Default or `app:"own"` selection is not synonymous with Chromium: native owned/headless WebKit
-(ABKit) already exists in 18.19. The default checks relay/CDP/Tern/cmux before the owned browser;
-`own` skips them and selects installed WebKit otherwise Chromium, while `auto` skips only the
-relay. Inspect the returned backend and fallback. Ordinary captures can use a capable permitted
+Default or `app:"own"` selection is not synonymous with Chromium. Follow the
+[browser lifecycle](skill://browser/references/lifecycle.md#managed-and-explicitly-spawned-browsers)
+for main and child defaults. For public delegated QA, use `app: "own"` to bypass user connections,
+including configured CDP, or `app: "chromium"` when Chromium is required. Inspect the returned
+backend and fallback. Ordinary captures can use a capable permitted
 WebKit backend, but the raw Puppeteer matrix below, reduced-motion emulation, Chromium traces and
 captured HAR response bodies require the corresponding Chromium capabilities. WebKit theme
 emulation affects all its tabs, so separate names do not isolate parallel theme rows. Do not

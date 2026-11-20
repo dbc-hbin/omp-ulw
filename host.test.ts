@@ -117,9 +117,10 @@ test("research routing changes only the host policy region, never project or run
   const directive = "Map unknown code via `task`, not reading file after file yourself.";
   const routing = adaptResearchRouting(directive);
   expect(routing).not.toBe(directive);
-  for (const contract of ["`scout`", "`sonic`", "`reviewer`", "`security-reviewer`", "`seance`", "`sourceSession`", "`solutionSpace`"]) {
+  for (const contract of ["`scout`", "`sonic`", "`reviewer`", "`security-reviewer`", "`solutionSpace`"]) {
     expect(routing).toContain(contract);
   }
+  expect(routing).not.toMatch(/`seance`|`sourceSession`/);
   expect(routing).toContain("Supply authoritative inputs, numbered must-do steps, allowed write scope, forbidden deviations and concrete success criteria.");
   expect(routing).toContain("Supply the diff, affected contracts and existing QA evidence.");
   expect(routing).toContain("Supply the scope and trust boundaries.");

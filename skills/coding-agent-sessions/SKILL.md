@@ -1,11 +1,11 @@
 ---
 name: coding-agent-sessions
-description: "Discover and search local coding-agent sessions across Codex, Claude, OpenCode, OMP, Senpi, and other supported products. Use for cross-product history discovery or fuzzy searches for a past task; specific OMP session consultation remains native seance with sourceSession."
+description: "Discover and search local coding-agent sessions across Codex, Claude, OpenCode, OMP, Senpi, and other supported products. Use for cross-product history discovery or fuzzy searches for a past task; use native Eval archive for OMP session history and recaps."
 ---
 
 # Coding Agent Session Discovery
 
-Find candidate sessions, not reconstruct their full conversations. This skill adds cross-product discovery/search; it does not replace OMP's installed archive or seance services. MODIFIED COPY of the upstream workflow and finder; see `ATTRIBUTION.md` and `LICENSE.md`.
+Find candidate sessions, not reconstruct their full conversations. This skill adds cross-product discovery/search; use OMP's native archive for OMP session history. MODIFIED COPY of the upstream workflow and finder; see `ATTRIBUTION.md` and `LICENSE.md`.
 
 ## Scope and privacy first
 
@@ -48,12 +48,12 @@ Requires an **already installed Python 3.11+**, standard library only. Use an ex
 
 ## Discovery workflow
 
-1. Establish the authorized scope and use the platform router above. If a user already selected an OMP session, skip cross-product discovery and use seance.
+1. Establish the authorized scope and use the platform router above. If the user already selected an OMP session, skip cross-product discovery and go directly to the native archive lookup in step 6.
 2. For fuzzy recall, derive 3–6 short, discriminative query lanes from the request: product aliases, repo/package names, exact errors, issue/PR IDs, English/Korean wording, or likely task verbs. Pass repeated `--query` values in one invocation; these are independent OR-style lanes, not an AND search. Do not include secrets as search terms.
 3. Narrow with repeated `--platform`, dates, cwd, and model. Use `--include-subagents` when the requested work may have been delegated; otherwise child sessions are hidden as standalone results. Each main result still has `subagent_count`.
 4. If necessary, split independent authorized searches by platform, project, or time window using ordinary OMP parallel calls/delegation. Give each lane the same privacy boundary. Merge candidates by `(platform, id)`; `path` can distinguish ambiguous exports. Stop once the intended candidate is identified; do not broaden just to collect more data.
 5. Return concise candidate metadata and only the useful, requested match evidence. A preview is a discovery clue, not proof of what the session concluded or verified.
-6. To consult a **specific OMP session**, use the existing native `task` seance agent with **`sourceSession`** identifying the selected OMP session, following the advertised task schema. Ask a focused question and require evidence/uncertainty. Do not pass an OMP transcript as an ordinary task prompt and do not read raw OMP JSONL as a workaround. If seance is unavailable or cannot resolve the source, report that limitation. Other products remain discovery-only here; do not assume seance accepts their formats.
+6. For a **specific OMP session**, use native Eval `archive.session(id, { limit })` with its observed ID or unique prefix, after reading `xd://eval/archive`. Use only relevant recaps and bounded prompt history. Recaps may be absent and prompts are not proof of outcomes; say which conclusion or verification the archive cannot establish. Do not use raw OMP JSONL or pass a transcript to a worker as a substitute for missing recaps. Other products remain discovery-only here.
 
 ## CLI contract
 

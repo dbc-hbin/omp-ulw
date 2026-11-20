@@ -117,7 +117,8 @@ describe("faithful omo presets", () => {
       expect(prompt).toMatch(/(?:user|sibling) changes/i);
       expect(prompt).toMatch(/(?:validators?|checks|tests)[^\n.]+(?:run|clean|evidence)|run[^\n.]+validator/i);
       if (id === "gpt-6.1-sol") {
-        expect(prompt).toMatch(/native `wait`/);
+        expect(prompt).toMatch(/native `wait` guidance/);
+        expect(prompt).not.toMatch(/call native `?wait\b/i);
         expect(prompt).toMatch(/never (?:poll|hold a foreground eval cell)|do not poll/i);
         expect(prompt).toMatch(/(?:existing run|running session)[^\n.]+duplicate/i);
       }

@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | 한국어
 
+### 2026-11-20 OMP 19 호스트 규약
+
+- OMP 세션 기록은 네이티브 Eval [`archive`](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/archive.md)로 안내하고, [제거된 `seance` 역할과 `sourceSession` 입력](https://github.com/can1357/oh-my-pi/commit/db5d932058)은 더 이상 안내하지 않습니다.
+- 대기는 현재 세션의 [OMP 대기 규약](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/wait.md)을 따릅니다. 결과 전달을 위해 TUI 턴을 끝내도 워크플로는 미완료 상태로 남습니다.
+- [OMP 19의 자식 브라우저 기본값](https://github.com/can1357/oh-my-pi/pull/18789)을 문서화합니다. 자식은 relay·Tern·cmux 자동 연결을 건너뛰지만 설정된 CDP는 여전히 적용될 수 있습니다.
+- [스크린샷 포인터 좌표](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/browser.md)를 보정하고, 클라이언트가 지원할 때 검증된 시각화에 [인라인 HTML 삽입](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/system/system-prompt.md)을 허용합니다. 스킬별 결과 검증은 유지하고 대기 동작은 공통 규약으로 통합합니다.
+
 ### 2026-11-18 GPT-6.2 Astra·Sol 지침
 
 - 두 모델은 Senpi 카탈로그로 판별하고, 본문은 [OpenAI 가이드](https://developers.openai.com/api/docs/guides/latest-model)에 맞춘 [독립 프리셋](prompts/gpt-6.2.ts)으로 생성합니다. 후속 질문과 리뷰에는 편집 없이 답하고, 요청한 변경과 진행 중인 작업에 대한 정정은 검증까지 이어갑니다. 필요한 비교, 미검증 항목, 진행 보고는 문체 규칙으로 생략하지 않습니다.

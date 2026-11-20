@@ -38,7 +38,7 @@ omp -e ./omp-ulw
 - **浏览器与桌面：** `/web-browser`、`/ultimate-browsing`、`/computer-use` 使用 OMP 的原生 Eval API 和权限；OMP 自带的 `/browser`、`/computer` 控制保持不变。
 - **会话与记忆：** `/coding-agent-sessions`、`/init-deep`、`/reflection`、`/memory-advisor`
 
-详细说明见 [skills/](skills/)。跨产品会话发现需要 Python 3.11+；特定 OMP 会话的详细咨询使用原生 `seance`。
+详细说明见 [skills/](skills/)。跨产品会话发现需要 Python 3.11+；OMP 会话历史和摘要使用原生 Eval `archive` 查看。
 
 ## 提示词与代码模式
 

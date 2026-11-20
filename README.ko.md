@@ -38,7 +38,7 @@ omp -e ./omp-ulw
 - **브라우저·데스크톱:** `/web-browser`, `/ultimate-browsing`, `/computer-use`는 OMP의 native Eval API와 권한을 사용합니다. 기존 `/browser`·`/computer` 제어 명령은 유지합니다.
 - **세션·메모리:** `/coding-agent-sessions`, `/init-deep`, `/reflection`, `/memory-advisor`
 
-상세 지침은 [skills/](skills/)에서 확인합니다. 여러 제품의 세션 탐색에는 Python 3.11+가 필요하며, 특정 OMP 세션 상담은 native `seance`를 사용합니다.
+상세 지침은 [skills/](skills/)에서 확인합니다. 여러 제품의 세션 탐색에는 Python 3.11+가 필요하며, OMP 세션 기록과 요약은 네이티브 Eval `archive`로 확인합니다.
 
 ## 프롬프트와 코드모드
 

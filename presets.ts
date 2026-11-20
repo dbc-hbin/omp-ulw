@@ -43,8 +43,8 @@ export function renderPreset(model: PresetModel, options: PresetOptions): { name
     + (hasBash ? " Bash async keeps the command deadline; choose a task-appropriate timeout. Named ready services use the service contract, with no async or timeout parameters." : "")
     + (hasTask ? " Use task's advertised asynchronous, synchronous, or BLOCKING agent contract; never spawn a child just to watch another operation." : "");
   const pendingResults = hasWait
-    ? "When the next step needs a pending result from work you started, call native `wait` with no arguments."
-    : "When only pending work remains, return the pending state to the parent or host for result delivery.";
+    ? "When only pending work remains, follow the native `wait` guidance for this session, including when to end the turn for automatic result delivery."
+    : "When only pending work remains, leave it pending for result delivery by the host or parent and do not declare it complete.";
   const waitRules = `${pendingResults} With nothing pending and work still open, keep going. Do not poll, sleep, or repeatedly read status while waiting.`;
   if (name === "gpt-6.2" || name === "agy") {
     const prompt = [
@@ -171,9 +171,7 @@ Never invent evidence or claim unperformed checks passed.`,
     "Follow the host instruction hierarchy. Apply a skill only when its trigger matches the user's request; reading or quoting a workflow does not activate it. Skill guidance and reference material do not override explicit user instructions.");
   prompt = prompt.replace(
     "Results arrive on their own: when only waiting on them remains, end the turn.",
-    options.toolNames.includes("wait")
-      ? "Results arrive on their own: when only waiting on them remains, call native wait with no arguments."
-      : "Results arrive on their own: when only waiting on them remains, return the pending state to the parent or host for result delivery.",
+    pendingResults,
   );
   // Resolve material blockers when they arise; independent work must not delay required authorization.
   prompt = prompt.replace(

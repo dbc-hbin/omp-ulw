@@ -2,7 +2,7 @@
 
 MODIFIED COPY for OMP discovery-only use; see `../ATTRIBUTION.md` and `../LICENSE.md`. Resolve `SKILL_DIR` from `skill://coding-agent-sessions` and apply its scope/privacy rules. This shared format scanner is for candidate discovery, not an alternate OMP consultation API.
 
-For **OMP-only** project history, prefer existing native Eval `archive` discovery after reading `xd://eval/archive`; preserve its current-project scope unless the user requests more. To consult a selected OMP session, use native `task` with the seance agent and **`sourceSession`**, following the advertised tool contract. Do not raw-read OMP JSONL, concatenate transcripts into a normal task, or use this script as a consultation workaround. If seance is unavailable or cannot resolve that session, report the limitation.
+For **OMP-only** project history, prefer native Eval `archive` after reading `xd://eval/archive`; preserve its current-project scope unless the user requests more. For a selected OMP session, follow the [native archive lookup](../SKILL.md#discovery-workflow) for recaps and bounded prompt history. If those do not support the requested conclusion, report the limitation. Do not use this scanner or raw OMP JSONL as a substitute for missing recaps.
 
 ## Scanner keys and roots
 
@@ -23,6 +23,6 @@ python3 -B "$SKILL_DIR/scripts/find-agent-sessions.py" search --query "proxy ret
 python3 -B "$SKILL_DIR/scripts/find-agent-sessions.py" list --platform gajae-code --cwd my-project --limit 10
 ```
 
-An OMP cross-product lane can use `--platform oh-my-pi` alongside the other authorized platforms; a request already identifying a particular OMP session goes directly to seance instead. Returned ids/paths are candidate selectors, not permission to inspect unrelated histories.
+An OMP cross-product lane can use `--platform oh-my-pi` alongside the other authorized platforms; a request already identifying a particular OMP session goes directly to the native archive instead. Returned ids/paths are candidate selectors, not permission to inspect unrelated histories.
 
 The scanner reads session stores only. Do not open adjacent `auth.json`, model/config files, or credentials to enrich a result. Prompt previews and reason snippets can contain secrets; disclose only useful requested evidence, never full transcripts. Native archive recaps and discovery snippets are clues, not proof of the historical session's conclusions or completed verification.

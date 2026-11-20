@@ -101,8 +101,11 @@ returned path and inspect it. `pdf` accepts `path`, `format`, `landscape`, `scal
 `margin` and `pageRanges`; Tern accepts only `path`, and owned WebKit throws for PDF. CSS page-size preference and header/footer
 templates are not forwarded by that helper. Required Chromium print options can use raw
 `page.pdf` inside `tab.run`; see [paged media](../../frontend/references/design/print-paged-media.md).
-A page screenshot is not desktop/browser chrome evidence. The capture report describes conversion
-from displayed image coordinates to CSS pixels; use it before `clickAt`.
+A page screenshot is not desktop/browser chrome evidence. In OMP 19, `clickAt`, `mouseMove` and
+`drag` take points from the tab's latest screenshot as displayed. If it is scaled, pass those
+image coordinates directly; do not convert them first. For CSS coordinates from `box()` or
+`evaluate()`, use `clickAt(x, y, { css: true })`, `mouseMove(x, y, { css: true })` or
+`{ x, y, css: true }` for a drag point. Follow the live host contract on older versions.
 
 ## Diagnostics, network and state
 

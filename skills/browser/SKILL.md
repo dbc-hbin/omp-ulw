@@ -33,13 +33,12 @@ project rules or native modes.
 | A blocked host, archive or platform-specific reader | [ultimate-browsing](../ultimate-browsing/SKILL.md) |
 
 A relay is optional. Public interaction can use OMP's owned WebKit (ABKit) or managed Chromium.
-Default selection checks configured relay/CDP, Tern and cmux before the owned browser; it does not
-guarantee Chromium or a fresh profile. `app: "own"` skips those external connections and chooses
-owned WebKit when installed, otherwise Chromium; `app: "auto"` skips only the relay. For a public
-probe requiring Chromium capabilities, pass `app: "chromium"` and inspect the reported backend and
-any fallback. Managed Chromium is project-shared. For a criterion requiring truly fresh profile
-state, use a separately authorized, task-owned browser profile as explained in
-[lifecycle.md](references/lifecycle.md), not a claim of isolation from a new tab name.
+In OMP 19, the main session can default to relay, configured CDP, Tern or cmux. A child skips
+automatic relay, Tern and cmux selection, but configured CDP can still take precedence over the
+owned browser. Use `app: "own"` to bypass those connections for public delegated work, or
+`app: "chromium"` if it needs Chromium capabilities. Neither guarantees a fresh profile.
+Inspect the reported backend and any fallback; see [lifecycle.md](references/lifecycle.md)
+for the selection order and a task-owned profile when isolation matters.
 
 Never replace an authenticated criterion with a headless browser that has no relevant login. Never
 clone, export or clear a user's live profile, cookies or storage to obtain authentication. A new tab
@@ -85,6 +84,9 @@ not a reason to switch engine, account or tool.
 A child does not inherit this loaded skill, the lead's ULW policy, tab handle or authorization.
 Put this skill's actual path or `skill://browser` in the assignment, plus the relevant source URL,
 required account/page state, allowed actions, backend prerequisites and expected evidence.
+If the task actually requires the user's Chrome or Tern session, confirm that access is authorized
+and name the explicit route (`app: "relay"` or `app: "tern"`). For an existing tab or block, use the
+observed `target` and omit `url` when borrowing it; navigation needs separate authorization.
 Include `skill://ultimate-browsing` for blocked/incomplete or platform-specific source reading,
 and the network/interaction references when the task depends on responses, pagination or frames.
 Choose only a worker whose advertised tools and role permit that work; an unavailable Eval/browser

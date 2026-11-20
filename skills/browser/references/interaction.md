@@ -31,10 +31,11 @@ cannot be used to reach the same denied result.
 
 ## Coordinates and device state
 
-Read actual CSS viewport, DPR and touch after changing device, window or page. `screenshot` reports
-how displayed image coordinates map to CSS coordinates. A full-page image uses page coordinates and
-an element capture uses an element-relative origin; do not treat either as a viewport capture.
-Re-observe after scrolling or resizing. Native window geometry is not page viewport emulation.
+Read actual CSS viewport, DPR and touch after changing device, window or page. Follow the
+[screenshot point rules](commands.md#emulation-and-captures) for displayed image and CSS
+coordinates. A full-page image uses page coordinates and an element capture uses an element-relative
+origin; take a fresh viewport screenshot if you need viewport points. Re-observe after scrolling
+or resizing. Native window geometry is not page viewport emulation.
 
 Use `tab.devices()` and a returned device name for full mobile emulation; setting width alone can
 leave a desktop user agent and touch mode. Device changes may reload the document. Restore the

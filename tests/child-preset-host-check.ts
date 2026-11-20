@@ -252,7 +252,7 @@ try {
   assert.equal(childRequests.get("task")!.length, 2, "worker must execute real eval and receive its result");
   console.log(JSON.stringify({ status: "PASS", requests: requests.length, scenarios: summaries,
     assertions: ["native default worker, sonic and scout spawn through eval tool.task", "complete shipped model profiles", "exact trailing-block preservation", "native role/assignment/completion retention", "parent ULW isolation", "unchanged active tools", "readonly scout restrictions", "native worker eval retains batch successes and partial failure", "native async completion delivery"],
-    limitations: ["Scripted local responses verify host transport, not model obedience", "Model refresh/fallback and custom-template rejection are covered by unit tests", "Seance is excluded because it isolates extensions"],
+    limitations: ["Scripted local responses verify host transport, not model obedience", "Model refresh/fallback and custom-template rejection are covered by unit tests"],
   }, null, 2));
 } finally {
   clearTimeout(deadline);

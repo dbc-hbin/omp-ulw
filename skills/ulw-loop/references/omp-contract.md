@@ -31,3 +31,9 @@ The installed extension can resume active loop-format or Boulder work owned by t
 Use the selected workflow's artifact schema and existing verifier where it has one. A checkpoint ties its criterion to the input identity, observed result and evidence location. Changed inputs invalidate dependent evidence, not unrelated completed work. Record the checks selected under model guidance, applicable native modes and project requirements rather than imposing a second generic verification pass.
 
 Load linked references only when their artifact or state contract is needed. Tool documentation, not this file, specifies native task, workpool, wait, browser or memory APIs.
+
+### Waiting for native results
+
+Continue independent work while jobs run. When only results from work you started or a blocking reply remain, follow the current session's native `wait` description. In OMP 19 TUI, end the turn when the host says results or messages resume it. This leaves the work pending; it does not complete the workflow. In other sessions use `wait` as advertised.
+
+A `wait` call is not a per-child wait or a wave barrier. It may return with no new terminal result, multiple events, or due to steering. Reconcile delivered results by their actual job or agent IDs and remove only terminal entries from the pending set. A message, preview, or running snapshot is not completion. Process delivered results before waiting again; never poll or sleep for them.

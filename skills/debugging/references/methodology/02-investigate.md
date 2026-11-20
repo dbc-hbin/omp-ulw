@@ -84,7 +84,7 @@ await tool.task({
 });
 ```
 
-Record returned actual ids in a pending set. Continue independent evidence gathering. Native `wait({})` may return without a new terminal result, with multiple results/messages, or due to steering. It takes no child handles and is not a wave barrier. Wait only when blocked on your own pending jobs/services or a blocking answer owed; process available results before waiting again. Reconcile ids and remove only terminal children. Validate the actual terminal response from task/wait or agent://; use structured.data only when the runtime returns it. A still-running snapshot is not completion. Do not end the investigation with pending children. Message actual roster ids via write, not fictional team recipients.
+Record returned child IDs in a pending set and collect results under the [native wait contract](../../../ulw-loop/references/omp-contract.md#waiting-for-native-results). Validate each delivered terminal result or its actual `agent://` output; use `structured.data` only when the runtime returns it. Do not declare the investigation complete with pending children. Message actual roster IDs via write, not fictional team recipients.
 
 ## Evidence capture discipline (both paths)
 

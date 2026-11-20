@@ -5,16 +5,17 @@ task actually needs, inspect the backend returned by open and keep a short task-
 
 ## Managed and explicitly spawned browsers
 
-The live contract determines selection. The native owned/headless WebKit (ABKit) backend was
-already introduced in 18.19; it is not an 18.20-only feature. With no `app`, selection is the first
+The live contract determines selection. In OMP 19, the main session with no `app` uses the first
 applicable route: enabled relay, configured `browser.cdpUrl`, Tern inside a Tern pane, cmux, then
-OMP's own browser. The owned default uses installed headless WebKit, downloading it first when no
-browser is installed, otherwise managed Chromium. `browser.webkit` or `PI_BROWSER_WEBKIT=0` can
-disable that default WebKit choice. These selection rules do not authorize installing engines,
-enabling the relay or changing persistent settings; follow the task's setup permissions.
+OMP's own browser. A `task` child or Eval `agent()` skips automatic relay, Tern and cmux even
+when enabled. It still considers configured CDP before the owned browser, so default selection
+does not guarantee isolation from a real user session.
 
-`app: "auto"` skips only the relay. `app: "own"` also skips configured CDP, Tern and cmux, choosing
-installed WebKit otherwise Chromium; it does not mean Chromium or an isolated profile.
+In a main session, `app: "auto"` skips only the relay; it does not bypass configured CDP or the
+native pane choices otherwise available to that session. `app: "own"` bypasses all of those
+connections and selects OMP's own backend, normally installed headless WebKit (ABKit) or managed
+Chromium. `browser.webkit` or `PI_BROWSER_WEBKIT=0` can disable the default WebKit choice.
+These selection rules do not authorize installing engines, enabling the relay or changing settings.
 `app: "chromium"` explicitly selects managed Chromium. Inspect the open result's backend and any
 fallback before using a backend-specific recipe. `headed` requests visibility, not necessarily
 Chromium: WebKit has a viewer on macOS; elsewhere a visible owned browser uses Chromium.

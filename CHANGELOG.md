@@ -2,6 +2,13 @@
 
 [English](CHANGELOG.md) | [한국어](CHANGELOG.ko.md)
 
+### 2026-11-20 OMP 19 host contracts
+
+- Route OMP session history through native Eval [`archive`](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/archive.md); stop advertising the [removed `seance` role and `sourceSession` input](https://github.com/can1357/oh-my-pi/commit/db5d932058).
+- Follow the active [OMP wait contract](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/wait.md) for pending work; ending a TUI turn for automatic result delivery is not workflow completion.
+- Document [OMP 19 child browser defaults](https://github.com/can1357/oh-my-pi/pull/18789): children skip automatic relay, Tern and cmux, but configured CDP can still apply.
+- Align [screenshot pointer coordinates](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/tools/browser.md) and allow verified visualization artifacts to use [inline HTML embeds](https://github.com/can1357/oh-my-pi/blob/v19.0.1/packages/coding-agent/src/prompts/system/system-prompt.md) when the client advertises support. Skills share one native wait contract and keep their own result checks.
+
 ### 2026-11-18 GPT-6.2 Astra and Sol prompts
 
 - Both models use Senpi catalog matching and a [standalone OMP preset](prompts/gpt-6.2.ts) based on the [OpenAI guide](https://developers.openai.com/api/docs/guides/latest-model). Answer follow-up questions and reviews without editing; implement and verify requested changes and corrections to authorized work. Writing guidance preserves necessary comparisons, verification limits and progress updates.

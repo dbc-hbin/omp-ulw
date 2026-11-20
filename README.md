@@ -38,7 +38,7 @@ Other entry points:
 - **Browser and desktop:** `/web-browser`, `/ultimate-browsing`, `/computer-use` use OMP's native Eval APIs and permissions; OMP's `/browser` and `/computer` controls remain intact.
 - **Sessions and memory:** `/coding-agent-sessions`, `/init-deep`, `/reflection`, `/memory-advisor`
 
-See [skills/](skills/) for individual instructions. Cross-product session discovery requires Python 3.11+; detailed OMP session consultation uses native `seance`.
+See [skills/](skills/) for individual instructions. Cross-product session discovery requires Python 3.11+; OMP session history and recaps use native Eval `archive`.
 
 ## Prompts and code mode
 
