@@ -67,6 +67,13 @@ Input: `click`, `dblclick`, `hover`, `focus`, `fill`, `type`, `press`, `check`, 
 `scrollIntoView`. `click(selector, { button?, count? })` supports other buttons/counts on Chromium;
 cmux has narrower support. `fill` replaces text; `type` appends; use `select` for a select control.
 
+In OMP 19.0.0–19.0.1 Chromium, `fill` fires text-input events but does not fire `keydown` or
+`keyup`. If a keyboard-driven field does not react, use actual typing or a suitable non-submitting
+`press` on the focused field, then verify the expected results or suggestions, not just its value.
+Do not dispatch events through page JavaScript to make the check pass. The
+[upstream fix](https://github.com/can1357/oh-my-pi/pull/19748) adds key events for supported text
+fields; do not assume it is present on the running host, or that synthetic events satisfy every page.
+
 Wait for a known state with `waitForSelector`, `waitForText` or `waitForUrl`. Inside `tab.run`,
 `tab.waitForResponse(pattern, { timeout })` returns a Puppeteer HTTPResponse and
 `tab.waitForNavigation({ waitUntil, timeout })` returns a response or null. Subscribe before the
